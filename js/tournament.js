@@ -1,5 +1,5 @@
 // Длительность одного уровня блайндов в миллисекундах
-export const BLIND_LEVEL_DURATION = 180000; // 3 минуты
+export const BLIND_LEVEL_DURATION = 10000; // 3 минуты
 export const BLIND_LEVELS = {
   classic: [
     [10, 20],
