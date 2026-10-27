@@ -26,10 +26,6 @@ const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
 const GAME_VERSION='v0.5.6 alpha';
 const DISPLAY_VERSION=GAME_VERSION;
-const BLIND_LEVELS={
- classic:[[10,20],[25,50],[50,100],[100,200],[150,300],[200,400],[250,500],[300,600],[400,800]],
- highroller:[[100,200],[200,400],[250,500],[500,1000],[750,1500],[1000,2000],[1500,3000],[2000,4000],[4000,8000]]
-};
 let tournamentMode='classic',blindLevel=0,blindRemaining=180000,blindDeadline=0,tournamentTimer=null,tournamentDisplayTimer=null;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 const feedbackReminderShown=new Set();
@@ -40,9 +36,6 @@ let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
 let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null;
 let pendingAISeat=-1;
-
-function modeStartingStack(){return tournamentMode==='highroller'?10000:1000}
-function currentBlindLevels(){return BLIND_LEVELS[tournamentMode]||BLIND_LEVELS.classic}
 function applyTournamentMode(resetClock=true){
  const high=tournamentMode==='highroller';
  const slider=$('betRange');
@@ -55,7 +48,7 @@ function applyTournamentMode(resetClock=true){
  $('table').classList.toggle('high-roller',high);
  $('tableWatermark').textContent=high?'HIGH ROLLER':'POKEREZA';
  if(resetClock){blindLevel=0;blindRemaining=180000}
- [sb,bb]=currentBlindLevels()[blindLevel]||currentBlindLevels()[0];
+ [sb,bb]=getBlindLevels(tournamentMode)[blindLevel]||getBlindLevels(tournamentMode)[0];
  updateTournamentDisplay();
 }
 function updateTournamentDisplay(){
