@@ -1,5 +1,20 @@
-// Длительность одного уровня блайндов в миллисекундах
-export const BLIND_LEVEL_DURATION = 10000; // 3 минуты
+// Настройки длительности уровней блайндов для каждого режима.
+// Время указывается в миллисекундах.
+export const TOURNAMENT_SETTINGS = {
+  classic: {
+    blindLevelDuration: 10000 // 3 минуты (пока 10 сек)
+  },
+
+  highroller: {
+    blindLevelDuration: 10000 // 3 минуты (пока 10 сек)
+  }
+};
+
+// Возвращает настройки выбранного режима.
+// Если режим неизвестен, используются настройки Classic.
+export function getTournamentSettings(mode) {
+  return TOURNAMENT_SETTINGS[mode] || TOURNAMENT_SETTINGS.classic;
+}
 export const BLIND_LEVELS = {
   classic: [
     [10, 20],
