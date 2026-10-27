@@ -237,7 +237,7 @@ function advanceQueue(){
 function advanceStreet(){
  if(over||gamePaused)return;tick++;busy=false;clearTurnTimer();if(live().length<=1){finish();return}collectBetsIntoPot();
  if(street===0){board.push(deck.pop(),deck.pop(),deck.pop());street=1}else if(street===1){board.push(deck.pop());street=2}else if(street===2){board.push(deck.pop());street=3}else{finish();return}
- currentBet=0;clearActedFlags();logit('Открыты общие карты');render();if(activeCount()<=1){runOutBoard();return}rebuildQueueFromStart(firstToAct);advanceQueue();
+ currentBet=0;clearActedFlags();logit('Открыты общие карты');render();if(activeCount()<=1){runOutBoard();return}rebuildQueueFromStart((firstToAct+N-2)%N);advanceQueue();
 }
 function scheduleAI(i){
  if(over||gamePaused||busy||queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return;
