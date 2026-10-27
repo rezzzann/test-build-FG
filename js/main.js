@@ -1,5 +1,15 @@
 import { ranks, score, cmp, bestFive, handNames } from './poker.js';
 import { decide } from './ai.js';
+import {
+  live as getLive,
+  activeCount as countActive,
+  eligible as isEligible,
+  clearActedFlags as resetActedFlags,
+  hasActedThisStreet as didAct,
+  rebuildQueueFromStart as makeActionQueue,
+  dequeue as removeFromQueue,
+  queueHead as getQueueHead
+} from './round.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
