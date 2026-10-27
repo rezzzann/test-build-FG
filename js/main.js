@@ -19,7 +19,7 @@ import {
 import { createShuffledDeck } from './deck.js';
 import { initBugReport } from './report.js';
 // Настройки турнира: стартовый стек, уровни блайндов и управление таймером.
-// BLIND_LEVEL_DURATION — длительность одного уровня, заданная в tournament.js.
+// getTournamentSettings — длительность одного уровня, заданная в tournament.js.
 import {
   getStartingStack,
   getBlindLevels,
