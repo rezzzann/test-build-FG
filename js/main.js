@@ -149,7 +149,7 @@ function runBlindSequence(sbi,sbAmount,bbi,bbAmount,handTick){
   blindSequenceTimer=setTimeout(()=>{blindSequenceTimer=null;if(!over&&handTick===tick&&!gamePaused)advanceQueue()},reduceMotion?200:1100);
  },reduceMotion?200:1100);
 }
-function shuffle(){deck=[];for(const r of ranks)for(const [s,red] of suits)deck.push({r,s,red});for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}}
+function shuffle() {   deck = createShuffledDeck(ranks, suits); }
 
 function live() {
   return getLive(players);
