@@ -18,7 +18,14 @@ import {
 } from './chips.js';
 import { createShuffledDeck } from './deck.js';
 import { initBugReport } from './report.js';
-import { getStartingStack, getBlindLevels, createTournamentClock } from './tournament.js';
+// Настройки турнира: стартовый стек, уровни блайндов и управление таймером.
+// BLIND_LEVEL_DURATION — длительность одного уровня, заданная в tournament.js.
+import {
+  getStartingStack,
+  getBlindLevels,
+  createTournamentClock,
+  BLIND_LEVEL_DURATION
+} from './tournament.js';
 import { createRenderer } from './render.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
@@ -27,7 +34,12 @@ const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
 const GAME_VERSION='v0.5.6 alpha';
 const DISPLAY_VERSION=GAME_VERSION;
-let tournamentMode='classic',blindLevel=0,blindRemaining=180000;
+// Текущий режим турнира: classic или highroller.
+let tournamentMode = 'classic';
+let blindLevel = 0;
+// Оставшееся время текущего уровня в миллисекундах.
+// Длительность автоматически берётся из tournament.js.
+let blindRemaining = BLIND_LEVEL_DURATION;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 const feedbackReminderShown=new Set();
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
