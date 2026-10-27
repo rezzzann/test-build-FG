@@ -110,7 +110,7 @@ export function createTournamentClock({
 
         setLevel(nextLevel);
         setBlinds(levels[nextLevel]);
-        setRemaining(BLIND_LEVEL_DURATION);
+        setRemaining(getTournamentSettings(getMode()).blindLevelDuration);
 
         updateDisplay();
         render();
