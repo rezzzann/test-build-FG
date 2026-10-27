@@ -1,0 +1,110 @@
+
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101315">
+<title>Pokereza Tournament — Demo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+ <div class="welcome-panel"><div class="start-ornament">♠</div><div class="welcome-title" id="welcomeTitle">ДОБРО ПОЖАЛОВАТЬ</div>
+ <div class="welcome-text"><strong>Pokereza Tournament · v0.5.6 alpha</strong><br><br>Игра находится на этапе альфа-версии — новые режимы и возможности ещё добавляются.<br><br><strong>После релиза появится мультиплеер.</strong><br><br>Скоро начнётся бета-тестирование полноценной игры Pokereza Poker.</div>
+ <button class="welcome-close" id="closeWelcomeButton" type="button">ЗАКРЫТЬ</button></div>
+</div>
+
+<div class="start-screen" id="startScreen">
+ <div class="start-panel">
+  <div class="start-ornament">♠</div>
+  <div class="start-title">POKEREZA <span>TOURNAMENT</span></div>
+  <div class="start-subtitle">TEXAS HOLD'EM</div>
+  <div class="start-divider"></div>
+  <div class="start-version">v0.5.6 alpha</div>
+  <div class="start-demo">DEMO MODE</div>
+  <div class="menu-buttons" id="menuButtons">
+   <button class="menu-button primary" id="playButton">ИГРАТЬ</button>
+   <div class="exit-menu-buttons" id="exitMenuButtons">
+    <button class="menu-button resume-button" id="resumeButton">ПРОДОЛЖИТЬ</button>
+    <button class="menu-button restart-button" id="restartButton">НАЧАТЬ ЗАНОВО</button>
+   </div>
+   <button class="menu-button locked" type="button" disabled aria-disabled="true"><span class="lock-icon">🔒</span><span class="menu-button-text"><span class="menu-button-title">СЛОЖНОСТЬ ИИ</span><span class="menu-button-subtitle">В РАЗРАБОТКЕ</span></span></button>
+   <button class="menu-button tournament-select-button" id="tournamentSelectButton" type="button">ВЫБОР ТУРНИРА</button>
+   <button class="menu-button info-button" id="aboutButton">♠　ОБ ИГРЕ　♠</button>
+   <button class="menu-button updates-button" id="updatesButton">✦　ПОСЛЕДНИЕ ОБНОВЛЕНИЯ　✦</button>
+   <button class="menu-button info-button" id="reportBugButton">⚑　СООБЩИТЬ О БАГЕ</button>
+  </div>
+  <div class="start-footnote">ВИРТУАЛЬНЫЕ ФИШКИ · ИГРА ПРОТИВ ИИ</div>
+ </div>
+</div>
+
+<div class="info-overlay" id="tournamentOverlay" role="dialog" aria-modal="true" aria-labelledby="tournamentTitle">
+ <div class="info-panel"><div class="start-ornament">♠</div><div class="info-title" id="tournamentTitle">ВЫБОР ТУРНИРА</div><div class="info-text">Выберите режим игры. Текущий режим изменится после подтверждения.</div><button class="info-close" id="classicModeButton" type="button">КЛАССИЧЕСКИЙ</button><button class="info-close" id="highRollerModeButton" type="button" style="margin-top:9px;background:linear-gradient(180deg,#d6e8ff,#4f8ed2);border-color:#f0d08a">POKEREZA HIGH ROLLER</button><button class="report-cancel" id="closeTournamentButton" type="button">НАЗАД</button></div>
+</div>
+
+<div class="info-overlay" id="infoOverlay" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+ <div class="info-panel"><div class="start-ornament">♠</div><div class="info-title" id="infoTitle">POKEREZA TOURNAMENT</div><div class="info-text">Демо-версия покерной игры в стиле Texas Hold'em.<br><br>Играйте против трёх ИИ-соперников, принимайте решения за покерным столом и проверяйте свою стратегию.<br><br><strong>Автор проекта:</strong><br>REZAN<br><br><strong>Режим:</strong> демонстрационный<br><strong>Фишки:</strong> виртуальные PP<br><strong>Версия:</strong> v0.5.6 alpha<br><br>Доступны классический режим и Pokereza High Roller.</div><button class="info-close" id="closeAboutButton">ЗАКРЫТЬ</button></div>
+</div>
+
+<div class="info-overlay" id="updatesOverlay" role="dialog" aria-modal="true" aria-labelledby="updatesTitle">
+ <div class="info-panel"><div class="start-ornament">✦</div><div class="info-title" id="updatesTitle">ПОСЛЕДНИЕ ОБНОВЛЕНИЯ</div><div class="update-list" id="updateList">
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.5.6 alpha</span><span class="update-type">Обновление</span></div><div class="update-description"><strong>Улучшена настройка ставок.</strong> В классическом режиме диапазон ползунка составляет 20–1000 PP. В режиме HIGH ROLLER сохранён диапазон 200–10000 PP, шаг изменения ставки — 10 PP. Также уточнены сведения о последних изменениях игры.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.5.2 alpha</span><span class="update-type">Улучшение</span></div><div class="update-description"><strong>Обновлён список последних обновлений.</strong> Теперь можно хранить до 20 последних записей, сначала отображаются пять, остальные открываются одной кнопкой.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.5.1 alpha · Build 003</span><span class="update-type">Улучшение</span></div><div class="update-description"><strong>Версия и Build отображаются на главном экране.</strong> Номер сборки включён в строку версии игры. В информации об игре также показывается актуальная версия с номером Build.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.5.1 alpha · Build 002</span><span class="update-type">Улучшение</span></div><div class="update-description"><strong>Уточнены названия обновлений.</strong> Для сборок Build используются категории «Новое», «Улучшение» и «Исправление» в зависимости от изменений. Мелкие версии без Build обозначаются как «Обновление», а крупные версии получают особое оформление.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.5.1 alpha · Build 002</span><span class="update-type">Улучшение</span></div><div class="update-description"><strong>Временные подписи действий стали компактнее.</strong> Над иконками игроков показывается только название действия — без суммы ставки после слов «РЕЙЗ», «СТАВКА», «М. БЛАЙНД» и «Б. БЛАЙНД».</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.5.1 alpha</span><span class="update-type">Обновление</span></div><div class="update-description"><strong>Улучшено отображение интерфейса.</strong> Уточнено отображение номера раздачи. Добавлено напоминание о возможности сообщить о недоработках и багах через меню игры после пятой завершённой раздачи.</div></div>
+  <div class="update-item major-update"><div class="update-head"><span class="update-build">v0.5.0 alpha</span><span class="update-type major">Крупное обновление</span></div><div class="update-description"><strong>Новый этап Pokereza Tournament.</strong> Обновлён главный экран и меню выхода: можно вернуться к текущей игре или начать заново. Улучшено отображение ставок и сохранение состояния раздачи при выходе.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.1</span><span class="update-type">Обновление</span></div><div class="update-description">Уточнено поведение меню и возврата к игре. Исправлены детали интерфейса, связанные с отображением ставок и продолжением раздачи.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.0 alpha · Build 023</span><span class="update-type">Исправление</span></div><div class="update-description">Исправлены перезапуск игры, сохранение ставок при выходе и продолжении, увеличена кнопка выхода.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.0 alpha · Build 022</span><span class="update-type">Новое</span></div><div class="update-description">Добавлена кнопка «ВЫХОД» в игровом интерфейсе. Меню позволяет продолжить текущую игру или начать заново со сбросом стека.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.0 alpha · Build 021</span><span class="update-type">Улучшение</span></div><div class="update-description">Описание проблемы стало необязательным. Удалено поле действий перед ошибкой. Добавлена подсказка об обязательном выборе вариантов.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.0 alpha · Build 020</span><span class="update-type">Улучшение</span></div><div class="update-description">Форма сообщения об ошибке получила категории проблем и уточняющие вопросы.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.0 alpha · Build 019</span><span class="update-type">Новое</span></div><div class="update-description">Добавлена отправка отчётов об ошибках автору через Telegram.</div></div>
+  <div class="update-item"><div class="update-head"><span class="update-build">v0.4.0 alpha · Build 018</span><span class="update-type">Улучшение</span></div><div class="update-description">Добавлены плавные переходы между меню и информационными окнами.</div></div>
+ </div><button class="update-list-toggle" id="toggleUpdatesButton" type="button" aria-expanded="false">ПОКАЗАТЬ ЕЩЁ</button><button class="info-close" id="closeUpdatesButton">ЗАКРЫТЬ</button></div>
+</div>
+
+<div class="info-overlay" id="reportOverlay" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+ <div class="info-panel report-panel"><div class="start-ornament">⚑</div><div class="info-title" id="reportTitle">СООБЩИТЬ О БАГЕ</div><div class="report-help">Выбери раздел, в котором возникла проблема. Я автоматически подготовлю уточняющие вопросы, чтобы автору было проще разобраться.</div>
+  <form id="reportForm"><label class="report-label">ГДЕ ВОЗНИКЛА ПРОБЛЕМА? *</label><div class="report-options" id="reportCategories">
+   <label class="report-option"><input type="radio" name="category" value="Отображение элементов" required><span>Отображение элементов</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Логика ИИ" required><span>Логика ИИ</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Карты и комбинации" required><span>Карты и комбинации</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Ставки и фишки" required><span>Ставки и фишки</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Очередность ходов" required><span>Очередность ходов</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Кнопки и управление" required><span>Кнопки и управление</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Меню и окна" required><span>Меню и окна</span></label>
+   <label class="report-option"><input type="radio" name="category" value="Другая проблема" required><span>Другая проблема</span></label>
+  </div><div id="reportDynamicQuestions"></div><label class="report-label" for="reportDescription" id="reportDescriptionLabel">ОПИСАНИЕ ПРОБЛЕМЫ (НЕОБЯЗАТЕЛЬНО)</label><textarea class="report-field" id="reportDescription" name="description" rows="3" maxlength="3000" placeholder="Если хочешь, опиши проблему своими словами."></textarea><div class="report-status" id="reportStatus" role="status" aria-live="polite"></div><button class="report-submit" id="reportSubmit" type="submit">ОТПРАВИТЬ ОТЧЁТ</button><div class="report-submit-note">Для отправки отчёта необходимо выбрать варианты во всех обязательных списках выше. Описание проблемы заполнять необязательно.</div><button class="report-cancel" id="closeReportButton" type="button">ОТМЕНА</button></form>
+ </div>
+</div>
+
+<div class="feedback-reminder" id="feedbackReminder" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+ <div class="feedback-panel">
+  <div class="feedback-icon">♠</div>
+  <div class="feedback-title" id="feedbackTitle">ПОМОГИ УЛУЧШИТЬ ИГРУ</div>
+  <div class="feedback-text">Если ты заметил недоработки, ошибки или баги, сообщи о них через пункт <strong>«СООБЩИТЬ О БАГЕ»</strong> в меню игры. Твоя обратная связь поможет сделать Pokereza лучше.</div>
+  <button class="feedback-dismiss" id="feedbackDismiss" type="button">БОЛЬШЕ НЕ ПОКАЗЫВАТЬ</button>
+ </div>
+</div>
+
+<div class="app">
+<header class="top">
+ <div class="brand-wrap"><div class="brand">♠ POKEREZA <span>TOURNAMENT</span></div><div class="brand-version" id="gameVersionDisplay">v0.5.6 alpha</div></div>
+ <div id="handStatus">ДЕМО · 4 МЕСТА</div>
+ <div class="top-blinds"><span id="blindsDisplay">БЛАЙНДЫ 10 / 20</span><button class="exit-button" id="exitButton" type="button">ВЫХОД</button></div>
+</header>
+<main class="tablewrap"><section class="table" id="table">
+ <div class="wm" id="tableWatermark">POKEREZA</div><div class="pot" id="potDisplay"><small id="street">ПРЕФЛОП</small>БАНК: <span id="pot">0</span> PP</div>
+ <div class="community" id="community"></div><div class="hole" id="hole"></div><div class="notice" id="notice"></div><div id="seats"></div><div id="opponentCards"></div><div id="handBets"></div>
+</section></main>
+<section class="actions"><button class="act next-hand" id="nextHand">РАЗДАЧА</button><button class="act fold" id="fold">ФОЛД</button><button class="act call" id="checkCall">ЧЕК</button><button class="act raise bet-mode" id="raise">СТАВКА</button><button class="act allin" id="allin">ALL-IN</button><div class="betbox">РАЗМЕР <input id="betRange" type="range" min="20" max="1000" step="10" value="20"><b id="betValue">20</b> PP</div></section>
+<footer class="bottom"><span id="message">Против трёх ИИ · виртуальные PP</span><span><button id="newHand">НОВАЯ РАЗДАЧА</button> · <button id="reset">СБРОСИТЬ СТЕК</button></span></footer>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
