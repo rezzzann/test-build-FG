@@ -1,4 +1,5 @@
 import { ranks, score, cmp, bestFive, handNames } from './poker.js';
+import { decide } from './ai.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
