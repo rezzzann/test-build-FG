@@ -1,6 +1,6 @@
 import { ranks, score, cmp, bestFive, handNames } from './poker.js';
 (()=>{'use strict';
-const ranks='23456789TJQKA',suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
+const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
 const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
