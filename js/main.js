@@ -10,6 +10,7 @@ import {
   dequeue as removeFromQueue,
   queueHead as getQueueHead
 } from './round.js';
+import { card, miniCard, fmt } from './format.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
