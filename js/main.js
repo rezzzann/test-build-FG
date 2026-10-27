@@ -71,7 +71,7 @@ function startTournamentClock(){
   tournamentTimer=null;
   if(tournamentDisplayTimer!==null){clearInterval(tournamentDisplayTimer);tournamentDisplayTimer=null}
   if(gamePaused)return;
-  const levels=currentBlindLevels();
+  const levels=getBlindLevels(tournamentMode);
   if(blindLevel<levels.length-1){
    blindLevel++;[sb,bb]=levels[blindLevel];blindRemaining=180000;updateTournamentDisplay();render();startTournamentClock();
   }else{
@@ -82,7 +82,7 @@ function startTournamentClock(){
 function chooseTournament(mode){
  tournamentMode=mode;applyTournamentMode(true);
  $('tournamentOverlay').classList.remove('visible');
- if(!gameStarted){players.forEach(p=>p.stack=modeStartingStack())}
+ if(!gameStarted){players.forEach(p=>p.stack=getStartingStack(tournamentMode))}
  else if(gamePaused){savedGameState=null;resetStacksAndRestart()}
 }
 function capUpdateHistory(){
@@ -287,7 +287,7 @@ function userAct(t){
  if(applyAction(user,a))advanceQueue();
 }
 function start(){
- players=[{name:'Вы',icon:'♠',style:'user',stack:modeStartingStack()},{name:'Тайтовый',icon:'♞',style:'tight',stack:modeStartingStack()},{name:'Стратег',icon:'♜',style:'balanced',stack:modeStartingStack()},{name:'Агрессор',icon:'♛',style:'aggressive',stack:modeStartingStack()}];
+ players=[{name:'Вы',icon:'♠',style:'user',stack:getStartingStack(tournamentMode)},{name:'Тайтовый',icon:'♞',style:'tight',stack:getStartingStack(tournamentMode)},{name:'Стратег',icon:'♜',style:'balanced',stack:getStartingStack(tournamentMode)},{name:'Агрессор',icon:'♛',style:'aggressive',stack:getStartingStack(tournamentMode)}];
  $('fold').onclick=()=>userAct('fold');$('checkCall').onclick=()=>userAct('call');$('raise').onclick=()=>userAct('raise');$('allin').onclick=()=>userAct('allin');$('nextHand').onclick=()=>{if(!gamePaused)newHand()};
  $('betRange').oninput=()=>$('betValue').textContent=$('betRange').value;
  $('newHand').onclick=()=>{if(!gamePaused){if(over)newHand();else logit('Завершите текущую раздачу')}};
@@ -326,7 +326,7 @@ function restoreSavedGame(){
 function resetStacksAndRestart(){
  gamePaused=false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
- stopTournamentClock(false);applyTournamentMode(true);players.forEach(p=>{p.stack=modeStartingStack();p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
+ stopTournamentClock(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
  deck=[];board=[];pot=0;currentBet=0;street=0;actor=-1;handNo=0;over=true;actQueue=[];firstToAct=3;log=[];renderedBoardCount=0;savedGameState=null;gameStarted=true;
  $('community').innerHTML='';$('hole').innerHTML='';$('opponentCards').innerHTML='';$('handBets').innerHTML='';$('seats').innerHTML='';$('pot').textContent='0';$('message').textContent='Новая игра';resetBetSlider();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
