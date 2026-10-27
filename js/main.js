@@ -204,7 +204,7 @@ function scheduleAI(i){
  busy=true;pendingAISeat=i;const myTick=tick;
  turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
   showThinking(i);render();turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
-   const call=Math.max(0,currentBet-players[i].bet),action=decide(players[i],i,call);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
+   const call=Math.max(0,currentBet-players[i].bet),action=decide(players[i],call,board,currentBet,bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
   },Math.floor(Math.random()*2501)+1000);
  },1200);
 }
@@ -223,13 +223,6 @@ function applyAction(i,a,myTick){
  render();return true;
 }
 function runOutBoard(){if(over||gamePaused)return;tick++;busy=false;clearTurnTimer();collectBetsIntoPot();while(board.length<5)board.push(deck.pop());street=4;render();finish()}
-function strength(p){
- const all=[...p.hole,...board],v=all.map(c=>ranks.indexOf(c.r)+2),counts={};v.forEach(x=>counts[x]=(counts[x]||0)+1);const c=Object.values(counts).sort((a,b)=>b-a),suitCount={};all.forEach(x=>suitCount[x.s]=(suitCount[x.s]||0)+1);
- const flush=Object.values(suitCount).some(x=>x>=5),u=[...new Set(v)].sort((a,b)=>b-a);if(u.includes(14))u.push(1);let straight=false;for(let i=0;i<=u.length-5;i++)if(u[i]-u[i+4]===4)straight=true;
- if(flush&&straight)return 8;if(c[0]===4)return 7;if(c[0]===3&&c[1]>=2)return 6;if(flush)return 5;if(straight)return 4;if(c[0]===3)return 3;if(c[0]===2&&c[1]===2)return 2;if(c[0]===2)return 1;
- const a=ranks.indexOf(p.hole[0].r),b=ranks.indexOf(p.hole[1].r);return(Math.max(a,b)>=10?.7:0)+(Math.abs(a-b)<=1?.3:0)+(p.hole[0].s===p.hole[1].s?.25:0)+(a===b?.7:0);
-}
-function decide(p,i,call){const st=strength(p)+Math.random()*.35,style=p.style;if(style==='tight'&&st<1.3&&call>bb*2)return{t:'fold'};if(style==='careful'&&st<1.6&&call>bb*2)return{t:'fold'};if(style==='calling'&&Math.random()<.72)return{t:call?'call':'check'};if(style==='aggressive'&&st>.8&&Math.random()<.55)return{t:call?'raise':'bet',amt:Math.min(p.stack,Math.max(bb*2,currentBet+bb*2))};if(st>2.4&&Math.random()<.55)return{t:call?'raise':'bet',amt:Math.min(p.stack,Math.max(bb*2,currentBet+bb*2))};if(!call)return{t:'check'};if(st>.8&&Math.random()<.6)return{t:'call'};return{t:'fold'}}
 
 function showFeedbackReminderAfterThirdHand(){
  const modeKey=tournamentMode;
