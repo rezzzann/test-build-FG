@@ -16,6 +16,7 @@ import {
   getBetChipCount,
   getBetChipClass
 } from './chips.js';
+import { createShuffledDeck } from './deck.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
