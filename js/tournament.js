@@ -1,4 +1,5 @@
-
+// Длительность одного уровня блайндов в миллисекундах
+export const BLIND_LEVEL_DURATION = 180000; // 3 минуты
 export const BLIND_LEVELS = {
   classic: [
     [10, 20],
@@ -67,7 +68,7 @@ export function createTournamentClock({
     if (getPaused() || timer !== null) return;
 
     if (getRemaining() <= 0) {
-      setRemaining(180000);
+      setRemaining(BLIND_LEVEL_DURATION);
     }
 
     deadline = Date.now() + getRemaining();
@@ -94,7 +95,7 @@ export function createTournamentClock({
 
         setLevel(nextLevel);
         setBlinds(levels[nextLevel]);
-        setRemaining(180000);
+        setRemaining(BLIND_LEVEL_DURATION);
 
         updateDisplay();
         render();
