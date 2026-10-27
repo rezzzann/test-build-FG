@@ -180,7 +180,11 @@ function dequeue(i) {
 function queueHead() {
   return getQueueHead(actQueue);
 }
-
+function logit(s) {
+  log.unshift(s);
+  log = log.slice(0, 3);
+  $('message').textContent = s;
+}
 function actionClass(action){const classes={'РЕЙЗ':'raise-label','ФОЛД':'fold-label','КОЛЛ':'call-label','ЧЕК':'check-label','СТАВКА':'bet-label','ALL-IN':'allin-label','М. БЛАЙНД':'small-blind-label','Б. БЛАЙНД':'big-blind-label'};return classes[action]||''}
 function actionMarkup(action,amount){if(['М. БЛАЙНД','Б. БЛАЙНД','СТАВКА','РЕЙЗ'].includes(action))return `<span class="bet-action-name">${action}</span>`;return action==='ДУМАЕТ'?'ДУМАЕТ…':action}
 function stateMarkup(p,i){if(p.folded)return'ФОЛД';if(p.allin)return'ALL-IN';if(i===actor&&!over)return'ХОД';if(p.action==='М. БЛАЙНД')return'М. БЛАЙНД';if(p.action==='Б. БЛАЙНД')return'Б. БЛАЙНД';if(p.action==='СТАВКА'||p.action==='РЕЙЗ')return`${p.action} ${fmt(p.actionAmount||0)} PP`;if(p.action)return p.action;return'В ИГРЕ'}
