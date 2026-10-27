@@ -148,15 +148,39 @@ function shuffle(){deck=[];for(const r of ranks)for(const [s,red] of suits)deck.
 function card(c,back=false){if(back)return '<div class="card back"></div>';return `<div class="card ${c.red?'red':''}"><span class="rank">${c.r==='T'?'10':c.r}</span><span class="center">${c.s}</span></div>`}
 function miniCard(c,reveal=false,isWinning=false){if(!reveal)return '<span class="mini-card"></span>';return `<span class="mini-card ${c.red?'red':''} ${isWinning?'winning-card':''}"><span class="mini-rank">${c.r==='T'?'10':c.r}</span><span class="mini-suit">${c.s}</span></span>`}
 function fmt(n){return Math.max(0,Math.round(n)).toLocaleString('ru-RU')}
-function live(){return players.filter(p=>!p.folded)}
-function activeCount(){return players.filter(p=>!p.folded&&!p.allin&&p.stack>0).length}
-function eligible(i){const p=players[i];return!!p&&!p.folded&&!p.allin&&p.stack>0}
-function logit(s){log.unshift(s);log=log.slice(0,3);$('message').textContent=s}
-function clearActedFlags(){players.forEach(p=>{p.actedStreet=-1})}
-function hasActedThisStreet(i){return players[i].actedStreet===street}
-function rebuildQueueFromStart(startIdx){actQueue=[];for(let k=0;k<N;k++){const idx=(startIdx+k+N*10)%N;if(eligible(idx))actQueue.push(idx)}}
-function dequeue(i){const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1)}
-function queueHead(){return actQueue.length?actQueue[0]:-1}
+
+function live() {
+  return getLive(players);
+}
+
+function activeCount() {
+  return countActive(players);
+}
+
+function eligible(i) {
+  return isEligible(players, i);
+}
+
+function clearActedFlags() {
+  resetActedFlags(players);
+}
+
+function hasActedThisStreet(i) {
+  return didAct(players, i, street);
+}
+
+function rebuildQueueFromStart(startIdx) {
+  actQueue = makeActionQueue(players, startIdx, N);
+}
+
+function dequeue(i) {
+  removeFromQueue(actQueue, i);
+}
+
+function queueHead() {
+  return getQueueHead(actQueue);
+}
+
 function actionClass(action){const classes={'РЕЙЗ':'raise-label','ФОЛД':'fold-label','КОЛЛ':'call-label','ЧЕК':'check-label','СТАВКА':'bet-label','ALL-IN':'allin-label','М. БЛАЙНД':'small-blind-label','Б. БЛАЙНД':'big-blind-label'};return classes[action]||''}
 function actionMarkup(action,amount){if(['М. БЛАЙНД','Б. БЛАЙНД','СТАВКА','РЕЙЗ'].includes(action))return `<span class="bet-action-name">${action}</span>`;return action==='ДУМАЕТ'?'ДУМАЕТ…':action}
 function stateMarkup(p,i){if(p.folded)return'ФОЛД';if(p.allin)return'ALL-IN';if(i===actor&&!over)return'ХОД';if(p.action==='М. БЛАЙНД')return'М. БЛАЙНД';if(p.action==='Б. БЛАЙНД')return'Б. БЛАЙНД';if(p.action==='СТАВКА'||p.action==='РЕЙЗ')return`${p.action} ${fmt(p.actionAmount||0)} PP`;if(p.action)return p.action;return'В ИГРЕ'}
