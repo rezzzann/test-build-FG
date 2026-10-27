@@ -1,4 +1,4 @@
-
+import { ranks, score, cmp, bestFive, handNames } from './poker.js';
 (()=>{'use strict';
 const ranks='23456789TJQKA',suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
