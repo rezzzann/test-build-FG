@@ -6,7 +6,7 @@ export const TOURNAMENT_SETTINGS = {
   },
 
   highroller: {
-    blindLevelDuration: 10000 // 3 минуты (пока 10 сек)
+    blindLevelDuration: 20000 // 3 минуты (пока 20 сек)
   }
 };
 
@@ -81,9 +81,9 @@ export function createTournamentClock({
 
   function start() {
     if (getPaused() || timer !== null) return;
-
+// Загружаем длительность уровня для выбранного режима турнира.
     if (getRemaining() <= 0) {
-      setRemaining(BLIND_LEVEL_DURATION);
+      setRemaining(getTournamentSettings(getMode()).blindLevelDuration);
     }
 
     deadline = Date.now() + getRemaining();
