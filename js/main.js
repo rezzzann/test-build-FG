@@ -24,7 +24,7 @@ import {
   getStartingStack,
   getBlindLevels,
   createTournamentClock,
-  BLIND_LEVEL_DURATION
+  getTournamentSettings
 } from './tournament.js';
 import { createRenderer } from './render.js';
 (()=>{'use strict';
@@ -39,7 +39,7 @@ let tournamentMode = 'classic';
 let blindLevel = 0;
 // Оставшееся время текущего уровня в миллисекундах.
 // Длительность автоматически берётся из tournament.js.
-let blindRemaining = BLIND_LEVEL_DURATION;
+let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 const feedbackReminderShown=new Set();
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
@@ -60,7 +60,7 @@ function applyTournamentMode(resetClock=true){
  $('betValue').textContent=slider.value;
  $('table').classList.toggle('high-roller',high);
  $('tableWatermark').textContent=high?'HIGH ROLLER':'POKEREZA';
- if(resetClock){blindLevel=0;blindRemaining=180000}
+ if(resetClock){blindLevel=0;blindRemaining=getTournamentSettings(tournamentMode).blindLevelDuration;}
  [sb,bb]=getBlindLevels(tournamentMode)[blindLevel]||getBlindLevels(tournamentMode)[0];
  updateTournamentDisplay();
 }
