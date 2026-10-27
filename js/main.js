@@ -229,17 +229,6 @@ function strength(p){
  const a=ranks.indexOf(p.hole[0].r),b=ranks.indexOf(p.hole[1].r);return(Math.max(a,b)>=10?.7:0)+(Math.abs(a-b)<=1?.3:0)+(p.hole[0].s===p.hole[1].s?.25:0)+(a===b?.7:0);
 }
 function decide(p,i,call){const st=strength(p)+Math.random()*.35,style=p.style;if(style==='tight'&&st<1.3&&call>bb*2)return{t:'fold'};if(style==='careful'&&st<1.6&&call>bb*2)return{t:'fold'};if(style==='calling'&&Math.random()<.72)return{t:call?'call':'check'};if(style==='aggressive'&&st>.8&&Math.random()<.55)return{t:call?'raise':'bet',amt:Math.min(p.stack,Math.max(bb*2,currentBet+bb*2))};if(st>2.4&&Math.random()<.55)return{t:call?'raise':'bet',amt:Math.min(p.stack,Math.max(bb*2,currentBet+bb*2))};if(!call)return{t:'check'};if(st>.8&&Math.random()<.6)return{t:'call'};return{t:'fold'}}
-function val(c){return ranks.indexOf(c.r)+2}
-function score5(cs){
- const vs=cs.map(val).sort((a,b)=>b-a),cnt={};vs.forEach(v=>cnt[v]=(cnt[v]||0)+1);const g=Object.entries(cnt).map(([v,n])=>({v:+v,n})).sort((a,b)=>b.n-a.n||b.v-a.v);
- const flush=cs.every(c=>c.s===cs[0].s),u=[...new Set(vs)].sort((a,b)=>b-a);if(u.includes(14))u.push(1);let st=0;for(let i=0;i<=u.length-5;i++)if(u[i]-u[i+4]===4)st=Math.max(st,u[i]);
- if(flush&&st)return[8,st];if(g[0].n===4)return[7,g[0].v,...g.filter(x=>x.n===1).map(x=>x.v)];if(g[0].n===3&&g[1]?.n===2)return[6,g[0].v,g[1].v];if(flush)return[5,...vs];if(st)return[4,st];if(g[0].n===3)return[3,g[0].v,...g.filter(x=>x.n===1).map(x=>x.v).sort((a,b)=>b-a)];
- const pairs=g.filter(x=>x.n===2).map(x=>x.v).sort((a,b)=>b-a);if(pairs.length>=2)return[2,pairs[0],pairs[1],g.find(x=>x.n===1)?.v||0];if(pairs.length===1)return[1,pairs[0],...g.filter(x=>x.n===1).map(x=>x.v).sort((a,b)=>b-a)];return[0,...vs];
-}
-function cmp(a,b){for(let i=0;i<Math.max(a.length,b.length);i++){const x=a[i]||0,y=b[i]||0;if(x!==y)return x-y}return 0}
-function score(cards){return bestFive(cards).score}
-function bestFive(cards){let bestScore=null,bestCards=[];function combine(start,selected){if(selected.length===5){const s=score5(selected);if(bestScore===null||cmp(s,bestScore)>0){bestScore=s;bestCards=selected.slice()}return}for(let i=start;i<cards.length;i++)combine(i+1,[...selected,cards[i]])}combine(0,[]);return{score:bestScore||[-1],cards:bestCards}}
-const handNames=['СТАРШАЯ КАРТА','ПАРА','ДВЕ ПАРЫ','ТРОЙКА','СТРИТ','ФЛЕШ','ФУЛЛ-ХАУС','КАРЕ','СТРИТ-ФЛЕШ'];
 
 function showFeedbackReminderAfterThirdHand(){
  const modeKey=tournamentMode;
