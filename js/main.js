@@ -146,9 +146,6 @@ function runBlindSequence(sbi,sbAmount,bbi,bbAmount,handTick){
  },reduceMotion?200:1100);
 }
 function shuffle(){deck=[];for(const r of ranks)for(const [s,red] of suits)deck.push({r,s,red});for(let i=deck.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[deck[i],deck[j]]=[deck[j],deck[i]]}}
-function card(c,back=false){if(back)return '<div class="card back"></div>';return `<div class="card ${c.red?'red':''}"><span class="rank">${c.r==='T'?'10':c.r}</span><span class="center">${c.s}</span></div>`}
-function miniCard(c,reveal=false,isWinning=false){if(!reveal)return '<span class="mini-card"></span>';return `<span class="mini-card ${c.red?'red':''} ${isWinning?'winning-card':''}"><span class="mini-rank">${c.r==='T'?'10':c.r}</span><span class="mini-suit">${c.s}</span></span>`}
-function fmt(n){return Math.max(0,Math.round(n)).toLocaleString('ru-RU')}
 
 function live() {
   return getLive(players);
