@@ -19,6 +19,7 @@ import {
 import { createShuffledDeck } from './deck.js';
 import { initBugReport } from './report.js';
 import { getStartingStack, getBlindLevels } from './tournament.js';
+import { createRenderer } from './render.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
@@ -182,36 +183,51 @@ function logit(s) {
   log = log.slice(0, 3);
   $('message').textContent = s;
 }
-function actionClass(action){const classes={'РЕЙЗ':'raise-label','ФОЛД':'fold-label','КОЛЛ':'call-label','ЧЕК':'check-label','СТАВКА':'bet-label','ALL-IN':'allin-label','М. БЛАЙНД':'small-blind-label','Б. БЛАЙНД':'big-blind-label'};return classes[action]||''}
-function actionMarkup(action,amount){if(['М. БЛАЙНД','Б. БЛАЙНД','СТАВКА','РЕЙЗ'].includes(action))return `<span class="bet-action-name">${action}</span>`;return action==='ДУМАЕТ'?'ДУМАЕТ…':action}
-function stateMarkup(p,i){if(p.folded)return'ФОЛД';if(p.allin)return'ALL-IN';if(i===actor&&!over)return'ХОД';if(p.action==='М. БЛАЙНД')return'М. БЛАЙНД';if(p.action==='Б. БЛАЙНД')return'Б. БЛАЙНД';if(p.action==='СТАВКА'||p.action==='РЕЙЗ')return`${p.action} ${fmt(p.actionAmount||0)} PP`;if(p.action)return p.action;return'В ИГРЕ'}
-function renderHandBets(){
- $('handBets').innerHTML=players.map((p,i)=>{if(p.folded||p.bet<=0)return'';const config=getBetChipConfig(p.bet),cls=config.color==='blue'?'blue-chip':'gold-chip',chips=Array.from({length:config.count},()=>cls==='blue-chip'?'<span class="blue-chip"></span>':'<span class="gold-chip"></span>').join('');return `<div class="hand-bet b${i} visible" data-player="${i}" aria-label="Ставка ${fmt(p.bet)} PP"><span class="bet-chips">${chips}</span><span class="bet-total">${fmt(p.bet)} PP</span></div>`}).join('');
-}
-function renderCommunity(){
- const el=$('community'),count=board.length;el.classList.toggle('ai-winner-board',aiWinnerReveal);$('table').classList.toggle('ai-winner-state',aiWinnerReveal);
- if(count===0){el.innerHTML='';renderedBoardCount=0;return}
- if(count===renderedBoardCount){[...el.children].forEach((node,i)=>node.classList.toggle('winning-card',humanWinnerReveal&&winningCards.includes(board[i])||aiWinnerReveal&&aiWinningCards.includes(board[i])));return}
- const previousCount=renderedBoardCount;el.innerHTML=board.map((c,i)=>{const isNew=i>=previousCount,isWinning=humanWinnerReveal&&winningCards.includes(c)||aiWinnerReveal&&aiWinningCards.includes(c);return `<div class="card ${c.red?'red':''} ${isNew?'reveal-card':''} ${isWinning?'winning-card':''}"><span class="rank">${c.r==='T'?'10':c.r}</span><span class="center">${c.s}</span></div>`}).join('');renderedBoardCount=count;
-}
-function render(){
- if(!players.length)return;
- $('pot').textContent=fmt(pot);$('street').textContent=streetNames[Math.min(street,4)];
- $('handStatus').textContent=tournamentMode==='highroller'?`HIGH ROLLER · УР. ${blindLevel+1} · ${Math.ceil(Math.max(0,blindRemaining)/1000)}с`:'';
- $('blindsDisplay').textContent=`БЛАЙНДЫ ${fmt(sb)} / ${fmt(bb)}`;
- renderCommunity();const holeEl=$('hole');holeEl.classList.toggle('winner-hole',humanWinnerReveal);holeEl.classList.toggle('ai-loser-hole',aiWinnerReveal);holeEl.classList.toggle('folded-hole',humanFoldedCards);
- holeEl.innerHTML=players[user].hole.map(c=>{const html=card(c);return humanWinnerReveal&&winningCards.includes(c)?html.replace('class="card','class="card winning-card'):html}).join('');
- $('seats').innerHTML=players.map((p,i)=>{const cls=seatClass[i],action=p.labelAction||'',thinking=action==='ДУМАЕТ',labelClass=actionClass(action),userClass=i===user?'user-seat':'',isWinner=winnerIds.includes(i);
-  const winMarkup=isWinner?`<div class="win-display visible"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i]||0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`:'';
-  return `<div class="seat ${cls} ${userClass} ${i===actor&&!over?'active':''} ${p.folded?'folded':''}">${winMarkup}<div class="action-label ${thinking?'thinking':''} ${labelClass}">${actionMarkup(action,p.labelAmount||0)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i===user?'Вы':p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p,i)}</div></div></div>`}).join('');
- $('opponentCards').innerHTML=players.map((p,i)=>{if(i===user)return'';const pos=cardPos[i];if(!pos)return'';const revealed=over&&!p.folded,isAIWinner=aiWinnerReveal&&i===aiWinnerId;return `<div class="opponent-cards ${pos} ${revealed?'revealed':''} ${isAIWinner?'ai-winner-cards':''}">${p.hole.map(c=>miniCard(c,revealed,isAIWinner&&aiWinningCards.includes(c))).join('')}</div>`}).join('');
- renderHandBets();$('betValue').textContent=$('betRange').value;
- const canAct=!over&&!busy&&!gamePaused&&actor===user&&eligible(user)&&actQueue.includes(user)&&!hasActedThisStreet(user);
- $('fold').disabled=!canAct;$('checkCall').disabled=!canAct;$('raise').disabled=!canAct;$('allin').disabled=!canAct;
- $('checkCall').textContent=currentBet>players[user].bet?'КОЛЛ '+fmt(currentBet-players[user].bet):'ЧЕК';
- const isRaise=currentBet>players[user].bet;$('raise').textContent=isRaise?'РЕЙЗ':'СТАВКА';$('raise').classList.toggle('bet-mode',!isRaise);
- $('nextHand').classList.toggle('visible',over);$('exitButton').classList.toggle('visible',gameStarted);
-}
+
+const { render, renderHandBets, renderCommunity } = createRenderer({
+  $,
+  getState: () => ({
+    players,
+    pot,
+    street,
+    tournamentMode,
+    blindLevel,
+    blindRemaining,
+    sb,
+    bb,
+    humanWinnerReveal,
+    aiWinnerReveal,
+    humanFoldedCards,
+    winningCards,
+    aiWinningCards,
+    aiWinnerId,
+    winnerIds,
+    winnerPayouts,
+    winnerCombo,
+    actor,
+    over,
+    busy,
+    gamePaused,
+    actQueue,
+    currentBet,
+    gameStarted,
+    board
+  }),
+  card,
+  miniCard,
+  fmt,
+  getBetChipConfig,
+  streetNames,
+  seatClass,
+  cardPos,
+  eligible,
+  hasActedThisStreet,
+  getRenderedBoardCount: () => renderedBoardCount,
+  setRenderedBoardCount: value => {
+    renderedBoardCount = value;
+  }
+});
+
 function post(i,n){const p=players[i],v=Math.min(n,p.stack);p.stack-=v;p.bet+=v;p.total+=v;if(!p.stack)p.allin=true;return v}
 function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('betValue').textContent=slider.value}
 function newHand(){
