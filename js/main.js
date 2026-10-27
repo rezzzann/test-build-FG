@@ -130,9 +130,7 @@ function showThinking(i){
  p.actionId=(p.actionId||0)+1;const id=p.actionId;p.labelAction='ДУМАЕТ';p.labelAmount=0;
  p.actionTimer=setTimeout(()=>{if(p.actionId!==id)return;p.actionTimer=null;if(p.labelAction==='ДУМАЕТ'){p.labelAction='';p.labelAmount=0;if(!gamePaused)render()}},2000);
 }
-function getBetChipConfig(amount){const value=Math.max(0,Number(amount)||0);if(value<50)return{count:1,color:'gold'};if(value<100)return{count:2,color:'gold'};if(value<200)return{count:3,color:'gold'};if(value<400)return{count:1,color:'blue'};if(value<700)return{count:2,color:'blue'};return{count:3,color:'blue'}}
-function getBetChipCount(amount){return getBetChipConfig(amount).count}
-function getBetChipClass(amount){return getBetChipConfig(amount).color==='blue'?'blue-chip':'gold-chip'}
+
 function animateBetChip(playerIndex,amount=0){
  const seat=document.querySelector(`.seat.${seatClass[playerIndex]}`),avatar=seat?.querySelector('.avatar'),betDisplay=document.querySelector(`.hand-bet.b${playerIndex}`);
  if(!avatar||!betDisplay||amount<=0||gamePaused)return;
