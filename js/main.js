@@ -18,7 +18,7 @@ import {
 } from './chips.js';
 import { createShuffledDeck } from './deck.js';
 import { initBugReport } from './report.js';
-import { getStartingStack, getBlindLevels } from './tournament.js';
+import { getStartingStack, getBlindLevels, createTournamentClock } from './tournament.js';
 import { createRenderer } from './render.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
@@ -27,7 +27,7 @@ const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
 const GAME_VERSION='v0.5.6 alpha';
 const DISPLAY_VERSION=GAME_VERSION;
-let tournamentMode='classic',blindLevel=0,blindRemaining=180000,blindDeadline=0,tournamentTimer=null,tournamentDisplayTimer=null;
+let tournamentMode='classic',blindLevel=0,blindRemaining=180000;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 const feedbackReminderShown=new Set();
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
@@ -59,27 +59,24 @@ function updateTournamentDisplay(){
  $('table').classList.toggle('high-roller',high);
  $('tableWatermark').textContent=high?'HIGH ROLLER':'POKEREZA';
 }
-function stopTournamentClock(preserve=true){
- if(tournamentTimer!==null){if(preserve)blindRemaining=Math.max(0,blindDeadline-Date.now());clearTimeout(tournamentTimer);tournamentTimer=null}
- if(tournamentDisplayTimer!==null){clearInterval(tournamentDisplayTimer);tournamentDisplayTimer=null}
-}
-function startTournamentClock(){
- if(gamePaused||tournamentTimer!==null)return;
- if(blindRemaining<=0)blindRemaining=180000;
- blindDeadline=Date.now()+blindRemaining;
- tournamentDisplayTimer=setInterval(()=>{blindRemaining=Math.max(0,blindDeadline-Date.now());updateTournamentDisplay()},250);
- tournamentTimer=setTimeout(()=>{
-  tournamentTimer=null;
-  if(tournamentDisplayTimer!==null){clearInterval(tournamentDisplayTimer);tournamentDisplayTimer=null}
-  if(gamePaused)return;
-  const levels=getBlindLevels(tournamentMode);
-  if(blindLevel<levels.length-1){
-   blindLevel++;[sb,bb]=levels[blindLevel];blindRemaining=180000;updateTournamentDisplay();render();startTournamentClock();
-  }else{
-   blindRemaining=0;updateTournamentDisplay();
-  }
- },blindRemaining);
-}
+const tournamentClock = createTournamentClock({
+  getMode: () => tournamentMode,
+  getPaused: () => gamePaused,
+  getLevel: () => blindLevel,
+  setLevel: value => {
+    blindLevel = value;
+  },
+  getRemaining: () => blindRemaining,
+  setRemaining: value => {
+    blindRemaining = value;
+  },
+  setBlinds: ([small, big]) => {
+    sb = small;
+    bb = big;
+  },
+  updateDisplay: updateTournamentDisplay,
+  render: () => render()
+});
 function chooseTournament(mode){
  tournamentMode=mode;applyTournamentMode(true);
  $('tournamentOverlay').classList.remove('visible');
@@ -320,7 +317,7 @@ function captureGameState(){
 }
 function pauseGameForMenu(){
  if(!gameStarted||gamePaused)return;
- savedGameState=captureGameState();stopTournamentClock(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
+ savedGameState=captureGameState();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
 $('gameVersionDisplay').textContent=DISPLAY_VERSION;
@@ -336,18 +333,18 @@ function restoreSavedGame(){
  $('betRange').value=String(Math.min(Number($('betRange').max),Math.max(Number($('betRange').min),Number(s.betRangeValue)||Number($('betRange').min))));$('betValue').textContent=$('betRange').value;
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
- savedGameState=null;render();renderHandBets();startTournamentClock();
+ savedGameState=null;render();renderHandBets();tournamentClock.start();
  if(!over&&actor!==user&&eligible(actor)&&actQueue.includes(actor)&&!hasActedThisStreet(actor))scheduleAI(actor);
 }
 function resetStacksAndRestart(){
  gamePaused=false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
- stopTournamentClock(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
+ tournamentClock.stop(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
  deck=[];board=[];pot=0;currentBet=0;street=0;actor=-1;handNo=0;over=true;actQueue=[];firstToAct=3;log=[];renderedBoardCount=0;savedGameState=null;gameStarted=true;
  $('community').innerHTML='';$('hole').innerHTML='';$('opponentCards').innerHTML='';$('handBets').innerHTML='';$('seats').innerHTML='';$('pot').textContent='0';$('message').textContent='Новая игра';resetBetSlider();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
  $('feedbackReminder').classList.remove('visible');
- newHand();startTournamentClock();
+ newHand();tournamentClock.start();
 }
 $('tournamentSelectButton').addEventListener('click',()=>{$('tournamentOverlay').classList.add('visible')});
 $('classicModeButton').addEventListener('click',()=>chooseTournament('classic'));
@@ -357,7 +354,7 @@ $('tournamentOverlay').addEventListener('click',event=>{if(event.target===$('tou
 $('exitButton').addEventListener('click',pauseGameForMenu);
 $('resumeButton').addEventListener('click',restoreSavedGame);
 $('restartButton').addEventListener('click',resetStacksAndRestart);
-$('playButton').addEventListener('click',()=>{if(gameStarted)return;gameStarted=true;gamePaused=false;$('startScreen').classList.add('hidden');applyTournamentMode(false);newHand();startTournamentClock()});
+$('playButton').addEventListener('click',()=>{if(gameStarted)return;gameStarted=true;gamePaused=false;$('startScreen').classList.add('hidden');applyTournamentMode(false);newHand();tournamentClock.start()});
 $('aboutButton').addEventListener('click',()=>{closeOverlays();$('infoOverlay').classList.add('visible')});
 $('updatesButton').addEventListener('click',()=>{closeOverlays();setUpdatesExpanded(false);$('updatesOverlay').classList.add('visible')});
 
