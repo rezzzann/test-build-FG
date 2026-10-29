@@ -315,25 +315,25 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
   transform: translate(-50%, -50%);
 }
 
-/* Обычная рамка всех карт лучшей пятёрки. */
-.card.hand-card {
-  border: 2px solid #c5a15b !important;
+/* Обычная золотая обводка — только выигравшие карты пользователя. */
+.card.winning-card {
+  border: 2px solid #f0d08a !important;
   box-shadow:
-    0 0 0 1px #c5a15b44,
-    0 0 7px #c5a15b66,
-    0 2px 4px #0005 !important;
+    0 0 0 2px #c5a15b66,
+    0 0 12px #e5bd63cc,
+    0 2px 5px #0008 !important;
+  z-index: 2;
 }
 
-/* Усиленная рамка карт, непосредственно составляющих комбинацию. */
+/* Зелёная обводка основных карт комбинации. */
 .card.combo-core {
-  border: 3px solid #ffe6a0 !important;
+  border: 3px solid #39ff78 !important;
   box-shadow:
-    0 0 0 2px #c5a15b99,
-    0 0 13px #ffe6a0cc,
+    0 0 0 2px #168c46aa,
+    0 0 13px #39ff78bb,
     0 2px 5px #0008 !important;
   z-index: 3;
 }
-
 @media (orientation: portrait) {
   .hand-summary {
     top: 34%;
