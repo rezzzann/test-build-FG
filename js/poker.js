@@ -128,6 +128,121 @@ export function bestFive(cards) {
   };
 }
 
+
+function partialScore(cards) {
+  const values = cards.map(val);
+  const counts = {};
+
+  values.forEach(value => {
+    counts[value] = (counts[value] || 0) + 1;
+  });
+
+  const groups = Object.entries(counts)
+    .map(([value, count]) => ({
+      value: Number(value),
+      count
+    }))
+    .sort((a, b) => b.count - a.count || b.value - a.value);
+
+  const pairs = groups
+    .filter(group => group.count === 2)
+    .map(group => group.value)
+    .sort((a, b) => b - a);
+
+  if (groups[0]?.count === 4) {
+    return [7, groups[0].value];
+  }
+
+  if (groups[0]?.count === 3) {
+    return [
+      3,
+      groups[0].value,
+      ...groups
+        .filter(group => group.count === 1)
+        .map(group => group.value)
+        .sort((a, b) => b - a)
+    ];
+  }
+
+  if (pairs.length >= 2) {
+    return [
+      2,
+      pairs[0],
+      pairs[1],
+      ...groups
+        .filter(group => group.count === 1)
+        .map(group => group.value)
+    ];
+  }
+
+  if (pairs.length === 1) {
+    return [
+      1,
+      pairs[0],
+      ...groups
+        .filter(group => group.count === 1)
+        .map(group => group.value)
+        .sort((a, b) => b - a)
+    ];
+  }
+
+  return [0, ...values.sort((a, b) => b - a)];
+}
+
+function combinationCore(cards, handScore) {
+  const category = handScore[0];
+
+  // Стрит, флеш, фулл-хаус и стрит-флеш:
+  // все пять карт составляют комбинацию.
+  if ([4, 5, 6, 8].includes(category)) {
+    return cards.slice();
+  }
+
+  let coreRanks = [];
+
+  // Пара, тройка или каре.
+  if ([1, 3, 7].includes(category)) {
+    coreRanks = [handScore[1]];
+  }
+
+  // Две пары.
+  if (category === 2) {
+    coreRanks = handScore.slice(1, 3);
+  }
+
+  // Старшая карта: выделяем только старшую.
+  if (category === 0) {
+    const highest = Math.max(...cards.map(val));
+
+    return cards
+      .filter(card => val(card) === highest)
+      .slice(0, 1);
+  }
+
+  return cards.filter(card => coreRanks.includes(val(card)));
+}
+
+export function analyzeHand(cards) {
+  if (!Array.isArray(cards) || cards.length === 0) {
+    return null;
+  }
+
+  const best = cards.length >= 5
+    ? bestFive(cards)
+    : {
+        score: partialScore(cards),
+        cards: cards.slice()
+      };
+
+  return {
+    score: best.score,
+    name: handNames[best.score[0]] || 'СТАРШАЯ КАРТА',
+    cards: best.cards,
+    coreCards: combinationCore(best.cards, best.score)
+  };
+}
+
+
 export const handNames = [
   'СТАРШАЯ КАРТА',
   'ПАРА',
