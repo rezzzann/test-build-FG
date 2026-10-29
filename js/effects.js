@@ -25,9 +25,24 @@ const EFFECTS_CSS = String.raw`
    КАРТЫ
    ========================================= */
 
+
 .community {
   transition: top .9s cubic-bezier(.22,.75,.25,1);
 }
+
+.community.ai-winner-board {
+  animation: aiWinnerBoardDrop .9s cubic-bezier(.22,.75,.25,1) both;
+}
+
+@keyframes aiWinnerBoardDrop {
+  from {
+    top: 50%;
+  }
+  to {
+    top: 60%;
+  }
+}
+
 
 .community .card.reveal-card {
   animation: cardReveal .55s cubic-bezier(.22,.75,.25,1) both;
