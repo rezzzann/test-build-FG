@@ -67,14 +67,42 @@ export function createRenderer({
     }).join('');
   }
 
+  function shouldShowComboCore(state) {
+    const {
+      currentHandAnalysis,
+      street,
+      over,
+      humanWinnerReveal
+    } = state;
+
+    // После проигрыша на вскрытии особая обводка скрывается.
+    if (over && !humanWinnerReveal) return false;
+
+    // Префлоп: выделяем только карманную пару.
+    if (street === 0) {
+      return currentHandAnalysis?.score?.[0] === 1;
+    }
+
+    // На остальных улицах показываем основные карты комбинации.
+    return true;
+  }
+
   function renderCommunity() {
-    const s = getState();
-    const {   board,   aiWinnerReveal,   humanWinnerReveal,   winningCards,   aiWinningCards,   currentHandAnalysis } = s;
+    const state = getState();
+    const {
+      board,
+      humanWinnerReveal,
+      winningCards,
+      currentHandAnalysis
+    } = state;
+
+    const showComboCore = shouldShowComboCore(state);
     const el = $('community');
     const count = board.length;
 
-    el.classList.toggle('ai-winner-board', aiWinnerReveal);
-    $('table').classList.toggle('ai-winner-state', aiWinnerReveal);
+    // Не сохраняем обводку победителя ИИ как обычную обводку.
+    el.classList.remove('ai-winner-board');
+    $('table').classList.remove('ai-winner-state');
 
     if (count === 0) {
       el.innerHTML = '';
@@ -86,31 +114,34 @@ export function createRenderer({
 
     if (count === renderedBoardCount) {
       [...el.children].forEach((node, i) => {
+        const currentCard = board[i];
+
         node.classList.toggle(
           'winning-card',
-          (humanWinnerReveal && winningCards.includes(board[i])) ||
-          (aiWinnerReveal && aiWinningCards.includes(board[i]))
-        );
-                node.classList.toggle(
-          'hand-card',
-          !!currentHandAnalysis?.cards.includes(board[i])
+          !!humanWinnerReveal && winningCards.includes(currentCard)
         );
 
         node.classList.toggle(
           'combo-core',
-          !!currentHandAnalysis?.coreCards.includes(board[i])
+          showComboCore &&
+            !!currentHandAnalysis?.coreCards.includes(currentCard)
         );
+
+        node.classList.remove('hand-card');
       });
+
       return;
     }
 
     el.innerHTML = board.map((c, i) => {
       const isNew = i >= renderedBoardCount;
       const isWinning =
-        (humanWinnerReveal && winningCards.includes(c)) ||
-        (aiWinnerReveal && aiWinningCards.includes(c));
+        !!humanWinnerReveal && winningCards.includes(c);
+      const isCoreCard =
+        showComboCore &&
+        !!currentHandAnalysis?.coreCards.includes(c);
 
-      const isHandCard = !!currentHandAnalysis?.cards.includes(c);       const isCoreCard = !!currentHandAnalysis?.coreCards.includes(c);        return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isWinning ? 'winning-card' : ''} ${isHandCard ? 'hand-card' : ''} ${isCoreCard ? 'combo-core' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
+      return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isWinning ? 'winning-card' : ''} ${isCoreCard ? 'combo-core' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
     }).join('');
 
     setRenderedBoardCount(count);
@@ -122,16 +153,39 @@ export function createRenderer({
     if (!s.players.length) return;
 
     const {
-      players, pot, street, tournamentMode, blindLevel, blindRemaining,
-      sb, bb, humanWinnerReveal, aiWinnerReveal, humanFoldedCards,
-      winningCards, aiWinningCards, aiWinnerId, winnerIds, winnerPayouts,
-      winnerCombo, actor, over, busy, gamePaused, actQueue, currentBet,
-            gameStarted, currentHandAnalysis
+      players,
+      pot,
+      street,
+      tournamentMode,
+      blindLevel,
+      blindRemaining,
+      sb,
+      bb,
+      humanWinnerReveal,
+      aiWinnerReveal,
+      humanFoldedCards,
+      winningCards,
+      aiWinningCards,
+      aiWinnerId,
+      winnerIds,
+      winnerPayouts,
+      winnerCombo,
+      actor,
+      over,
+      busy,
+      gamePaused,
+      actQueue,
+      currentBet,
+      gameStarted,
+      currentHandAnalysis
     } = s;
+
+    const showComboCore = shouldShowComboCore(s);
 
     $('pot').textContent = fmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
-        const handSummary = $('handSummary');
+
+    const handSummary = $('handSummary');
 
     if (handSummary) {
       handSummary.textContent = currentHandAnalysis
@@ -157,23 +211,21 @@ export function createRenderer({
     holeEl.classList.toggle('ai-loser-hole', aiWinnerReveal);
     holeEl.classList.toggle('folded-hole', humanFoldedCards);
 
-        holeEl.innerHTML = players[0].hole.map(c => {
+    holeEl.innerHTML = players[0].hole.map(c => {
       let html = card(c);
 
-      if (currentHandAnalysis?.cards.includes(c)) {
-        html = html.replace(
-          'class="card',
-          'class="card hand-card'
-        );
-      }
-
-      if (currentHandAnalysis?.coreCards.includes(c)) {
+      // Зелёная обводка — только основные карты текущей комбинации.
+      if (
+        showComboCore &&
+        currentHandAnalysis?.coreCards.includes(c)
+      ) {
         html = html.replace(
           'class="card',
           'class="card combo-core'
         );
       }
 
+      // Обычная золотая обводка — только при победе пользователя.
       if (humanWinnerReveal && winningCards.includes(c)) {
         html = html.replace(
           'class="card',
