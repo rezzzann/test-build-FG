@@ -24,7 +24,6 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .community{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;gap:clamp(4px,.7vw,9px);z-index:3;}
 .card{width:clamp(48px,7vw,82px);height:clamp(70px,10.2vw,116px);background:#fff;color:#161616;border:1px solid #d8d8d3;border-radius:4px;box-shadow:0 2px 4px #0004;display:flex;flex-direction:column;justify-content:space-between;padding:5px 6px;font-weight:800;flex-shrink:0;position:relative;overflow:hidden}
 .card.red{color:#c62836}.rank{font-size:clamp(17px,2.5vw,27px);line-height:1}.center{align-self:center;font-size:clamp(27px,4vw,42px);font-weight:500;line-height:1}
-.community .card.reveal-card{backface-visibility:hidden}
 .back{background:repeating-linear-gradient(45deg,#76232b,#76232b 3px,#9c333b 3px,#9c333b 6px);border:2px solid #e4c98d;position:relative}
 .back:after{content:"♠";position:absolute;inset:5px;border:1px solid #e4c98d;border-radius:2px;display:grid;place-items:center;color:#e4c98d;font-size:24px}
 .hole{position:absolute;top:calc(73% - clamp(42px,6vw,66px));left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:4;}
@@ -57,8 +56,6 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .action-label{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);z-index:7;color:#ffe3a0;font-size:clamp(20px,3vw,29px);font-weight:1000;line-height:1.1;white-space:nowrap;text-shadow:0 2px 4px #000,0 0 8px #000;pointer-events:none;letter-spacing:.04em}
 .action-label:empty{display:none}.action-label.thinking{color:#fff;font-size:clamp(13px,1.8vw,17px);font-weight:800;letter-spacing:0}
 .action-label.thinking:after{content:"";display:inline-block;width:1.2em;text-align:left;}
-.action-label.thinking{}
-.action-label.thinking:after{content:"";}
 .action-label.raise-label,.action-label.bet-label{color:#ffe3a0;text-shadow:0 0 5px #b98a3a,0 0 10px #8c5c16,0 2px 4px #000}
 .action-label.fold-label{color:#ff3038;text-shadow:0 0 5px #b50012,0 2px 4px #000}
 .action-label.call-label,.action-label.check-label{color:#39ff78;text-shadow:0 0 4px #00b84d,0 0 9px #007d38,0 2px 4px #000}
@@ -111,7 +108,6 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .flying-chip.gold-flying:after{content:"";position:absolute;inset:6px;border-radius:50%;border:2px solid #fff2b8aa}
 .flying-chip.blue-flying{background:radial-gradient(circle at 35% 28%,#b8dcff 0%,#438be1 32%,#1450a0 70%,#082653 100%);border:4px solid #d7b765;box-shadow:0 0 0 2px #75551d,0 3px 12px #000b,0 0 18px #438be199}
 .flying-chip.blue-flying:after{content:"♠";position:absolute;inset:0;display:grid;place-items:center;color:#050912;font-size:23px;font-weight:1000}
-.flying-chip.fly{}
 .exit-button{display:none;position:absolute;top:calc(100% + 5px);right:0;z-index:20;padding:10px 24px;border:2px solid #c5a15b;border-radius:12px;background:linear-gradient(180deg,#292b25,#151a16);color:#f0d08a;font-size:20px;font-weight:1000;letter-spacing:.12em;box-shadow:0 3px 10px #0008;min-width:112px;min-height:42px}
 .exit-button.visible{display:block}.exit-button:active{transform:translateY(1px);filter:brightness(1.15)}
 .top-blinds{position:relative;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;height:100%;padding-bottom:18px;white-space:nowrap}.top.high-roller-mode #handStatus,.top.high-roller-mode #blindsDisplay{display:none}
@@ -171,7 +167,6 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .update-list.show-all .update-item{display:block}
 .update-list-toggle{position:relative;width:100%;margin-top:12px;padding:11px;border:1px solid #c5a15b88;border-radius:10px;background:linear-gradient(180deg,#292b25,#151a16);color:#f0d08a;font-size:11px;font-weight:1000;letter-spacing:.1em}
 .update-list-toggle:active{transform:translateY(1px);filter:brightness(1.1)}
-.update-item:nth-child(1){}.update-item:nth-child(2){}.update-item:nth-child(3){}.update-item:nth-child(4){}.update-item:nth-child(5){}
 .update-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}
 .update-build{color:#f0d08a;font-size:11px;font-weight:1000;letter-spacing:.08em}
 .update-type{padding:3px 7px;border:1px solid #39ff7844;border-radius:20px;color:#8de7a9;font-size:8px;font-weight:900;letter-spacing:.08em;white-space:nowrap}
