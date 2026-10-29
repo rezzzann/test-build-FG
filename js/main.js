@@ -27,6 +27,7 @@ import {
   getTournamentSettings
 } from './tournament.js';
 import { createRenderer } from './render.js';
+import { createEffects } from './effects.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
@@ -48,6 +49,11 @@ let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
 let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null;
+const effects = createEffects({
+  getBetChipConfig,
+  seatClass,
+  getPaused: () => gamePaused
+});
 let pendingAISeat=-1;
 function applyTournamentMode(resetClock=true){
  const high=tournamentMode==='highroller';
@@ -122,8 +128,20 @@ function collectBetsIntoPot(){const amount=players.reduce((sum,p)=>sum+(Number(p
 function clearTurnTimer(){if(turnTimer!==null){clearTimeout(turnTimer);turnTimer=null}}
 function clearBlindSequence(){if(blindSequenceTimer!==null){clearTimeout(blindSequenceTimer);blindSequenceTimer=null}}
 function clearActionTimers(){
- players.forEach(p=>{if(p.actionTimer){clearTimeout(p.actionTimer);p.actionTimer=null}p.actionId=(p.actionId||0)+1;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0});
- document.querySelectorAll('.flying-chip').forEach(el=>el.remove());
+ players.forEach(p=>{
+  if(p.actionTimer){
+   clearTimeout(p.actionTimer);
+   p.actionTimer=null;
+  }
+
+  p.actionId=(p.actionId||0)+1;
+  p.action='';
+  p.actionAmount=0;
+  p.labelAction='';
+  p.labelAmount=0;
+ });
+
+ effects.clearFlyingChips();
 }
 function showAction(i,text,amount=0,duration=2000){
  const p=players[i];if(!p)return;if(p.actionTimer){clearTimeout(p.actionTimer);p.actionTimer=null}
@@ -136,21 +154,9 @@ function showThinking(i){
  p.actionId=(p.actionId||0)+1;const id=p.actionId;p.labelAction='ДУМАЕТ';p.labelAmount=0;
  p.actionTimer=setTimeout(()=>{if(p.actionId!==id)return;p.actionTimer=null;if(p.labelAction==='ДУМАЕТ'){p.labelAction='';p.labelAmount=0;if(!gamePaused)render()}},2000);
 }
-
-function animateBetChip(playerIndex,amount=0){
- const seat=document.querySelector(`.seat.${seatClass[playerIndex]}`),avatar=seat?.querySelector('.avatar'),betDisplay=document.querySelector(`.hand-bet.b${playerIndex}`);
- if(!avatar||!betDisplay||amount<=0||gamePaused)return;
- const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches,from=avatar.getBoundingClientRect(),to=betDisplay.getBoundingClientRect();
- const startX=from.left+from.width/2,startY=from.top+from.height/2,endX=to.left+to.width/2,endY=to.top+to.height/2,config=getBetChipConfig(amount),count=config.count,flyingClass=config.color==='blue'?'blue-flying':'gold-flying';
- for(let n=0;n<count;n++){const chip=document.createElement('div');chip.className=`flying-chip ${flyingClass}`;if(config.color==='gold')chip.textContent='♠';
-  const offsetX=(n-(count-1)/2)*8,offsetY=(n%2===0?-1:1)*Math.ceil(n/2)*5,startX2=startX+offsetX,startY2=startY+offsetY;
-  chip.style.left=startX2+'px';chip.style.top=startY2+'px';chip.style.setProperty('--dx',(endX-startX2+(n-(count-1)/2)*5)+'px');chip.style.setProperty('--dy',(endY-startY2)+'px');chip.style.animationDelay=(reduceMotion?0:n*75)+'ms';document.body.appendChild(chip);
-  requestAnimationFrame(()=>{if(chip.isConnected)chip.classList.add('fly')});chip.addEventListener('animationend',()=>chip.remove(),{once:true});setTimeout(()=>{if(chip.isConnected)chip.remove()},1300+(reduceMotion?0:n*75));
- }
-}
 function runBlindSequence(sbi,sbAmount,bbi,bbAmount,handTick){
- render();const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;showAction(sbi,'М. БЛАЙНД',sbAmount,1000);render();requestAnimationFrame(()=>animateBetChip(sbi,sbAmount));
- blindSequenceTimer=setTimeout(()=>{blindSequenceTimer=null;if(over||handTick!==tick||gamePaused)return;showAction(bbi,'Б. БЛАЙНД',bbAmount,1000);render();requestAnimationFrame(()=>animateBetChip(bbi,bbAmount));
+ render();const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;showAction(sbi,'М. БЛАЙНД',sbAmount,1000);render();requestAnimationFrame(()=>effects.animateBetChip(sbi,sbAmount));
+ blindSequenceTimer=setTimeout(()=>{blindSequenceTimer=null;if(over||handTick!==tick||gamePaused)return;showAction(bbi,'Б. БЛАЙНД',bbAmount,1000);render();requestAnimationFrame(()=>effects.animateBetChip(bbi,bbAmount));
   blindSequenceTimer=setTimeout(()=>{blindSequenceTimer=null;if(!over&&handTick===tick&&!gamePaused)advanceQueue()},reduceMotion?200:1100);
  },reduceMotion?200:1100);
 }
