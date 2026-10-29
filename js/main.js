@@ -28,6 +28,7 @@ import {
 } from './tournament.js';
 import { createRenderer } from './render.js';
 import { createEffects } from './effects.js';
+import { initUpdates } from './updates.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
@@ -101,28 +102,9 @@ function chooseTournament(mode){
  if(!gameStarted){players.forEach(p=>p.stack=getStartingStack(tournamentMode))}
  else if(gamePaused){savedGameState=null;resetStacksAndRestart()}
 }
-function capUpdateHistory(){
- const list=$('updateList');
- if(!list)return;
- while(list.querySelectorAll('.update-item').length>20){
-  const items=list.querySelectorAll('.update-item');
-  items[items.length-1].remove();
- }
-}
-function setUpdatesExpanded(expanded){
- const list=$('updateList'),button=$('toggleUpdatesButton');
- if(!list||!button)return;
- list.classList.toggle('show-all',expanded);
- button.textContent=expanded?'СКРЫТЬ ВСЕ':'ПОКАЗАТЬ ЕЩЁ';
- button.setAttribute('aria-expanded',String(expanded));
- button.hidden=list.querySelectorAll('.update-item').length<=5;
-}
-capUpdateHistory();
-setUpdatesExpanded(false);
-$('toggleUpdatesButton').addEventListener('click',()=>{
- const list=$('updateList');
- setUpdatesExpanded(!list.classList.contains('show-all'));
-});
+
+initUpdates({ $, closeOverlays });
+
 
 function collectBetsIntoPot(){const amount=players.reduce((sum,p)=>sum+(Number(p.bet)||0),0);if(amount>0){pot+=amount;players.forEach(p=>{p.bet=0})}currentBet=0}
 function clearTurnTimer(){if(turnTimer!==null){clearTimeout(turnTimer);turnTimer=null}}
@@ -374,7 +356,6 @@ $('resumeButton').addEventListener('click',restoreSavedGame);
 $('restartButton').addEventListener('click',resetStacksAndRestart);
 $('playButton').addEventListener('click',()=>{if(gameStarted)return;gameStarted=true;gamePaused=false;$('startScreen').classList.add('hidden');applyTournamentMode(false);newHand();tournamentClock.start()});
 $('aboutButton').addEventListener('click',()=>{closeOverlays();$('infoOverlay').classList.add('visible')});
-$('updatesButton').addEventListener('click',()=>{closeOverlays();setUpdatesExpanded(false);$('updatesOverlay').classList.add('visible')});
 
 function closeOverlays(){$('infoOverlay').classList.remove('visible');$('updatesOverlay').classList.remove('visible');$('reportOverlay').classList.remove('visible');$('tournamentOverlay').classList.remove('visible')}
 initBugReport({
