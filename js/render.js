@@ -69,7 +69,7 @@ export function createRenderer({
 
   function renderCommunity() {
     const s = getState();
-    const { board, aiWinnerReveal, humanWinnerReveal, winningCards, aiWinningCards } = s;
+    const {   board,   aiWinnerReveal,   humanWinnerReveal,   winningCards,   aiWinningCards,   currentHandAnalysis } = s;
     const el = $('community');
     const count = board.length;
 
@@ -91,6 +91,15 @@ export function createRenderer({
           (humanWinnerReveal && winningCards.includes(board[i])) ||
           (aiWinnerReveal && aiWinningCards.includes(board[i]))
         );
+                node.classList.toggle(
+          'hand-card',
+          !!currentHandAnalysis?.cards.includes(board[i])
+        );
+
+        node.classList.toggle(
+          'combo-core',
+          !!currentHandAnalysis?.coreCards.includes(board[i])
+        );
       });
       return;
     }
@@ -101,7 +110,7 @@ export function createRenderer({
         (humanWinnerReveal && winningCards.includes(c)) ||
         (aiWinnerReveal && aiWinningCards.includes(c));
 
-      return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isWinning ? 'winning-card' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
+      const isHandCard = !!currentHandAnalysis?.cards.includes(c);       const isCoreCard = !!currentHandAnalysis?.coreCards.includes(c);        return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isWinning ? 'winning-card' : ''} ${isHandCard ? 'hand-card' : ''} ${isCoreCard ? 'combo-core' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
     }).join('');
 
     setRenderedBoardCount(count);
@@ -117,11 +126,23 @@ export function createRenderer({
       sb, bb, humanWinnerReveal, aiWinnerReveal, humanFoldedCards,
       winningCards, aiWinningCards, aiWinnerId, winnerIds, winnerPayouts,
       winnerCombo, actor, over, busy, gamePaused, actQueue, currentBet,
-      gameStarted
+            gameStarted, currentHandAnalysis
     } = s;
 
     $('pot').textContent = fmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
+        const handSummary = $('handSummary');
+
+    if (handSummary) {
+      handSummary.textContent = currentHandAnalysis
+        ? currentHandAnalysis.name
+        : '';
+
+      handSummary.classList.toggle(
+        'visible',
+        !!currentHandAnalysis
+      );
+    }
 
     $('handStatus').textContent = tournamentMode === 'highroller'
       ? `HIGH ROLLER · УР. ${blindLevel + 1} · ${Math.ceil(Math.max(0, blindRemaining) / 1000)}с`
@@ -136,11 +157,31 @@ export function createRenderer({
     holeEl.classList.toggle('ai-loser-hole', aiWinnerReveal);
     holeEl.classList.toggle('folded-hole', humanFoldedCards);
 
-    holeEl.innerHTML = players[0].hole.map(c => {
-      const html = card(c);
-      return humanWinnerReveal && winningCards.includes(c)
-        ? html.replace('class="card', 'class="card winning-card')
-        : html;
+        holeEl.innerHTML = players[0].hole.map(c => {
+      let html = card(c);
+
+      if (currentHandAnalysis?.cards.includes(c)) {
+        html = html.replace(
+          'class="card',
+          'class="card hand-card'
+        );
+      }
+
+      if (currentHandAnalysis?.coreCards.includes(c)) {
+        html = html.replace(
+          'class="card',
+          'class="card combo-core'
+        );
+      }
+
+      if (humanWinnerReveal && winningCards.includes(c)) {
+        html = html.replace(
+          'class="card',
+          'class="card winning-card'
+        );
+      }
+
+      return html;
     }).join('');
 
     $('seats').innerHTML = players.map((p, i) => {
