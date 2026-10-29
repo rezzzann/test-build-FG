@@ -29,6 +29,7 @@ import {
 import { createRenderer } from './render.js';
 import { createEffects } from './effects.js';
 import { initUpdates } from './updates.js';
+import { initFeedbackReminder } from './feedback.js';
 (()=>{'use strict';
 const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
@@ -43,7 +44,6 @@ let blindLevel = 0;
 // Длительность автоматически берётся из tournament.js.
 let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
-const feedbackReminderShown=new Set();
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3;
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
@@ -272,16 +272,13 @@ function applyAction(i,a,myTick){
 }
 function runOutBoard(){if(over||gamePaused)return;tick++;busy=false;clearTurnTimer();collectBetsIntoPot();while(board.length<5)board.push(deck.pop());street=4;render();finish()}
 
-function showFeedbackReminderAfterThirdHand(){
- const modeKey=tournamentMode;
- if(handNo!==3||gamePaused||feedbackReminderShown.has(modeKey))return;
- feedbackReminderShown.add(modeKey);
- $('feedbackReminder').classList.add('visible');
-}
-$('feedbackDismiss').addEventListener('click',()=>{
- $('feedbackReminder').classList.remove('visible');
+const feedbackReminder = initFeedbackReminder({
+  $,
+  getHandNo: () => handNo,
+  getGamePaused: () => gamePaused,
+  getTournamentMode: () => tournamentMode
 });
-
+      
 function finish(){
  if(over)return;tick++;busy=false;pendingAISeat=-1;clearTurnTimer();clearBlindSequence();clearActionTimers();over=true;actQueue=[];collectBetsIntoPot();
  const survivors=live();let winners=[],winnerScore=null;humanWinnerReveal=false;winningCards=[];aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
@@ -292,7 +289,7 @@ function finish(){
  if(userWon){humanWinnerReveal=true;if(survivors.length>1&&board.length===5)winningCards=bestFive([...players[user].hole,...board]).cards}
  else{const aiWinners=winners.filter(p=>players.indexOf(p)!==user);if(aiWinners.length>0){aiWinnerReveal=true;aiWinnerId=players.indexOf(aiWinners[0]);humanFoldedCards=true;if(survivors.length>1&&board.length===5)aiWinningCards=bestFive([...aiWinners[0].hole,...board]).cards}}
  $('message').textContent=userWon?'Победа!':`Победитель: ${winners.map(p=>p.name).join(', ')}`;render();
- showFeedbackReminderAfterThirdHand();
+ feedbackReminder.showAfterThirdHand();
 }
 function userAct(t){
  if(over||busy||gamePaused||actor!==user||!eligible(user)||queueHead()!==user||hasActedThisStreet(user))return;
