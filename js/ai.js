@@ -1,11 +1,10 @@
 
- // Центральный модуль ИИ: уровни сложности и выбор действий.
- // Текущая стратегия сохранена без изменения поведения.
+ // Центральный модуль ИИ: реестр сложностей и выбор стратегии.
+ // Игровой движок продолжает вызывать decide(p, call, board, currentBet, bb).
 
 import { strength } from './ai-analysis.js';
 
-// Пока реализован только лёгкий уровень.
-// Настройки сложности пока не меняют алгоритм принятия решений.
+// Описания подключённых уровней сложности.
 export const AI_DIFFICULTIES = Object.freeze({
   easy: Object.freeze({
     id: 'easy',
@@ -15,9 +14,24 @@ export const AI_DIFFICULTIES = Object.freeze({
 
 export const DEFAULT_AI_DIFFICULTY = 'easy';
 
-// Текущая стратегия лёгкого уровня.
-// Интерфейс decide() сохранён для совместимости с main.js.
-export function decide(p, call, board, currentBet, bb) {
+let activeDifficulty = DEFAULT_AI_DIFFICULTY;
+
+// Выбор сложности без изменения игрового движка.
+export function setAIDifficulty(difficulty) {
+  if (!AI_STRATEGIES[difficulty]) {
+    return false;
+  }
+
+  activeDifficulty = difficulty;
+  return true;
+}
+
+export function getAIDifficulty() {
+  return activeDifficulty;
+}
+
+// Лёгкий ИИ. Существующая логика сохранена.
+function decideEasy(p, call, board, currentBet, bb) {
   const st = strength(p, board) + Math.random() * 0.35;
   const style = p.style;
 
@@ -54,4 +68,17 @@ export function decide(p, call, board, currentBet, bb) {
   }
 
   return { t: 'fold' };
+}
+
+// Реестр стратегий. Здесь подключаются новые уровни сложности.
+const AI_STRATEGIES = Object.freeze({
+  easy: decideEasy
+});
+
+// Совместимый интерфейс: main.js менять не нужно.
+export function decide(p, call, board, currentBet, bb) {
+  const strategy = AI_STRATEGIES[activeDifficulty]
+    || AI_STRATEGIES[DEFAULT_AI_DIFFICULTY];
+
+  return strategy(p, call, board, currentBet, bb);
 }
