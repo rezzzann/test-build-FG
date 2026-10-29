@@ -1,4 +1,4 @@
-import { ranks, score, cmp, bestFive, handNames } from './poker.js';
+import { ranks, score, cmp, bestFive, handNames, analyzeHand } from './poker.js';
 import { decide } from './ai.js';
 import {
   live as getLive,
@@ -35,7 +35,7 @@ const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
 const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
-const GAME_VERSION='v0.5.6 alpha';
+const GAME_VERSION='v0.5.8 alpha';
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
@@ -207,8 +207,13 @@ const { render, renderHandBets, renderCommunity } = createRenderer({
     gamePaused,
     actQueue,
     currentBet,
-    gameStarted,
-    board
+        gameStarted,
+    board,
+    currentHandAnalysis: players[user] &&
+      !players[user].folded &&
+      players[user].hole?.length
+        ? analyzeHand([...players[user].hole, ...board])
+        : null
   }),
   card,
   miniCard,
