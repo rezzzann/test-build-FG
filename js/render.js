@@ -89,20 +89,21 @@ export function createRenderer({
 
   function renderCommunity() {
     const state = getState();
-    const {
-      board,
-      humanWinnerReveal,
-      winningCards,
-      currentHandAnalysis
-    } = state;
+const {
+  board,
+  humanWinnerReveal,
+  aiWinnerReveal,
+  winningCards,
+  currentHandAnalysis
+} = state;
 
-    const showComboCore = shouldShowComboCore(state);
-    const el = $('community');
-    const count = board.length;
+const showComboCore = shouldShowComboCore(state);
+const el = $('community');
+const count = board.length;
 
-    // Не сохраняем обводку победителя ИИ как обычную обводку.
-    el.classList.remove('ai-winner-board');
-    $('table').classList.remove('ai-winner-state');
+// Сохраняем сдвиг карт и состояние стола при победе ИИ.
+el.classList.toggle('ai-winner-board', !!aiWinnerReveal);
+$('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
 
     if (count === 0) {
       el.innerHTML = '';
