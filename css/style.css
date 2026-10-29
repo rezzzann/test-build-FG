@@ -34,7 +34,7 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .community.ai-winner-board{top:60%}
 .hole.ai-loser-hole{top:calc(73% - clamp(35px,5.1vw,58px));gap:clamp(4px,.7vw,9px)}
 .hole.ai-loser-hole .card{width:clamp(48px,7vw,82px);height:clamp(70px,10.2vw,116px);padding:5px 6px}
-.opponent-cards.ai-winner-cards,.opponent-cards.ai-winner-cards.revealed{top:calc(60% - clamp(55px,15vw,70px)*1.5 - 10px)!important;left:50%!important;right:auto!important;transform:translate(-50%,0)!important;gap:3px!important;opacity:1;z-index:5;filter:drop-shadow(0 2px 4px #000b);}
+.opponent-cards.ai-winner-cards,.opponent-cards.ai-winner-cards.revealed{top:calc(60% - clamp(55px,15vw,70px)*1.5 - 10px)!important;left:50%!important;right:auto!important;transform:translate(-50%,0);gap:3px!important;opacity:1;z-index:5;filter:drop-shadow(0 2px 4px #000b);}
 .opponent-cards.ai-winner-cards .mini-card,.opponent-cards.ai-winner-cards.revealed .mini-card{width:clamp(38px,10.5vw,49px)!important;height:clamp(55px,15vw,70px)!important;padding:4px;border:1px solid #fff;border-radius:4px;background:linear-gradient(145deg,#fff 0%,#f8f8f5 100%);color:#171717;box-shadow:0 2px 5px #0009,inset 0 0 0 1px #deded8;overflow:hidden;flex-shrink:0}
 .opponent-cards.ai-winner-cards .mini-card.red,.opponent-cards.ai-winner-cards.revealed .mini-card.red{color:#c62836!important}
 .opponent-cards.ai-winner-cards .mini-rank,.opponent-cards.ai-winner-cards.revealed .mini-rank{top:4px!important;left:4px!important;font-size:16px!important;font-weight:1000!important;line-height:1!important}
