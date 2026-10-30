@@ -282,30 +282,31 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 
 /* v0.5.8 alpha: текущая комбинация и точечная подсветка её карт. */
 
+/* Компактная подпись комбинации над картами игрока. */
 .hand-summary {
   position: absolute;
-  top: 32%;
+  top: calc(73% - clamp(42px, 6vw, 66px) - 26px);
   left: 50%;
-  transform: translate(-50%, -50%) translateY(4px);
+  transform: translate(-50%, -50%) translateY(3px);
   z-index: 5;
-  max-width: 84%;
-  padding: 5px 10px;
-  border: 1px solid #c5a15b99;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #171d18ee, #0b110fee);
-  box-shadow: 0 2px 9px #0006;
-  color: #f0d08a;
-  font-size: clamp(9px, 1.1vw, 12px);
-  font-weight: 900;
-  letter-spacing: .08em;
+  max-width: 88%;
+  padding: 3px 8px;
+  border: 1px solid #c5a15b55;
+  border-radius: 6px;
+  background: #101813c9;
+  box-shadow: 0 1px 4px #0004;
+  color: #d9c48c;
+  font-size: clamp(9px, 1vw, 11px);
+  font-weight: 600;
+  letter-spacing: .025em;
   text-align: center;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity .18s ease,
-    transform .18s ease,
-    visibility .18s ease;
+    opacity .22s ease,
+    transform .22s ease,
+    visibility .22s ease;
   pointer-events: none;
 }
 
@@ -313,6 +314,15 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, -50%);
+}
+
+/* Скрываем подпись во время изменения положения карт. */
+.table:has(.hole.winner-hole) .hand-summary,
+.table:has(.hole.ai-loser-hole) .hand-summary,
+.table:has(.hole.folded-hole) .hand-summary {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -50%) translateY(-3px);
 }
 
 /* Обычная золотая обводка — только выигравшие карты пользователя. */
@@ -343,18 +353,17 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 }
 @media (orientation: portrait) {
   .hand-summary {
-    top: 34%;
-    max-width: 88%;
-    padding: 4px 8px;
+    top: calc(73% - clamp(26px, 8vh, 41px) - 23px);
+    max-width: 90%;
+    padding: 3px 7px;
     font-size: clamp(8px, 2.3vw, 10px);
   }
 }
 
 @media (max-height: 420px) and (orientation: landscape) {
   .hand-summary {
-    top: 31%;
-    padding: 3px 8px;
+    top: calc(73% - clamp(26px, 8vh, 41px) - 22px);
+    padding: 2px 7px;
     font-size: 9px;
   }
 }
-
