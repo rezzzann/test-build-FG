@@ -224,7 +224,8 @@ node.classList.remove('hand-card');
       actQueue,
       currentBet,
       gameStarted,
-      currentHandAnalysis
+      currentHandAnalysis,
+      aiWinnerAnalysis
     } = s;
 
     const showComboCore = shouldShowComboCore(s);
