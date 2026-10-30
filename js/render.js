@@ -94,7 +94,9 @@ const {
   humanWinnerReveal,
   aiWinnerReveal,
   winningCards,
-  currentHandAnalysis
+  aiWinningCards,
+  currentHandAnalysis,
+  aiWinnerAnalysis
 } = state;
 
 const showComboCore = shouldShowComboCore(state);
@@ -117,18 +119,42 @@ $('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
       [...el.children].forEach((node, i) => {
         const currentCard = board[i];
 
-        node.classList.toggle(
-          'winning-card',
-          !!humanWinnerReveal && winningCards.includes(currentCard)
-        );
+       const isHumanCore =
+  !!humanWinnerReveal &&
+  !!currentHandAnalysis?.coreCards.includes(currentCard);
 
-        node.classList.toggle(
-          'combo-core',
-          showComboCore &&
-            !!currentHandAnalysis?.coreCards.includes(currentCard)
-        );
+const isAIWinningCard =
+  !!aiWinnerReveal &&
+  aiWinningCards.includes(currentCard);
 
-        node.classList.remove('hand-card');
+const isAICore =
+  !!aiWinnerReveal &&
+  !!aiWinnerAnalysis?.coreCards.includes(currentCard);
+
+const isInWinningHand =
+  humanWinnerReveal
+    ? winningCards.includes(currentCard)
+    : isAIWinningCard;
+
+node.classList.toggle(
+  'winning-card',
+  isAICore
+);
+
+node.classList.toggle(
+  'combo-core',
+  humanWinnerReveal
+    ? isHumanCore
+    : showComboCore && !aiWinnerReveal &&
+      !!currentHandAnalysis?.coreCards.includes(currentCard)
+);
+
+node.classList.toggle(
+  'not-in-combo',
+  (humanWinnerReveal || aiWinnerReveal) && !isInWinningHand
+);
+
+node.classList.remove('hand-card');
       });
 
       return;
@@ -136,15 +162,33 @@ $('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
 
     el.innerHTML = board.map((c, i) => {
       const isNew = i >= renderedBoardCount;
-      const isWinning =
-        !!humanWinnerReveal && winningCards.includes(c);
-      const isCoreCard =
-        showComboCore &&
+
+const isHumanCore =
+  !!humanWinnerReveal &&
+  !!currentHandAnalysis?.coreCards.includes(c);
+
+const isAICore =
+  !!aiWinnerReveal &&
+  !!aiWinnerAnalysis?.coreCards.includes(c);
+
+const isWinningCard =
+  humanWinnerReveal
+    ? winningCards.includes(c)
+    : !!aiWinnerReveal && aiWinningCards.includes(c);
+
+const isCoreCard =
+  humanWinnerReveal
+    ? isHumanCore
+    : aiWinnerReveal
+      ? isAICore
+      : showComboCore &&
         !!currentHandAnalysis?.coreCards.includes(c);
 
-      return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isWinning ? 'winning-card' : ''} ${isCoreCard ? 'combo-core' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
-    }).join('');
+const isDimmed =
+  (humanWinnerReveal || aiWinnerReveal) &&
+  !isWinningCard;
 
+return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isDimmed ? 'not-in-combo' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
     setRenderedBoardCount(count);
   }
 
@@ -226,14 +270,18 @@ $('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
         );
       }
 
-      // Обычная золотая обводка — только при победе пользователя.
-      if (humanWinnerReveal && winningCards.includes(c)) {
-        html = html.replace(
-          'class="card',
-          'class="card winning-card'
-        );
-      }
+  const isInWinningHand =
+  humanWinnerReveal && winningCards.includes(c);
 
+if (
+  (humanWinnerReveal || aiWinnerReveal) &&
+  !isInWinningHand
+) {
+  html = html.replace(
+    'class="card',
+    'class="card not-in-combo'
+  );
+}
       return html;
     }).join('');
 
@@ -261,7 +309,7 @@ $('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
       const revealed = over && !p.folded;
       const isAIWinner = aiWinnerReveal && i === aiWinnerId;
 
-      return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole.map(c => miniCard(c, revealed, isAIWinner && aiWinningCards.includes(c))).join('')}</div>`;
+      return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole.map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
     }).join('');
 
     renderHandBets();
