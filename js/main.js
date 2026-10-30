@@ -208,12 +208,17 @@ const { render, renderHandBets, renderCommunity } = createRenderer({
     actQueue,
     currentBet,
         gameStarted,
-    board,
-    currentHandAnalysis: players[user] &&
-      !players[user].folded &&
-      players[user].hole?.length
-        ? analyzeHand([...players[user].hole, ...board])
-        : null
+   board,
+currentHandAnalysis: players[user] &&
+  !players[user].folded &&
+  players[user].hole?.length
+    ? analyzeHand([...players[user].hole, ...board])
+    : null,
+
+aiWinnerAnalysis: aiWinningCards.length &&
+  players[aiWinnerId]?.hole?.length
+    ? analyzeHand([...players[aiWinnerId].hole, ...board])
+    : null
   }),
   card,
   miniCard,
