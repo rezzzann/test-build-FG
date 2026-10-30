@@ -160,36 +160,38 @@ node.classList.remove('hand-card');
       return;
     }
 
+    
     el.innerHTML = board.map((c, i) => {
       const isNew = i >= renderedBoardCount;
 
-const isHumanCore =
-  !!humanWinnerReveal &&
-  !!currentHandAnalysis?.coreCards.includes(c);
-
-const isAICore =
-  !!aiWinnerReveal &&
-  !!aiWinnerAnalysis?.coreCards.includes(c);
-
-const isWinningCard =
-  humanWinnerReveal
-    ? winningCards.includes(c)
-    : !!aiWinnerReveal && aiWinningCards.includes(c);
-
-const isCoreCard =
-  humanWinnerReveal
-    ? isHumanCore
-    : aiWinnerReveal
-      ? isAICore
-      : showComboCore &&
+      const isHumanCore =
+        !!humanWinnerReveal &&
         !!currentHandAnalysis?.coreCards.includes(c);
 
-const isDimmed =
-  (humanWinnerReveal || aiWinnerReveal) &&
-  !isWinningCard;
+      const isAICore =
+        !!aiWinnerReveal &&
+        !!aiWinnerAnalysis?.coreCards.includes(c);
 
-return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isDimmed ? 'not-in-combo' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
+      const isWinningCard = humanWinnerReveal
+        ? winningCards.includes(c)
+        : !!aiWinnerReveal && aiWinningCards.includes(c);
+
+      const isCoreCard = humanWinnerReveal
+        ? isHumanCore
+        : aiWinnerReveal
+          ? isAICore
+          : showComboCore &&
+            !!currentHandAnalysis?.coreCards.includes(c);
+
+      const isDimmed =
+        (humanWinnerReveal || aiWinnerReveal) &&
+        !isWinningCard;
+
+      return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isDimmed ? 'not-in-combo' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
+    }).join('');
+
     setRenderedBoardCount(count);
+
   }
 
   function render() {
