@@ -334,6 +334,13 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
     0 2px 5px #0008 !important;
   z-index: 3;
 }
+/* Затемнение карт, не участвующих в лучшей комбинации. */
+.card.not-in-combo,
+.mini-card.not-in-combo {
+  filter: brightness(0.68);
+  opacity: 0.82;
+  box-shadow: none !important;
+}
 @media (orientation: portrait) {
   .hand-summary {
     top: 34%;
