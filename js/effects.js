@@ -71,10 +71,7 @@ const EFFECTS_CSS = String.raw`
 .opponent-cards.ai-winner-cards,
 .opponent-cards.ai-winner-cards.revealed {
   animation: aiWinnerCardsIn .65s cubic-bezier(.22,.75,.25,1) .5s both;
-  transition:
-  top .9s cubic-bezier(.22,.75,.25,1),
-  left .9s cubic-bezier(.22,.75,.25,1),
-  right .9s cubic-bezier(.22,.75,.25,1) !important;
+  transition: none !important;
 }
 
 .hole.folded-hole {
