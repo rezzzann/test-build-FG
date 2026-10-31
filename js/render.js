@@ -329,6 +329,7 @@ const winnerCardsMarkup =
 
       const revealed = over && !p.folded && (humanWinnerReveal || aiWinnerReveal);
       const isAIWinner = aiWinnerReveal && i === aiWinnerId;
+      if (isAIWinner) return '';
 
       return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole.map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
     }).join('');
