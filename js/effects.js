@@ -67,6 +67,10 @@ const EFFECTS_CSS = String.raw`
 .hole .card {
   transition: width .35s ease, height .35s ease, box-shadow .25s, border-color .25s;
 }
+.hole .card.user-card-flip {
+  animation: ai-card-flip .55s ease-out both;
+  backface-visibility: hidden;
+}
 
 .opponent-cards.ai-winner-cards,
 .opponent-cards.ai-winner-cards.revealed {
