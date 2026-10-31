@@ -623,3 +623,9 @@ height: clamp(61px, 8.7vw, 96px);
 .hole.winner-hole {
   left: calc(50% + 12px) !important;
 }
+/* Плавный переворот карт после раздачи */
+.user-card-flip,
+.community-card-flip {
+  animation: ai-card-flip .55s ease-out both;
+  transform-style: preserve-3d;
+}
