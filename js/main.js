@@ -305,15 +305,19 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
     const tableRect = table.getBoundingClientRect();
 
     const startWidth = deckRect.width;
-    const startHeight = deckRect.height;
+const startHeight = deckRect.height;
 
-    const startX = deckRect.left - tableRect.left +
-      deckRect.width / 2 - startWidth / 2;
-    const startY = deckRect.top - tableRect.top +
-      deckRect.height / 2 - startHeight / 2;
+// Учитываем рамку стола — начало координат находится внутри неё.
+const tableOriginX = tableRect.left + table.clientLeft;
+const tableOriginY = tableRect.top + table.clientTop;
 
-    const endX = targetRect.left - tableRect.left;
-    const endY = targetRect.top - tableRect.top;
+const startX = deckRect.left - tableOriginX +
+  deckRect.width / 2 - startWidth / 2;
+const startY = deckRect.top - tableOriginY +
+  deckRect.height / 2 - startHeight / 2;
+
+const endX = targetRect.left - tableOriginX;
+const endY = targetRect.top - tableOriginY;
 
     const flyingCard = document.createElement('div');
 flyingCard.className = isUser
