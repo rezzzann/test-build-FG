@@ -48,6 +48,11 @@ const EFFECTS_CSS = String.raw`
   animation: cardReveal .55s cubic-bezier(.22,.75,.25,1) both;
   backface-visibility: hidden;
 }
+.community .community-slot .card.community-card-flip {
+  animation: ai-card-flip .55s ease-out both;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
 
 @keyframes cardReveal {
   0% {
