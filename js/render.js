@@ -232,12 +232,15 @@ node.classList.remove('hand-card');
     } = s;
 
     const showComboCore = shouldShowComboCore(s);
+    const showUserCombo =
+  !dealInProgress && !userCardFlipPending;
         if (previousDealInProgress && !dealInProgress) {
       userCardFlipPending = true;
 
-      setTimeout(() => {
-        userCardFlipPending = false;
-      }, 650);
+     setTimeout(() => {
+  userCardFlipPending = false;
+  render();
+}, 650);
     }
 
     previousDealInProgress = dealInProgress;
@@ -247,16 +250,17 @@ node.classList.remove('hand-card');
 
     const handSummary = $('handSummary');
 
-    if (handSummary) {
-      handSummary.textContent = currentHandAnalysis
-        ? currentHandAnalysis.name
-        : '';
+   if (handSummary) {
+  handSummary.textContent =
+    showUserCombo && currentHandAnalysis
+      ? currentHandAnalysis.name
+      : '';
 
-      handSummary.classList.toggle(
-        'visible',
-        !!currentHandAnalysis
-      );
-    }
+  handSummary.classList.toggle(
+    'visible',
+    showUserCombo && !!currentHandAnalysis
+  );
+}
 
     $('handStatus').textContent = tournamentMode === 'highroller'
       ? `HIGH ROLLER · УР. ${blindLevel + 1} · ${Math.ceil(Math.max(0, blindRemaining) / 1000)}с`
@@ -275,10 +279,11 @@ node.classList.remove('hand-card');
             let html = dealInProgress         ? '<div class="card back"></div>'         : card(c);        if (userCardFlipPending && !dealInProgress) {         html = html.replace(           'class="card',           'class="card user-card-flip'         );       }
 
       // Зелёная обводка — только основные карты текущей комбинации.
-      if (
-        showComboCore &&
-        currentHandAnalysis?.coreCards.includes(c)
-      ) {
+     if (
+  showUserCombo &&
+  showComboCore &&
+  currentHandAnalysis?.coreCards.includes(c)
+) {
         html = html.replace(
           'class="card',
           'class="card combo-core'
