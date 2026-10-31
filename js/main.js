@@ -49,7 +49,7 @@ let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],f
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
-let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false;
+let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set();
 const effects = createEffects({
   getBetChipConfig,
   seatClass,
@@ -209,6 +209,7 @@ const { render, renderHandBets, renderCommunity } = createRenderer({
     currentBet,
         gameStarted,
     dealInProgress,
+    communityDealingIndices: [...communityDealingIndices],
    board,
 currentHandAnalysis: players[user] &&
   !players[user].folded &&
@@ -241,6 +242,7 @@ function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('
 
 function clearDealSequence() {
   dealInProgress = false;
+  communityDealingIndices.clear();
 
   document.querySelectorAll('.dealing-card').forEach(el => {
     el.getAnimations().forEach(animation => animation.cancel());
@@ -381,6 +383,146 @@ flyingCard.className = isUser
     animation.onfinish = () => finishAnimation(true);
     animation.oncancel = () => finishAnimation(false);
   });
+}
+function flyCommunityCard(cardIndex, handTick, reduceMotion) {
+  return new Promise(resolve => {
+    if (handTick !== tick || gamePaused) {
+      resolve(false);
+      return;
+    }
+
+    const target = $('community').querySelector(
+      `.community-slot[data-index="${cardIndex}"]`
+    );
+
+    const deckStack = $('deckStack');
+    const table = $('table');
+
+    if (!target || !deckStack || !table) {
+      resolve(false);
+      return;
+    }
+
+    if (reduceMotion) {
+      resolve(true);
+      return;
+    }
+
+    const targetRect = target.getBoundingClientRect();
+    const deckRect = deckStack.getBoundingClientRect();
+    const tableRect = table.getBoundingClientRect();
+
+    const tableOriginX = tableRect.left + table.clientLeft;
+    const tableOriginY = tableRect.top + table.clientTop;
+
+    const startX =
+      deckRect.left - tableOriginX +
+      deckRect.width / 2 - deckRect.width / 2;
+
+    const startY =
+      deckRect.top - tableOriginY +
+      deckRect.height / 2 - deckRect.height / 2;
+
+    const endX = targetRect.left - tableOriginX;
+    const endY = targetRect.top - tableOriginY;
+
+    const flyingCard = document.createElement('div');
+    flyingCard.className = 'card back dealing-card';
+
+    Object.assign(flyingCard.style, {
+      left: `${startX}px`,
+      top: `${startY}px`,
+      width: `${deckRect.width}px`,
+      height: `${deckRect.height}px`
+    });
+
+    table.appendChild(flyingCard);
+
+    let completed = false;
+
+    const finishAnimation = success => {
+      if (completed) return;
+
+      completed = true;
+      flyingCard.remove();
+
+      resolve(success && handTick === tick && !gamePaused);
+    };
+
+    const animation = flyingCard.animate([
+      {
+        left: `${startX}px`,
+        top: `${startY}px`,
+        width: `${deckRect.width}px`,
+        height: `${deckRect.height}px`
+      },
+      {
+        left: `${endX}px`,
+        top: `${endY}px`,
+        width: `${targetRect.width}px`,
+        height: `${targetRect.height}px`
+      }
+    ], {
+      duration: 340,
+      easing: 'cubic-bezier(.2,.8,.2,1)',
+      fill: 'forwards'
+    });
+
+    animation.onfinish = () => finishAnimation(true);
+    animation.oncancel = () => finishAnimation(false);
+  });
+}
+
+async function dealCommunityCards(cardIndices, handTick) {
+  const reduceMotion =
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  communityDealingIndices = new Set(cardIndices);
+  dealInProgress = true;
+  busy = true;
+
+  $('deckStack').classList.add('deck-visible');
+  render();
+
+  for (const cardIndex of cardIndices) {
+    if (handTick !== tick || gamePaused) return;
+
+    const completed = await flyCommunityCard(
+      cardIndex,
+      handTick,
+      reduceMotion
+    );
+
+    if (!completed) return;
+
+    communityDealingIndices.delete(cardIndex);
+    render();
+
+    if (
+      !reduceMotion &&
+      !(await waitForDeal(90, handTick))
+    ) {
+      return;
+    }
+  }
+
+  $('deckStack').classList.remove('deck-visible');
+
+  if (!(await waitForDeal(reduceMotion ? 0 : 300, handTick))) {
+    return;
+  }
+
+  dealInProgress = false;
+  busy = false;
+  render();
+
+  if (activeCount() <= 1) {
+    runOutBoard();
+    return;
+  }
+
+  rebuildQueueFromStart((firstToAct + N - 2) % N);
+  advanceQueue();
 }
 
 async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
@@ -542,10 +684,52 @@ function advanceQueue(){
  while(actQueue.length&&hasActedThisStreet(actQueue[0]))actQueue.shift();if(actQueue.length===0){advanceStreet();return}
  actor=actQueue[0];const p=players[actor];if(p){p.action='';p.actionAmount=0}render();if(actor!==user)scheduleAI(actor);
 }
-function advanceStreet(){
- if(over||gamePaused||dealInProgress)return;tick++;busy=false;clearTurnTimer();if(live().length<=1){finish();return}collectBetsIntoPot();
- if(street===0){board.push(deck.pop(),deck.pop(),deck.pop());street=1}else if(street===1){board.push(deck.pop());street=2}else if(street===2){board.push(deck.pop());street=3}else{finish();return}
- currentBet=0;clearActedFlags();logit('Открыты общие карты');render();if(activeCount()<=1){runOutBoard();return}rebuildQueueFromStart((firstToAct+N-2)%N);advanceQueue();
+function advanceStreet() {
+  if (over || gamePaused || dealInProgress) return;
+
+  tick++;
+  busy = false;
+  clearTurnTimer();
+
+  if (live().length <= 1) {
+    finish();
+    return;
+  }
+
+  collectBetsIntoPot();
+
+  let newCards;
+
+  if (street === 0) {
+    newCards = [deck.pop(), deck.pop(), deck.pop()];
+    street = 1;
+  } else if (street === 1) {
+    newCards = [deck.pop()];
+    street = 2;
+  } else if (street === 2) {
+    newCards = [deck.pop()];
+    street = 3;
+  } else {
+    finish();
+    return;
+  }
+
+  const handTick = tick;
+  const startIndex = board.length;
+
+  board.push(...newCards);
+
+  currentBet = 0;
+  clearActedFlags();
+  logit('Открыты общие карты');
+
+  dealCommunityCards(
+    Array.from(
+      { length: newCards.length },
+      (_, i) => startIndex + i
+    ),
+    handTick
+  );
 }
 function scheduleAI(i){
  if(over||gamePaused||dealInProgress||busy||queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return;
