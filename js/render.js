@@ -300,23 +300,38 @@ if (
   ? `<div class="win-display visible"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
   : '';
 
-const winnerCardsMarkup =
-  aiWinnerReveal && i === aiWinnerId && !p.folded
-    ? `<div class="ai-seat-cards">${p.hole.map(c => {
-        const isInWinningHand = aiWinningCards.includes(c);
-        const isAICore = !!aiWinnerAnalysis?.coreCards.includes(c);
-        let html = miniCard(c, true, isAICore);
+const showAISeatCards =
+  i !== 0 &&
+  over &&
+  !p.folded &&
+  (humanWinnerReveal || aiWinnerReveal);
 
-        if (!isInWinningHand) {
-          html = html.replace(
-            'class="mini-card',
-            'class="mini-card not-in-combo'
-          );
-        }
+const isAIWinner = aiWinnerReveal && i === aiWinnerId;
 
-        return html;
-      }).join('')}</div>`
-    : '';
+const winnerCardsMarkup = showAISeatCards
+  ? `<div class="ai-seat-cards">${p.hole.map(c => {
+      const isInWinningHand =
+        isAIWinner && aiWinningCards.includes(c);
+
+      const isAICore =
+        isAIWinner &&
+        !!aiWinnerAnalysis?.coreCards.includes(c);
+
+      let html = miniCard(c, true, isAICore);
+
+      if (
+        (humanWinnerReveal || aiWinnerReveal) &&
+        !isInWinningHand
+      ) {
+        html = html.replace(
+          'class="mini-card',
+          'class="mini-card not-in-combo'
+        );
+      }
+
+      return html;
+    }).join('')}</div>`
+  : '';
 
       return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
     }).join('');
@@ -329,7 +344,7 @@ const winnerCardsMarkup =
 
       const revealed = over && !p.folded && (humanWinnerReveal || aiWinnerReveal);
       const isAIWinner = aiWinnerReveal && i === aiWinnerId;
-      if (isAIWinner) return '';
+     if (revealed) return '';
 
       return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole.map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
     }).join('');
