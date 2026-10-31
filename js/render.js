@@ -89,112 +89,140 @@ export function createRenderer({
     return true;
   }
 
-  function renderCommunity() {
-    const state = getState();
-const {
-  board,
-  humanWinnerReveal,
-  aiWinnerReveal,
-  winningCards,
-  aiWinningCards,
-  currentHandAnalysis,
-  aiWinnerAnalysis
-} = state;
+function renderCommunity() {
+  const state = getState();
 
-const showComboCore = shouldShowComboCore(state);
-const el = $('community');
-const count = board.length;
+  const {
+    board,
+    humanWinnerReveal,
+    aiWinnerReveal,
+    winningCards,
+    aiWinningCards,
+    currentHandAnalysis,
+    aiWinnerAnalysis,
+    communityDealingIndices = []
+  } = state;
 
-// Сохраняем сдвиг карт и состояние стола при победе ИИ.
-el.classList.toggle('ai-winner-board', !!aiWinnerReveal);
-$('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
+  const showComboCore = shouldShowComboCore(state);
+  const el = $('community');
+  const count = board.length;
 
-    if (count === 0) {
-      el.innerHTML = '';
-      setRenderedBoardCount(0);
-      return;
-    }
+  el.classList.toggle('ai-winner-board', !!aiWinnerReveal);
+  $('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
 
-    const renderedBoardCount = getRenderedBoardCount();
+  const renderedBoardCount = getRenderedBoardCount();
 
-    if (count === renderedBoardCount) {
-      [...el.children].forEach((node, i) => {
-        const currentCard = board[i];
+  // Пять постоянных слотов не дают общим картам смещаться.
+  if (
+    count === renderedBoardCount &&
+    el.children.length === 5
+  ) {
+    [...el.children].forEach((slot, i) => {
+      if (i >= count) return;
 
-       const isHumanCore =
-  !!humanWinnerReveal &&
-  !!currentHandAnalysis?.coreCards.includes(currentCard);
+      const node = slot.querySelector('.card');
+      if (!node) return;
 
-const isAIWinningCard =
-  !!aiWinnerReveal &&
-  aiWinningCards.includes(currentCard);
-
-const isAICore =
-  !!aiWinnerReveal &&
-  !!aiWinnerAnalysis?.coreCards.includes(currentCard);
-
-const isInWinningHand =
-  humanWinnerReveal
-    ? winningCards.includes(currentCard)
-    : isAIWinningCard;
-
-node.classList.toggle(
-  'winning-card',
-  isAICore
-);
-
-node.classList.toggle(
-  'combo-core',
-  humanWinnerReveal
-    ? isHumanCore
-    : showComboCore && !aiWinnerReveal &&
-      !!currentHandAnalysis?.coreCards.includes(currentCard)
-);
-
-node.classList.toggle(
-  'not-in-combo',
-  (humanWinnerReveal || aiWinnerReveal) && !isInWinningHand
-);
-
-node.classList.remove('hand-card');
-      });
-
-      return;
-    }
-
-    
-    el.innerHTML = board.map((c, i) => {
-      const isNew = i >= renderedBoardCount;
+      const currentCard = board[i];
 
       const isHumanCore =
         !!humanWinnerReveal &&
-        !!currentHandAnalysis?.coreCards.includes(c);
+        !!currentHandAnalysis?.coreCards.includes(currentCard);
+
+      const isAIWinningCard =
+        !!aiWinnerReveal &&
+        aiWinningCards.includes(currentCard);
 
       const isAICore =
         !!aiWinnerReveal &&
-        !!aiWinnerAnalysis?.coreCards.includes(c);
+        !!aiWinnerAnalysis?.coreCards.includes(currentCard);
 
-      const isWinningCard = humanWinnerReveal
-        ? winningCards.includes(c)
-        : !!aiWinnerReveal && aiWinningCards.includes(c);
+      const isInWinningHand = humanWinnerReveal
+        ? winningCards.includes(currentCard)
+        : isAIWinningCard;
 
-      const isCoreCard = humanWinnerReveal
-        ? isHumanCore
-        : aiWinnerReveal
-          ? isAICore
+      node.classList.toggle(
+        'winning-card',
+        isAICore
+      );
+
+      node.classList.toggle(
+        'combo-core',
+        humanWinnerReveal
+          ? isHumanCore
           : showComboCore &&
-            !!currentHandAnalysis?.coreCards.includes(c);
+            !aiWinnerReveal &&
+            !!currentHandAnalysis?.coreCards.includes(currentCard)
+      );
 
-      const isDimmed =
+      node.classList.toggle(
+        'not-in-combo',
         (humanWinnerReveal || aiWinnerReveal) &&
-        !isWinningCard;
+          !isInWinningHand
+      );
 
-      return `<div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isDimmed ? 'not-in-combo' : ''}"><span class="rank">${c.r === 'T' ? '10' : c.r}</span><span class="center">${c.s}</span></div>`;
-    }).join('');
+      node.classList.toggle(
+        'deal-pending',
+        communityDealingIndices.includes(i)
+      );
 
-    setRenderedBoardCount(count);
+      node.classList.remove('hand-card');
+    });
 
+    return;
   }
+
+  // Всегда создаём пять позиций, даже если открыты не все карты.
+  el.innerHTML = Array.from({ length: 5 }, (_, i) => {
+    const c = board[i];
+
+    if (!c) {
+      return `<div class="community-slot" data-index="${i}"></div>`;
+    }
+
+    const isNew = i >= renderedBoardCount;
+
+    const isHumanCore =
+      !!humanWinnerReveal &&
+      !!currentHandAnalysis?.coreCards.includes(c);
+
+    const isAICore =
+      !!aiWinnerReveal &&
+      !!aiWinnerAnalysis?.coreCards.includes(c);
+
+    const isWinningCard = humanWinnerReveal
+      ? winningCards.includes(c)
+      : !!aiWinnerReveal && aiWinningCards.includes(c);
+
+    const isCoreCard = humanWinnerReveal
+      ? isHumanCore
+      : aiWinnerReveal
+        ? isAICore
+        : showComboCore &&
+          !!currentHandAnalysis?.coreCards.includes(c);
+
+    const isDimmed =
+      (humanWinnerReveal || aiWinnerReveal) &&
+      !isWinningCard;
+
+    const pending = communityDealingIndices.includes(i);
+
+    const cardHTML = `
+      <div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
+        <span class="rank">${c.r === 'T' ? '10' : c.r}</span>
+        <span class="center">${c.s}</span>
+      </div>
+    `;
+
+    return `
+      <div class="community-slot" data-index="${i}">
+        ${cardHTML}
+      </div>
+    `;
+  }).join('');
+
+  setRenderedBoardCount(count);
+}
 
   function render() {
     const s = getState();
