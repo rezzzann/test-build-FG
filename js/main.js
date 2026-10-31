@@ -49,7 +49,7 @@ let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],f
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
-let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null;
+let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false;
 const effects = createEffects({
   getBetChipConfig,
   seatClass,
@@ -208,6 +208,7 @@ const { render, renderHandBets, renderCommunity } = createRenderer({
     actQueue,
     currentBet,
         gameStarted,
+    dealInProgress,
    board,
 currentHandAnalysis: players[user] &&
   !players[user].folded &&
@@ -237,28 +238,297 @@ aiWinnerAnalysis: aiWinningCards.length &&
 
 function post(i,n){const p=players[i],v=Math.min(n,p.stack);p.stack-=v;p.bet+=v;p.total+=v;if(!p.stack)p.allin=true;return v}
 function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('betValue').textContent=slider.value}
-function newHand(){
- tick++;const thisHandTick=tick;busy=false;pendingAISeat=-1;clearTurnTimer();clearBlindSequence();clearActionTimers();resetBetSlider();$('notice').classList.remove('show');$('notice').innerHTML='';
- winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
- $('hole').classList.remove('winner-hole','ai-loser-hole','folded-hole');$('community').classList.remove('ai-winner-board');$('table').classList.remove('ai-winner-state');$('nextHand').classList.remove('visible');
- if(players[user]&&players[user].stack<=0){logit('Стек пуст — нажми «Сбросить стек»');render();return}
- handNo++;shuffle();board=[];renderedBoardCount=0;$('community').innerHTML='';pot=0;currentBet=0;street=0;over=false;log=[];
- players.forEach(p=>{p.hole=[deck.pop(),deck.pop()];p.folded=p.stack<=0;p.allin=false;p.bet=0;p.total=0;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actionTimer=null;p.actionId=(p.actionId||0)+1;p.actedStreet=-1});
- firstToAct=(firstToAct+1)%N;const sbi=(firstToAct+N-2)%N,bbi=(firstToAct+N-1)%N;
- const sbAmount=post(sbi,sb),bbAmount=post(bbi,bb);currentBet=Math.max(...players.map(p=>p.bet));clearActedFlags();rebuildQueueFromStart(firstToAct);actor=-1;logit('Новая раздача');runBlindSequence(sbi,sbAmount,bbi,bbAmount,thisHandTick);
+
+function clearDealSequence() {
+  dealInProgress = false;
+
+  document.querySelectorAll('.dealing-card').forEach(el => {
+    el.getAnimations().forEach(animation => animation.cancel());
+    el.remove();
+  });
+
+  $('deckStack')?.classList.remove('deck-visible');
 }
+
+function waitForDeal(ms, handTick) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(handTick === tick && !gamePaused);
+    }, ms);
+  });
+}
+
+function flyDealtCard(playerIndex, handTick, reduceMotion) {
+  return new Promise(resolve => {
+    if (handTick !== tick || gamePaused) {
+      resolve(false);
+      return;
+    }
+
+    const isUser = playerIndex === user;
+    const target = isUser
+      ? $('hole')
+      : $('opponentCards').querySelector(`.${cardPos[playerIndex]}`);
+
+    const deckStack = $('deckStack');
+    const table = $('table');
+
+    if (!target || !deckStack || !table) {
+      resolve(false);
+      return;
+    }
+
+    if (reduceMotion) {
+      resolve(true);
+      return;
+    }
+
+    // Временно создаём невидимые места для двух карт,
+    // чтобы точно вычислить конечную позицию каждой карты.
+    const placeholders = [];
+
+    for (let i = 0; i < 2; i++) {
+      const placeholder = document.createElement(isUser ? 'div' : 'span');
+
+      placeholder.className = isUser
+        ? 'card back deal-placeholder'
+        : 'mini-card deal-placeholder';
+
+      target.appendChild(placeholder);
+      placeholders.push(placeholder);
+    }
+
+    const cardIndex = players[playerIndex].dealtCount || 0;
+    const targetRect = placeholders[cardIndex].getBoundingClientRect();
+
+    placeholders.forEach(el => el.remove());
+
+    const deckRect = deckStack.getBoundingClientRect();
+    const tableRect = table.getBoundingClientRect();
+
+    const startWidth = deckRect.width;
+    const startHeight = deckRect.height;
+
+    const startX = deckRect.left - tableRect.left +
+      deckRect.width / 2 - startWidth / 2;
+    const startY = deckRect.top - tableRect.top +
+      deckRect.height / 2 - startHeight / 2;
+
+    const endX = targetRect.left - tableRect.left;
+    const endY = targetRect.top - tableRect.top;
+
+    const flyingCard = document.createElement('div');
+    flyingCard.className = 'card back dealing-card';
+
+    Object.assign(flyingCard.style, {
+      left: `${startX}px`,
+      top: `${startY}px`,
+      width: `${startWidth}px`,
+      height: `${startHeight}px`
+    });
+
+    table.appendChild(flyingCard);
+
+    let completed = false;
+
+    const finishAnimation = success => {
+      if (completed) return;
+      completed = true;
+      flyingCard.remove();
+
+      resolve(success && handTick === tick && !gamePaused);
+    };
+
+    const animation = flyingCard.animate([
+      {
+        left: `${startX}px`,
+        top: `${startY}px`,
+        width: `${startWidth}px`,
+        height: `${startHeight}px`
+      },
+      {
+        left: `${endX}px`,
+        top: `${endY}px`,
+        width: `${targetRect.width}px`,
+        height: `${targetRect.height}px`
+      }
+    ], {
+      duration: 280,
+      easing: 'cubic-bezier(.2,.8,.2,1)',
+      fill: 'forwards'
+    });
+
+    animation.onfinish = () => finishAnimation(true);
+    animation.oncancel = () => finishAnimation(false);
+  });
+}
+
+async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
+  const reduceMotion =
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  $('deckStack').classList.add('deck-visible');
+  render();
+
+  // Два круга: по одной карте каждому активному игроку.
+  for (let round = 0; round < 2; round++) {
+    for (let i = 0; i < players.length; i++) {
+      if (handTick !== tick || gamePaused) return;
+      if (players[i].folded) continue;
+
+      const completed = await flyDealtCard(i, handTick, reduceMotion);
+
+      if (!completed) return;
+
+      players[i].dealtCount =
+        Math.min(2, (players[i].dealtCount || 0) + 1);
+
+      // Лицевые стороны видны только у пользователя.
+      // У ИИ отображаются исключительно рубашки.
+      render();
+
+      if (!reduceMotion && !(await waitForDeal(75, handTick))) {
+        return;
+      }
+    }
+  }
+
+  if (handTick !== tick || gamePaused) return;
+
+  $('deckStack').classList.remove('deck-visible');
+
+  if (!(await waitForDeal(reduceMotion ? 0 : 320, handTick))) {
+    return;
+  }
+
+  dealInProgress = false;
+  busy = false;
+
+  // Только после раздачи карт начинаем выставление блайндов.
+  const sbAmount = post(smallBlindSeat, sb);
+  const bbAmount = post(bigBlindSeat, bb);
+
+  currentBet = Math.max(...players.map(p => p.bet));
+
+  clearActedFlags();
+  rebuildQueueFromStart(firstToAct);
+  actor = -1;
+
+  render();
+  runBlindSequence(
+    smallBlindSeat,
+    sbAmount,
+    bigBlindSeat,
+    bbAmount,
+    handTick
+  );
+}
+
+
+function newHand() {
+  tick++;
+  const thisHandTick = tick;
+
+  clearDealSequence();
+  busy = false;
+  pendingAISeat = -1;
+
+  clearTurnTimer();
+  clearBlindSequence();
+  clearActionTimers();
+  resetBetSlider();
+
+  $('notice').classList.remove('show');
+  $('notice').innerHTML = '';
+
+  winnerIds = [];
+  winnerPayouts = {};
+  winnerCombo = '';
+  humanWinnerReveal = false;
+  winningCards = [];
+  humanFoldedCards = false;
+  aiWinnerReveal = false;
+  aiWinnerId = -1;
+  aiWinningCards = [];
+
+  $('hole').classList.remove(
+    'winner-hole',
+    'ai-loser-hole',
+    'folded-hole'
+  );
+  $('community').classList.remove('ai-winner-board');
+  $('table').classList.remove('ai-winner-state');
+  $('nextHand').classList.remove('visible');
+
+  if (players[user] && players[user].stack <= 0) {
+    logit('Стек пуст — нажми «Сбросить стек»');
+    render();
+    return;
+  }
+
+  handNo++;
+  shuffle();
+
+  board = [];
+  renderedBoardCount = 0;
+  $('community').innerHTML = '';
+
+  pot = 0;
+  currentBet = 0;
+  street = 0;
+  over = false;
+  log = [];
+
+  players.forEach(p => {
+    p.folded = p.stack <= 0;
+    p.hole = p.folded ? [] : [deck.pop(), deck.pop()];
+    p.dealtCount = 0;
+    p.allin = false;
+    p.bet = 0;
+    p.total = 0;
+    p.action = '';
+    p.actionAmount = 0;
+    p.labelAction = '';
+    p.labelAmount = 0;
+    p.actionTimer = null;
+    p.actionId = (p.actionId || 0) + 1;
+    p.actedStreet = -1;
+  });
+
+  firstToAct = (firstToAct + 1) % N;
+
+  const smallBlindSeat = (firstToAct + N - 2) % N;
+  const bigBlindSeat = (firstToAct + N - 1) % N;
+
+  clearActedFlags();
+  rebuildQueueFromStart(firstToAct);
+
+  actor = -1;
+  dealInProgress = true;
+  busy = true;
+
+  logit('Новая раздача');
+  render();
+
+  dealInitialCards(
+    smallBlindSeat,
+    bigBlindSeat,
+    thisHandTick
+  );
+}
+
 function advanceQueue(){
- if(over||gamePaused)return;if(live().length<=1){finish();return}if(activeCount()<=1){runOutBoard();return}
+ if (over || gamePaused || dealInProgress) return;
  while(actQueue.length&&hasActedThisStreet(actQueue[0]))actQueue.shift();if(actQueue.length===0){advanceStreet();return}
  actor=actQueue[0];const p=players[actor];if(p){p.action='';p.actionAmount=0}render();if(actor!==user)scheduleAI(actor);
 }
 function advanceStreet(){
- if(over||gamePaused)return;tick++;busy=false;clearTurnTimer();if(live().length<=1){finish();return}collectBetsIntoPot();
+ if(over||gamePaused||dealInProgress)return;tick++;busy=false;clearTurnTimer();if(live().length<=1){finish();return}collectBetsIntoPot();
  if(street===0){board.push(deck.pop(),deck.pop(),deck.pop());street=1}else if(street===1){board.push(deck.pop());street=2}else if(street===2){board.push(deck.pop());street=3}else{finish();return}
  currentBet=0;clearActedFlags();logit('Открыты общие карты');render();if(activeCount()<=1){runOutBoard();return}rebuildQueueFromStart((firstToAct+N-2)%N);advanceQueue();
 }
 function scheduleAI(i){
- if(over||gamePaused||busy||queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return;
+ if(over||gamePaused||dealInProgress||busy||queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return;
  busy=true;pendingAISeat=i;const myTick=tick;
  turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
   showThinking(i);render();turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
@@ -302,7 +572,7 @@ function finish(){
  feedbackReminder.showAfterThirdHand();
 }
 function userAct(t){
- if(over||busy||gamePaused||actor!==user||!eligible(user)||queueHead()!==user||hasActedThisStreet(user))return;
+ if(over||busy||dealInProgress||gamePaused||actor!==user||!eligible(user)||queueHead()!==user||hasActedThisStreet(user))return;
  const call=Math.max(0,currentBet-players[user].bet);let a;if(t==='fold')a={t:'fold'};else if(t==='call')a=call?{t:'call'}:{t:'check'};else if(t==='raise'){const amount=Number($('betRange').value);a={t:call?'raise':'bet',amt:call?Math.max(currentBet+bb,amount):amount}}else if(t==='allin')a={t:'allin'};else return;
  if(applyAction(user,a))advanceQueue();
 }
@@ -323,7 +593,7 @@ function captureGameState(){
  };
 }
 function pauseGameForMenu(){
- if(!gameStarted||gamePaused)return;
+ if(!gameStarted||gamePaused||dealInProgress)return;
  savedGameState=captureGameState();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
