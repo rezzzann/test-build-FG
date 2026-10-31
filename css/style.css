@@ -579,7 +579,7 @@ height: clamp(61px, 8.7vw, 96px);
 .deck-stack {
   width: clamp(48px, 7vw, 82px);
   height: clamp(70px, 10.2vw, 116px);
-  top: 39%;
+  top: calc(39% - 5px);
 }
 
 /* Вертикальная ориентация телефона */
@@ -597,7 +597,7 @@ height: clamp(61px, 8.7vw, 96px);
   .deck-stack {
     width: clamp(38px, 10.5vw, 49px);
     height: clamp(55px, 15vw, 70px);
-    top: 39%;
+    top: calc(39% - 5px);
   }
 }
 
@@ -616,7 +616,7 @@ height: clamp(61px, 8.7vw, 96px);
   .deck-stack {
     width: clamp(36px, 5.2vw, 60px);
     height: clamp(48px, 15vh, 76px);
-    top: 39%;
+    top: calc(39% - 5px);
   }
 }
 /* Корректировка горизонтального положения карт победителя */
