@@ -283,23 +283,19 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
       return;
     }
 
-    // Временно создаём невидимые места для двух карт,
-    // чтобы точно вычислить конечную позицию каждой карты.
-    const placeholders = [];
+        // Создаём одно временное место, чтобы контейнер
+    // не смещался при расчёте конечной позиции карты.
+    const placeholder = document.createElement(isUser ? 'div' : 'span');
 
-    for (let i = 0; i < 2; i++) {
-      const placeholder = document.createElement(isUser ? 'div' : 'span');
+    placeholder.className = isUser
+      ? 'card back deal-placeholder'
+      : 'mini-card deal-placeholder';
 
-      placeholder.className = isUser
-        ? 'card back deal-placeholder'
-        : 'mini-card deal-placeholder';
+    target.appendChild(placeholder);
 
-      target.appendChild(placeholder);
-      placeholders.push(placeholder);
-    }
+    const targetRect = placeholder.getBoundingClientRect();
 
-    const targetRect = placeholders[0].getBoundingClientRect();
-    placeholders.forEach(el => el.remove());
+    placeholder.remove();
 
     const deckRect = deckStack.getBoundingClientRect();
     const tableRect = table.getBoundingClientRect();
