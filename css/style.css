@@ -597,3 +597,7 @@ height: clamp(61px, 8.7vw, 96px);
     top: 39%;
   }
 }
+/* Корректировка горизонтального положения карт победителя */
+.hole.winner-hole {
+  left: calc(50% + 12px) !important;
+}
