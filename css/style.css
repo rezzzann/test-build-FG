@@ -79,7 +79,7 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
   transform: rotate(0);
 }
 
-.hole{position:absolute;top:calc(73% - clamp(42px,6vw,66px));left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:4;}
+.hole{position:absolute;top:calc(73% - clamp(42px,6vw,66px));left:50%;transform:translateX(-50%);display:flex;gap:5px;width:calc(clamp(58px,8.5vw,94px)*2 + 5px);z-index:4;}
 .hole .card{width:clamp(58px,8.5vw,94px);height:clamp(84px,12vw,132px);}
 .hole.winner-hole{top:calc(50% + clamp(35px,5.1vw,58px) + 6px);gap:clamp(4px,.7vw,9px)}
 .hole.winner-hole .card{width:clamp(48px,7vw,82px);height:clamp(70px,10.2vw,116px)}
@@ -333,7 +333,7 @@ height: clamp(61px, 8.7vw, 96px);
 @media(orientation:portrait){
 .app{padding:5px;gap:4px}.top{height:34px}.table{border-radius:34%/23%}.seat{min-width:91px;padding:5px;gap:5px}.avatar{width:34px;height:34px;font-size:19px}.name{font-size:9px}.stack{font-size:10px}.state{font-size:9px}
 .community{top:50%;gap:3px}.community .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}.community .rank{font-size:16px}.community .center{font-size:23px}
-.hole{top:calc(73% - clamp(35px,9.5vw,45px));gap:4px}.hole .card{width:clamp(48px,13vw,62px);height:clamp(70px,19vw,90px);padding:4px}.hole .rank{font-size:20px}.hole .center{font-size:29px}
+.hole{top:calc(73% - clamp(35px,9.5vw,45px));gap:4px;width:calc(clamp(48px,13vw,62px)*2 + 4px)}.hole .card{width:clamp(48px,13vw,62px);height:clamp(70px,19vw,90px);padding:4px}.hole .rank{font-size:20px}.hole .center{font-size:29px}
 .hole.winner-hole{top:calc(50% + clamp(27.5px,7.5vw,35px) + 5px);gap:3px}.hole.winner-hole .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}.hole.winner-hole .rank{font-size:16px}.hole.winner-hole .center{font-size:23px}
 .community.ai-winner-board{top:60%}.hole.ai-loser-hole{top:calc(73% - clamp(27.5px,7.5vw,35px));gap:3px}
 .hole.ai-loser-hole .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}
@@ -377,7 +377,7 @@ height: clamp(61px, 8.7vw, 96px);
 .opponent-cards.ai-winner-cards .mini-card,.opponent-cards.ai-winner-cards.revealed .mini-card{height:clamp(48px,15vh,76px)!important;width:clamp(36px,5.2vw,60px)!important}
 .opponent-cards.ai-winner-cards .mini-rank,.opponent-cards.ai-winner-cards.revealed .mini-rank{font-size:17px!important}
 .opponent-cards.ai-winner-cards .mini-suit,.opponent-cards.ai-winner-cards.revealed .mini-suit{font-size:26px!important}
-.seat{padding:4px 6px}.avatar{width:32px;height:32px}.seat.user-seat{min-width:155px;padding:5px 8px}.user-seat .avatar{width:43px;height:55px}.user-seat .stack{font-size:14px}.hole{top:calc(73% - clamp(26px,8vh,41px))}.community{top:50%}.s0{top:8%}.opponent-cards.c0{top:calc(17% + 5px);left:calc(50% - 25px);width:48px}.action-label{font-size:20px}.opponent-cards .mini-card{width:22px;height:31px}.opponent-cards.revealed .mini-card{width:29px;height:42px}.action-label.allin-label{font-size:23px}.next-hand{height:55px}.win-word{font-size:30px}.win-prize{font-size:11px}.win-combo{font-size:9px}
+.seat{padding:4px 6px}.avatar{width:32px;height:32px}.seat.user-seat{min-width:155px;padding:5px 8px}.user-seat .avatar{width:43px;height:55px}.user-seat .stack{font-size:14px}.hole{top:calc(73% - clamp(26px,8vh,41px));width:calc(clamp(39px,5.4vw,64px)*2 + 5px)}.community{top:50%}.s0{top:8%}.opponent-cards.c0{top:calc(17% + 5px);left:calc(50% - 25px);width:48px}.action-label{font-size:20px}.opponent-cards .mini-card{width:22px;height:31px}.opponent-cards.revealed .mini-card{width:29px;height:42px}.action-label.allin-label{font-size:23px}.next-hand{height:55px}.win-word{font-size:30px}.win-prize{font-size:11px}.win-combo{font-size:9px}
 .hole.folded-hole{top:calc(73% - clamp(26px,8vh,41px) + 24px)!important;gap:3px!important}
 .hole.folded-hole .card{height:clamp(48px,15vh,76px)!important;width:clamp(36px,5.2vw,60px)!important;padding:4px!important}
 .action-label.bet-label,.action-label.raise-label,.action-label.small-blind-label,.action-label.big-blind-label{bottom:calc(100% + 5px);gap:2px;max-width:180px}
