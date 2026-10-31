@@ -259,7 +259,7 @@ node.classList.remove('hand-card');
     holeEl.classList.toggle('ai-loser-hole', aiWinnerReveal);
     holeEl.classList.toggle('folded-hole', humanFoldedCards);
 
-    holeEl.innerHTML = players[0].hole.map(c => {
+    holeEl.innerHTML = players[0].hole   .slice(     0,     Number.isInteger(players[0].dealtCount)       ? players[0].dealtCount       : players[0].hole.length   )   .map(c => {
       let html = card(c);
 
       // Зелёная обводка — только основные карты текущей комбинации.
@@ -346,7 +346,14 @@ const winnerCardsMarkup = showAISeatCards
       const isAIWinner = aiWinnerReveal && i === aiWinnerId;
      if (revealed) return '';
 
-      return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole.map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
+      return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole
+  .slice(
+    0,
+    Number.isInteger(p.dealtCount)
+      ? p.dealtCount
+      : p.hole.length
+  )
+  .map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
     }).join('');
 
     renderHandBets();
