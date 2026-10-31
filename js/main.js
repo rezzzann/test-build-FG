@@ -302,10 +302,16 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
 
     target.parentElement.appendChild(targetClone);
 
-    const cardIndex = Math.min(
-      1,
-      players[playerIndex].dealtCount || 0
-    );
+    
+const dealtCount = Math.min(
+  1,
+  players[playerIndex].dealtCount || 0
+);
+
+const cardIndex = playerIndex === 3
+  ? 1 - dealtCount
+  : dealtCount;
+
 
     const targetRect =
       placeholders[cardIndex].getBoundingClientRect();
