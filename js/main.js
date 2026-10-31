@@ -283,20 +283,34 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
       return;
     }
 
-        // Создаём одно временное место, чтобы контейнер
-    // не смещался при расчёте конечной позиции карты.
-    const placeholder = document.createElement(isUser ? 'div' : 'span');
+           // Рассчитываем позицию в копии контейнера,
+    // не смещая настоящие карты ИИ во время анимации.
+    const targetClone = target.cloneNode(false);
+    targetClone.style.visibility = 'hidden';
 
-    placeholder.className = isUser
-      ? 'card back deal-placeholder'
-      : 'mini-card deal-placeholder';
+    const cardCount = isUser
+      ? (target.children.length + 1)
+      : ((players[playerIndex].dealtCount || 0) + 1);
 
-    target.appendChild(placeholder);
+    const placeholders = [];
 
-    const targetRect = placeholder.getBoundingClientRect();
+    for (let i = 0; i < cardCount; i++) {
+      const placeholder = document.createElement(isUser ? 'div' : 'span');
 
-    placeholder.remove();
+      placeholder.className = isUser
+        ? 'card back deal-placeholder'
+        : 'mini-card deal-placeholder';
 
+      targetClone.appendChild(placeholder);
+      placeholders.push(placeholder);
+    }
+
+    target.parentElement.appendChild(targetClone);
+
+    const targetRect =
+      placeholders[placeholders.length - 1].getBoundingClientRect();
+
+    targetClone.remove();
     const deckRect = deckStack.getBoundingClientRect();
     const tableRect = table.getBoundingClientRect();
 
