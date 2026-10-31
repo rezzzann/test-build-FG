@@ -283,18 +283,13 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
       return;
     }
 
-           // Рассчитываем позицию в копии контейнера,
-    // не смещая настоящие карты ИИ во время анимации.
+             // Всегда рассчитываем позиции в контейнере из двух карт.
     const targetClone = target.cloneNode(false);
     targetClone.style.visibility = 'hidden';
 
-    const cardCount = isUser
-      ? (target.children.length + 1)
-      : ((players[playerIndex].dealtCount || 0) + 1);
-
     const placeholders = [];
 
-    for (let i = 0; i < cardCount; i++) {
+    for (let i = 0; i < 2; i++) {
       const placeholder = document.createElement(isUser ? 'div' : 'span');
 
       placeholder.className = isUser
@@ -307,8 +302,13 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
 
     target.parentElement.appendChild(targetClone);
 
+    const cardIndex = Math.min(
+      1,
+      players[playerIndex].dealtCount || 0
+    );
+
     const targetRect =
-      placeholders[placeholders.length - 1].getBoundingClientRect();
+      placeholders[cardIndex].getBoundingClientRect();
 
     targetClone.remove();
     const deckRect = deckStack.getBoundingClientRect();
