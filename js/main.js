@@ -298,9 +298,7 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
       placeholders.push(placeholder);
     }
 
-    const cardIndex = players[playerIndex].dealtCount || 0;
-    const targetRect = placeholders[cardIndex].getBoundingClientRect();
-
+    const targetRect = placeholders[0].getBoundingClientRect();
     placeholders.forEach(el => el.remove());
 
     const deckRect = deckStack.getBoundingClientRect();
