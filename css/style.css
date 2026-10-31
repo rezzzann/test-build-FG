@@ -502,3 +502,21 @@ height: clamp(61px, 8.7vw, 96px);
   visibility: visible;
 }
 
+/* Полёт карт из колоды к игрокам */
+.dealing-card {
+  position: absolute !important;
+  z-index: 30 !important;
+  margin: 0;
+  padding: 0 !important;
+  flex-shrink: 0;
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+/* Невидимые карты нужны только для расчёта позиции полёта */
+.deal-placeholder {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
