@@ -296,11 +296,29 @@ if (
       const userClass = i === 0 ? 'user-seat' : '';
       const isWinner = winnerIds.includes(i);
 
-      const winMarkup = isWinner
-        ? `<div class="win-display visible"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
-        : '';
+     const winMarkup = isWinner
+  ? `<div class="win-display visible"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
+  : '';
 
-      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
+const winnerCardsMarkup =
+  aiWinnerReveal && i === aiWinnerId && !p.folded
+    ? `<div class="ai-seat-cards">${p.hole.map(c => {
+        const isInWinningHand = aiWinningCards.includes(c);
+        const isAICore = !!aiWinnerAnalysis?.coreCards.includes(c);
+        let html = miniCard(c, true, isAICore);
+
+        if (!isInWinningHand) {
+          html = html.replace(
+            'class="mini-card',
+            'class="mini-card not-in-combo'
+          );
+        }
+
+        return html;
+      }).join('')}</div>`
+    : '';
+
+      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
