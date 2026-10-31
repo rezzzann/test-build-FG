@@ -46,15 +46,16 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .avatar{width:clamp(38px,4.5vw,49px);height:clamp(38px,4.5vw,49px);border:2px solid var(--gold);border-radius:50%;background:linear-gradient(135deg,#d4b36d,#5c4727);color:#17140e;display:grid;place-items:center;font-size:clamp(20px,2.5vw,27px);font-weight:900;flex-shrink:0}
 .avatar-wrap{position:relative;flex-shrink:0}.name{font-size:clamp(10px,1.2vw,14px);font-weight:800;white-space:nowrap}.stack{font-size:clamp(11px,1.35vw,15px);color:#f0d08a;white-space:nowrap;font-weight:800}.state{font-size:10px;color:#b9c4ba}
 /* Карты победившего ИИ внутри его карточки */
+/* Карты победившего ИИ — по центру карточки */
 .ai-seat-cards {
   position: absolute;
-  left: calc(100% - 5px);
+  left: 50%;
   top: 50%;
-  transform: translate(-100%, -50%);
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
+  justify-content: center;
+  gap: 5px;
   z-index: 20;
   pointer-events: none;
   perspective: 700px;
@@ -62,15 +63,16 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 
 .ai-seat-cards .mini-card {
   position: relative;
-  width: clamp(30px, 4vw, 42px);
-  height: clamp(44px, 5.8vw, 59px);
+  width: clamp(48px, 7vw, 82px);
+  height: clamp(70px, 10.2vw, 116px);
   flex-shrink: 0;
+  box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid #fff;
+  border: 1px solid #d8d8d3;
   border-radius: 4px;
   background: linear-gradient(145deg, #fff 0%, #f8f8f5 100%);
   color: #171717;
-  box-shadow: 0 2px 5px #0009;
+  box-shadow: 0 2px 4px #0006;
   animation: ai-card-flip .55s ease-out both;
   transform-style: preserve-3d;
 }
@@ -80,17 +82,17 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 }
 
 .ai-seat-cards .mini-rank {
-  top: 4px;
-  left: 4px;
-  font-size: 15px;
-  font-weight: 1000;
+  top: 5px;
+  left: 6px;
+  font-size: clamp(17px, 2.5vw, 27px);
+  font-weight: 800;
   line-height: 1;
 }
 
 .ai-seat-cards .mini-suit {
-  bottom: 4px;
-  right: 4px;
-  font-size: 21px;
+  bottom: 5px;
+  right: 6px;
+  font-size: clamp(17px, 2.5vw, 27px);
   line-height: 1;
 }
 
