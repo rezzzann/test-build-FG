@@ -496,7 +496,16 @@ async function dealCommunityCards(cardIndices, handTick) {
     if (!completed) return;
 
     communityDealingIndices.delete(cardIndex);
-    render();
+render();
+
+// Переворот карты запускается только один раз при её открытии.
+const communityCard = $('community').querySelector(
+  `.community-slot[data-index="${cardIndex}"] .card`
+);
+
+if (communityCard && !communityCard.classList.contains('community-card-flip')) {
+  communityCard.classList.add('community-card-flip');
+}
 
     if (
       !reduceMotion &&
