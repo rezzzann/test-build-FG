@@ -512,6 +512,35 @@ height: clamp(61px, 8.7vw, 96px);
   pointer-events: none;
   border-radius: 6px;
 }
+.dealing-card {
+  box-sizing: border-box;
+}
+
+/* Рубашка летящей карты ИИ совпадает с картами на столе. */
+.dealing-card.mini-card {
+  border: 1px solid #d5bd83;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    45deg,
+    #76232b,
+    #76232b 2px,
+    #9c333b 2px,
+    #9c333b 4px
+  );
+  box-shadow: 0 1px 3px #0008;
+}
+
+.dealing-card.mini-card::after {
+  content: "♠";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid #d5bd83;
+  border-radius: 1px;
+  display: grid;
+  place-items: center;
+  color: #e4c98d;
+  font-size: clamp(10px, 1.5vw, 14px);
+}
 
 /* Невидимые карты нужны только для расчёта позиции полёта */
 .deal-placeholder {
