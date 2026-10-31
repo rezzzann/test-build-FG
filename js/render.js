@@ -262,7 +262,7 @@ function renderCommunity() {
     const showComboCore = shouldShowComboCore(s);
     const showUserCombo =
   !dealInProgress && !userCardFlipPending;
-        if (previousDealInProgress && !dealInProgress) {
+        if (   previousDealInProgress &&   !dealInProgress &&   street === 0 ) {
       userCardFlipPending = true;
 
      setTimeout(() => {
