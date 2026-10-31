@@ -63,8 +63,8 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 
 .ai-seat-cards .mini-card {
   position: relative;
-  width: clamp(48px, 7vw, 82px);
-  height: clamp(70px, 10.2vw, 116px);
+width: clamp(42px, 6vw, 68px);
+height: clamp(61px, 8.7vw, 96px);
   flex-shrink: 0;
   box-sizing: border-box;
   overflow: hidden;
