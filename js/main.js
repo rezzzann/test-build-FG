@@ -316,7 +316,9 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
     const endY = targetRect.top - tableRect.top;
 
     const flyingCard = document.createElement('div');
-    flyingCard.className = 'card back dealing-card';
+flyingCard.className = isUser
+  ? 'card back dealing-card'
+  : 'mini-card dealing-card';
 
     Object.assign(flyingCard.style, {
       left: `${startX}px`,
