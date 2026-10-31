@@ -14,6 +14,8 @@ export function createRenderer({
   getRenderedBoardCount,
   setRenderedBoardCount
 }) {
+    let previousDealInProgress = false;
+  let userCardFlipPending = false;
   function actionClass(action) {
     const classes = {
       'РЕЙЗ': 'raise-label',
@@ -224,11 +226,21 @@ node.classList.remove('hand-card');
       actQueue,
       currentBet,
       gameStarted,
+      dealInProgress,
       currentHandAnalysis,
       aiWinnerAnalysis
     } = s;
 
     const showComboCore = shouldShowComboCore(s);
+        if (previousDealInProgress && !dealInProgress) {
+      userCardFlipPending = true;
+
+      setTimeout(() => {
+        userCardFlipPending = false;
+      }, 650);
+    }
+
+    previousDealInProgress = dealInProgress;
 
     $('pot').textContent = fmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
@@ -260,7 +272,7 @@ node.classList.remove('hand-card');
     holeEl.classList.toggle('folded-hole', humanFoldedCards);
 
     holeEl.innerHTML = players[0].hole   .slice(     0,     Number.isInteger(players[0].dealtCount)       ? players[0].dealtCount       : players[0].hole.length   )   .map(c => {
-      let html = card(c);
+            let html = dealInProgress         ? '<div class="card back"></div>'         : card(c);        if (userCardFlipPending && !dealInProgress) {         html = html.replace(           'class="card',           'class="card user-card-flip'         );       }
 
       // Зелёная обводка — только основные карты текущей комбинации.
       if (
