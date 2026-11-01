@@ -392,11 +392,12 @@ flyingCard.className = isUser
   userHoleRevealBack = true;
   render();
 
-  if (reduceMotion) {
-    userHoleRevealBack = false;
-    render();
-    return true;
-  }
+ if (reduceMotion) {
+  initialDealInProgress = false;
+  userHoleRevealBack = false;
+  render();
+  return true;
+}
 
   const backs = [...$('hole').querySelectorAll('.card.back')];
 
@@ -414,10 +415,11 @@ flyingCard.className = isUser
 
   if (handTick !== tick || gamePaused) return false;
 
-  userHoleRevealBack = false;
-  render();
+ initialDealInProgress = false;
+userHoleRevealBack = false;
+render();
 
-  const faces = [...$('hole').querySelectorAll('.card')];
+const faces = [...$('hole').querySelectorAll('.card')];
 
   await Promise.all(faces.map(el => el.animate(
     [
