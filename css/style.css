@@ -645,6 +645,6 @@ height: clamp(61px, 8.7vw, 96px);
   }
 }
 
-.action-label:not(:empty) {
+.action-label.action-label-animate:not(:empty) {
   animation: actionLabelAppear .35s ease-out both;
 }
