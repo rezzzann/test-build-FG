@@ -577,9 +577,107 @@ export function createEffects({
       }, 1300 + (reduceMotion ? 0 : n * 75));
     }
   }
+  /**
+   * Анимирует полёт фишек от ставок игроков в центральный банк.
+   * Использует существующие классы и CSS-анимацию chipFlight.
+   */
+  function animateBetsToPot(bets = []) {
+    if (getPaused()) return Promise.resolve();
 
+    const potElement = document.getElementById('pot');
+    if (!potElement) return Promise.resolve();
+
+    const potRect = potElement.getBoundingClientRect();
+    const endX = potRect.left + potRect.width / 2;
+    const endY = potRect.top + potRect.height / 2;
+
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    let maxCount = 0;
+
+    bets.forEach((amount, playerIndex) => {
+      if (!Number.isFinite(amount) || amount <= 0) return;
+
+      const betDisplay = document.querySelector(
+        `.hand-bet.b${playerIndex}`
+      );
+
+      if (!betDisplay) return;
+
+      const from = betDisplay.getBoundingClientRect();
+      const config = getBetChipConfig(amount);
+
+      if (!config || !Number.isFinite(config.count) || config.count <= 0) {
+        return;
+      }
+
+      maxCount = Math.max(maxCount, config.count);
+
+      const flyingClass = config.color === 'blue'
+        ? 'blue-flying'
+        : 'gold-flying';
+
+      for (let n = 0; n < config.count; n++) {
+        const chip = document.createElement('div');
+
+        chip.className = `flying-chip ${flyingClass}`;
+
+        if (config.color === 'gold') {
+          chip.textContent = '♠';
+        }
+
+        const offsetX = (n - (config.count - 1) / 2) * 8;
+        const offsetY = (n % 2 === 0 ? -1 : 1)
+          * Math.ceil(n / 2)
+          * 5;
+
+        const startX = from.left + from.width / 2 + offsetX;
+        const startY = from.top + from.height / 2 + offsetY;
+
+        chip.style.left = `${startX}px`;
+        chip.style.top = `${startY}px`;
+
+        chip.style.setProperty(
+          '--dx',
+          `${endX - startX + (n - (config.count - 1) / 2) * 5}px`
+        );
+
+        chip.style.setProperty('--dy', `${endY - startY}px`);
+
+        chip.style.animationDelay = reduceMotion
+          ? '0ms'
+          : `${n * 75}ms`;
+
+        document.body.appendChild(chip);
+
+        requestAnimationFrame(() => {
+          if (chip.isConnected) chip.classList.add('fly');
+        });
+
+        chip.addEventListener('animationend', () => {
+          chip.remove();
+        }, { once: true });
+
+        setTimeout(() => {
+          chip.remove();
+        }, 1300 + (reduceMotion ? 0 : n * 75));
+      }
+    });
+
+    if (!maxCount) return Promise.resolve();
+
+    return new Promise(resolve => {
+      setTimeout(
+        resolve,
+        reduceMotion ? 180 : 850 + (maxCount - 1) * 75
+      );
+    });
+  }
   return {
     animateBetChip,
+     animateBetsToPot,
     clearFlyingChips
   };
 }
