@@ -103,7 +103,7 @@ const EFFECTS_CSS = String.raw`
    ПОБЕДА
    ========================================= */
 
-.win-display {
+.win-display.win-entrance {
   animation: winEntrance .8s cubic-bezier(.16,1,.3,1) both;
 }
 
