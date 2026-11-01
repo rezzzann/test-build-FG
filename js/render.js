@@ -16,6 +16,7 @@ export function createRenderer({
 }) {
     let previousDealInProgress = false;
   let previousLabelActions = [];
+  let labelAnimationUntil = [];
   let userCardFlipPending = false;
   function actionClass(action) {
     const classes = {
@@ -337,10 +338,16 @@ if (
     $('seats').innerHTML = players.map((p, i) => {
       const cls = seatClass[i];
       const action = p.labelAction || '';
-const animateAction =
-  !!action && previousLabelActions[i] !== action;
 
-previousLabelActions[i] = action;
+if (previousLabelActions[i] !== action) {
+  previousLabelActions[i] = action;
+  labelAnimationUntil[i] = action
+    ? Date.now() + 350
+    : 0;
+}
+
+const animateAction =
+  !!action && Date.now() < (labelAnimationUntil[i] || 0);
 
 const thinking = action === 'ДУМАЕТ';
       const labelClass = actionClass(action);
