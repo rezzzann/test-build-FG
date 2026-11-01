@@ -781,3 +781,50 @@ height: clamp(61px, 8.7vw, 96px);
     animation: none;
   }
 }
+/* ALL-IN: скрываем информацию игрока на время эффекта */
+.seat:has(.action-label.allin-label.action-label-animate) .avatar-wrap,
+.seat:has(.action-label.allin-label.action-label-animate) .name,
+.seat:has(.action-label.allin-label.action-label-animate) .stack,
+.seat:has(.action-label.allin-label.action-label-animate) .state {
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+/* Плавное завершение вспышки */
+.action-label.allin-label.action-label-animate {
+  animation: allin-impact 1.1s ease-out both;
+}
+
+.action-label.allin-label.action-label-animate::before {
+  animation: allin-ring 1.1s ease-out both;
+}
+
+@keyframes allin-impact {
+  0% {
+    transform: translateX(-50%) scale(.78);
+    opacity: .35;
+  }
+  25% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 1;
+  }
+  65% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: .85;
+  }
+}
+
+@keyframes allin-ring {
+  0% {
+    inset: 0;
+    opacity: .9;
+  }
+  100% {
+    inset: -15px;
+    opacity: 0;
+  }
+}
