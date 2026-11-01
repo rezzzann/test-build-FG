@@ -49,7 +49,7 @@ let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],f
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
-let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;
+let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
 const effects = createEffects({
   getBetChipConfig,
   seatClass,
@@ -209,6 +209,7 @@ const { render, renderHandBets, renderCommunity } = createRenderer({
     currentBet,
         gameStarted,
     dealInProgress,
+    initialDealInProgress,
     userHoleRevealBack,
 aiShowdownRevealBack,
     communityDealingIndices: [...communityDealingIndices],
@@ -649,6 +650,7 @@ if (communityCard && !reduceMotion) {
 }
 
 async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
+  initialDealInProgress = true;
   const reduceMotion =
     matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -686,7 +688,8 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
     return;
   }
 
-   dealInProgress = false;
+ initialDealInProgress = false;
+dealInProgress = false;
 
   if (!(await revealUserHoleCards(handTick, reduceMotion))) {
     return;
