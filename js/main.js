@@ -495,17 +495,75 @@ async function dealCommunityCards(cardIndices, handTick) {
 
     if (!completed) return;
 
-    communityDealingIndices.delete(cardIndex);
-render();
 
-// Переворот карты запускается только один раз при её открытии.
-const communityCard = $('community').querySelector(
-  `.community-slot[data-index="${cardIndex}"] .card`
+communityDealingIndices.delete(cardIndex);
+
+const communitySlot = $('community').querySelector(
+  `.community-slot[data-index="${cardIndex}"]`
 );
 
-if (communityCard && !communityCard.classList.contains('community-card-flip')) {
-  communityCard.classList.add('community-card-flip');
+const communityCard = communitySlot?.querySelector('.card');
+
+if (communityCard && !reduceMotion) {
+  // Сначала показываем рубашку карты.
+  communityCard.className = 'card back';
+  communityCard.innerHTML = '';
+  communityCard.classList.remove('deal-pending');
+
+  // Первая половина: рубашка поворачивается ребром.
+  const turnAway = communityCard.animate(
+    [
+      { transform: 'perspective(700px) rotateY(0deg)' },
+      { transform: 'perspective(700px) rotateY(90deg)' }
+    ],
+    {
+      duration: 120,
+      easing: 'ease-in',
+      fill: 'forwards'
+    }
+  );
+
+  try {
+    await turnAway.finished;
+  } catch {}
+
+  if (handTick !== tick || gamePaused) return;
+
+  // Меняем рубашку на лицевую сторону в момент поворота ребром.
+  communityCard.outerHTML = card(board[cardIndex]);
+
+  const faceCard = communitySlot.querySelector('.card');
+
+  if (faceCard) {
+    const turnBack = faceCard.animate(
+      [
+        {
+          transform: 'perspective(700px) rotateY(-90deg)',
+          opacity: 0.8
+        },
+        {
+          transform: 'perspective(700px) rotateY(0deg)',
+          opacity: 1
+        }
+      ],
+      {
+        duration: 150,
+        easing: 'ease-out',
+        fill: 'both'
+      }
+    );
+
+    try {
+      await turnBack.finished;
+    } catch {}
+  }
+
+  render();
+} else {
+  // Для режима уменьшенной анимации показываем карту сразу.
+  render();
 }
+
 
     if (
       !reduceMotion &&
