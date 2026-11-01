@@ -828,3 +828,49 @@ height: clamp(61px, 8.7vw, 96px);
     opacity: 0;
   }
 }
+/* ALL-IN: плавное затухание без резкого обрыва */
+.action-label.allin-label.action-label-animate {
+  animation: allin-impact 1.5s ease-out both;
+}
+
+.action-label.allin-label.action-label-animate::before {
+  animation: allin-ring 1.5s ease-out both;
+}
+
+@keyframes allin-impact {
+  0% {
+    transform: translateX(-50%) scale(.78);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(.96);
+    opacity: 0;
+  }
+}
+
+@keyframes allin-ring {
+  0% {
+    inset: 0;
+    opacity: .9;
+  }
+  100% {
+    inset: -18px;
+    opacity: 0;
+  }
+}
+
+.seat:has(.action-label.allin-label.action-label-animate) .avatar-wrap,
+.seat:has(.action-label.allin-label.action-label-animate) .name,
+.seat:has(.action-label.allin-label.action-label-animate) .stack,
+.seat:has(.action-label.allin-label.action-label-animate) .state {
+  opacity: 0;
+  transition: opacity .3s ease;
+}
