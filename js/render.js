@@ -14,10 +14,8 @@ export function createRenderer({
   getRenderedBoardCount,
   setRenderedBoardCount
 }) {
-    let previousDealInProgress = false;
   let previousLabelActions = [];
   let labelAnimationUntil = [];
-  let userCardFlipPending = false;
   function actionClass(action) {
     const classes = {
       'РЕЙЗ': 'raise-label',
@@ -263,18 +261,7 @@ function renderCommunity() {
 
     const showComboCore = shouldShowComboCore(s);
     const showUserCombo =
-  !dealInProgress && !userCardFlipPending;
-        if (   previousDealInProgress &&   !dealInProgress &&   street === 0 ) {
-      userCardFlipPending = true;
-
-     setTimeout(() => {
-  userCardFlipPending = false;
-  render();
-}, 650);
-    }
-
-    previousDealInProgress = dealInProgress;
-
+  !dealInProgress && !userHoleRevealBack;
     $('pot').textContent = fmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
 
@@ -306,7 +293,9 @@ function renderCommunity() {
     holeEl.classList.toggle('folded-hole', humanFoldedCards);
 
     holeEl.innerHTML = players[0].hole   .slice(     0,     Number.isInteger(players[0].dealtCount)       ? players[0].dealtCount       : players[0].hole.length   )   .map(c => {
-            let html = dealInProgress         ? '<div class="card back"></div>'         : card(c);        if (userCardFlipPending && !dealInProgress) {         html = html.replace(           'class="card',           'class="card user-card-flip'         );       }
+         let html = (dealInProgress || userHoleRevealBack)
+  ? '<div class="card back"></div>'
+  : card(c);
 
       // Зелёная обводка — только основные карты текущей комбинации.
      if (
