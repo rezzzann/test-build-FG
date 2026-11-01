@@ -818,19 +818,50 @@ function advanceQueue(){
  while(actQueue.length&&hasActedThisStreet(actQueue[0]))actQueue.shift();if(actQueue.length===0){advanceStreet();return}
  actor=actQueue[0];const p=players[actor];if(p){p.action='';p.actionAmount=0}render();if(actor!==user)scheduleAI(actor);
 }
-function advanceStreet() {
-  if (over || gamePaused || dealInProgress) return;
+async function collectBetsVisually(handTick) {
+  const bets = players.map(p => Number(p.bet) || 0);
 
-  tick++;
-  busy = false;
-  clearTurnTimer();
+  if (bets.some(amount => amount > 0)) {
+    await effects.animateBetsToPot(bets);
 
-  if (live().length <= 1) {
-    finish();
-    return;
+    if (handTick !== tick || gamePaused) return false;
   }
 
   collectBetsIntoPot();
+  render();
+
+  const reduceMotion = matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  if (!(await waitForDeal(reduceMotion ? 150 : 350, handTick))) {
+    return false;
+  }
+
+  return true;
+}
+
+async function advanceStreet() {
+  if (over || gamePaused || dealInProgress) return;
+
+  tick++;
+  const handTick = tick;
+
+  busy = true;
+  dealInProgress = true;
+  clearTurnTimer();
+  render();
+
+  const collected = await collectBetsVisually(handTick);
+
+  if (!collected) return;
+
+  if (live().length <= 1) {
+    dealInProgress = false;
+    busy = false;
+    finish();
+    return;
+  }
 
   let newCards;
 
@@ -844,11 +875,12 @@ function advanceStreet() {
     newCards = [deck.pop()];
     street = 3;
   } else {
+    dealInProgress = false;
+    busy = false;
     finish();
     return;
   }
 
-  const handTick = tick;
   const startIndex = board.length;
 
   board.push(...newCards);
@@ -888,7 +920,7 @@ function applyAction(i,a,myTick){
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
 }
-function runOutBoard(){if(over||gamePaused)return;tick++;busy=false;clearTurnTimer();collectBetsIntoPot();while(board.length<5)board.push(deck.pop());street=4;render();finish()}
+async function runOutBoard() {   if (over || gamePaused || dealInProgress) return;    tick++;   const handTick = tick;    busy = true;   dealInProgress = true;   clearTurnTimer();   render();    const collected = await collectBetsVisually(handTick);    if (!collected) return;    while (board.length < 5) {     board.push(deck.pop());   }    street = 4;   dealInProgress = false;   busy = false;    render();   finish(); }
 
 const feedbackReminder = initFeedbackReminder({
   $,
