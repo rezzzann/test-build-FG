@@ -383,16 +383,12 @@ const winnerCardsMarkup = showAISeatCards
 
       let html = miniCard(c, true, isAICore);
 
-      if (
-        (humanWinnerReveal || aiWinnerReveal) &&
-        !isInWinningHand
-      ) {
-        html = html.replace(
-          'class="mini-card',
-          'class="mini-card not-in-combo'
-        );
-      }
-
+      if (isAIWinner && !isInWinningHand) {
+  html = html.replace(
+    'class="mini-card',
+    'class="mini-card not-in-combo'
+  );
+}
       return html;
     }).join('')}</div>`
   : '';
