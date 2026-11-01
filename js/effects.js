@@ -576,6 +576,9 @@ export function createEffects({
         }
       }, 1300 + (reduceMotion ? 0 : n * 75));
     }
+         return new Promise(resolve => {
+      setTimeout(resolve, reduceMotion ? 180 : 800 + (count - 1) * 75);
+    });
   }
   /**
    * Анимирует полёт фишек от ставок игроков в центральный банк.
