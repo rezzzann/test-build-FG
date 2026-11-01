@@ -49,7 +49,7 @@ let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],f
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
-let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set();
+let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;
 const effects = createEffects({
   getBetChipConfig,
   seatClass,
@@ -209,6 +209,8 @@ const { render, renderHandBets, renderCommunity } = createRenderer({
     currentBet,
         gameStarted,
     dealInProgress,
+    userHoleRevealBack,
+aiShowdownRevealBack,
     communityDealingIndices: [...communityDealingIndices],
    board,
 currentHandAnalysis: players[user] &&
@@ -383,6 +385,60 @@ flyingCard.className = isUser
     animation.onfinish = () => finishAnimation(true);
     animation.oncancel = () => finishAnimation(false);
   });
+}
+      async function revealUserHoleCards(handTick, reduceMotion) {
+  userHoleRevealBack = true;
+  render();
+
+  if (reduceMotion) {
+    userHoleRevealBack = false;
+    render();
+    return true;
+  }
+
+  const backs = [...$('hole').querySelectorAll('.card.back')];
+
+  await Promise.all(backs.map(el => el.animate(
+    [
+      { transform: 'perspective(700px) rotateY(0deg)' },
+      { transform: 'perspective(700px) rotateY(90deg)' }
+    ],
+    {
+      duration: 60,
+      easing: 'ease-in',
+      fill: 'forwards'
+    }
+  ).finished.catch(() => {})));
+
+  if (handTick !== tick || gamePaused) return false;
+
+  userHoleRevealBack = false;
+  render();
+
+  const faces = [...$('hole').querySelectorAll('.card')];
+
+  await Promise.all(faces.map(el => el.animate(
+    [
+      {
+        transform: 'perspective(700px) rotateY(-90deg)',
+        opacity: 0.8
+      },
+      {
+        transform: 'perspective(700px) rotateY(0deg)',
+        opacity: 1
+      }
+    ],
+    {
+      duration: 75,
+      easing: 'ease-out',
+      fill: 'both'
+    }
+  ).finished.catch(() => {})));
+
+  if (handTick !== tick || gamePaused) return false;
+
+  render();
+  return true;
 }
 function flyCommunityCard(cardIndex, handTick, reduceMotion) {
   return new Promise(resolve => {
@@ -630,9 +686,15 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
     return;
   }
 
-  dealInProgress = false;
+   dealInProgress = false;
+
+  if (!(await revealUserHoleCards(handTick, reduceMotion))) {
+    return;
+  }
+
   busy = false;
 
+  // Только после раздачи карт начинаем выставление блайндов.
   // Только после раздачи карт начинаем выставление блайндов.
   const sbAmount = post(smallBlindSeat, sb);
   const bbAmount = post(bigBlindSeat, bb);
@@ -829,7 +891,58 @@ const feedbackReminder = initFeedbackReminder({
   getGamePaused: () => gamePaused,
   getTournamentMode: () => tournamentMode
 });
-      
+ async function animateAIShowdownCards(handTick) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    aiShowdownRevealBack = false;
+    render();
+    return;
+  }
+
+  const backs = [
+    ...document.querySelectorAll('.ai-seat-cards .ai-reveal-back')
+  ];
+
+  await Promise.all(backs.map(el => el.animate(
+    [
+      { transform: 'perspective(700px) rotateY(0deg)' },
+      { transform: 'perspective(700px) rotateY(90deg)' }
+    ],
+    {
+      duration: 60,
+      easing: 'ease-in',
+      fill: 'forwards'
+    }
+  ).finished.catch(() => {})));
+
+  if (handTick !== tick || gamePaused) return;
+
+  aiShowdownRevealBack = false;
+  render();
+
+  const faces = [
+    ...document.querySelectorAll('.ai-seat-cards .mini-card')
+  ];
+
+  await Promise.all(faces.map(el => el.animate(
+    [
+      {
+        transform: 'perspective(700px) rotateY(-90deg)',
+        opacity: 0.8
+      },
+      {
+        transform: 'perspective(700px) rotateY(0deg)',
+        opacity: 1
+      }
+    ],
+    {
+      duration: 75,
+      easing: 'ease-out',
+      fill: 'both'
+    }
+  ).finished.catch(() => {})));
+
+  if (handTick === tick && !gamePaused) render();
+}     
 function finish(){
  if(over)return;tick++;busy=false;pendingAISeat=-1;clearTurnTimer();clearBlindSequence();clearActionTimers();over=true;actQueue=[];collectBetsIntoPot();
  const survivors=live();let winners=[],winnerScore=null;humanWinnerReveal=false;winningCards=[];aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
@@ -839,7 +952,13 @@ function finish(){
  winnerCombo=survivors.length>1&&winnerScore?handNames[winnerScore[0]]:'БЕЗ ВСКРЫТИЯ';const userWon=winners.includes(players[user]);
  if(userWon){humanWinnerReveal=true;if(survivors.length>1&&board.length===5)winningCards=bestFive([...players[user].hole,...board]).cards}
  else{const aiWinners=winners.filter(p=>players.indexOf(p)!==user);if(aiWinners.length>0){aiWinnerReveal=survivors.length>1;aiWinnerId=players.indexOf(aiWinners[0]);humanFoldedCards=true;if(survivors.length>1&&board.length===5)aiWinningCards=bestFive([...aiWinners[0].hole,...board]).cards}}
- $('message').textContent=userWon?'Победа!':`Победитель: ${winners.map(p=>p.name).join(', ')}`;render();
+  aiShowdownRevealBack = survivors.length > 1;
+$('message').textContent=userWon?'Победа!':`Победитель: ${winners.map(p=>p.name).join(', ')}`;
+render();
+
+if (aiShowdownRevealBack) {
+  animateAIShowdownCards(tick);
+}
  feedbackReminder.showAfterThirdHand();
 }
 function userAct(t){
