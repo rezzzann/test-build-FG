@@ -688,15 +688,15 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
     return;
   }
 
- initialDealInProgress = false;
-dealInProgress = false;
+  dealInProgress = false;
 
   if (!(await revealUserHoleCards(handTick, reduceMotion))) {
     return;
   }
 
+  initialDealInProgress = false;
   busy = false;
-
+  render();
   // Только после раздачи карт начинаем выставление блайндов.
   // Только после раздачи карт начинаем выставление блайндов.
   const sbAmount = post(smallBlindSeat, sb);
@@ -988,7 +988,7 @@ function captureGameState(){
  };
 }
 function pauseGameForMenu(){
- if(!gameStarted||gamePaused||dealInProgress)return;
+ if(!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;
  savedGameState=captureGameState();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
