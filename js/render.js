@@ -257,6 +257,8 @@ function renderCommunity() {
       dealInProgress,
       currentHandAnalysis,
       aiWinnerAnalysis
+      userHoleRevealBack,
+aiShowdownRevealBack,
     } = s;
 
     const showComboCore = shouldShowComboCore(s);
@@ -357,6 +359,9 @@ const isAIWinner = aiWinnerReveal && i === aiWinnerId;
 
 const winnerCardsMarkup = showAISeatCards
   ? `<div class="ai-seat-cards">${p.hole.map(c => {
+    if (aiShowdownRevealBack) {
+  return '<span class="mini-card ai-reveal-back"></span>';
+}
       const isInWinningHand =
         isAIWinner && aiWinningCards.includes(c);
 
