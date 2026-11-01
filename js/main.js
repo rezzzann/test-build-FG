@@ -820,14 +820,19 @@ function advanceQueue(){
  actor=actQueue[0];const p=players[actor];if(p){p.action='';p.actionAmount=0}render();if(actor!==user)scheduleAI(actor);
 }
 async function collectBetsVisually(handTick) {
-  const bets = players.map(p => Number(p.bet) || 0);
-
+  const soleWinner = live().length === 1 ? live()[0] : null;
+const bets = players.map(p =>
+  p === soleWinner ? 0 : Number(p.bet) || 0
+);
   if (bets.some(amount => amount > 0)) {
     await effects.animateBetsToPot(bets);
 
     if (handTick !== tick || gamePaused) return false;
   }
-
+if (soleWinner && soleWinner.bet > 0) {
+  soleWinner.stack += soleWinner.bet;
+  soleWinner.bet = 0;
+}
   collectBetsIntoPot();
   render();
 
@@ -984,7 +989,7 @@ const feedbackReminder = initFeedbackReminder({
   if (handTick === tick && !gamePaused) render();
 }     
 function finish(){
- if(over)return;tick++;busy=false;pendingAISeat=-1;clearTurnTimer();clearBlindSequence();clearActionTimers();over=true;actQueue=[];collectBetsIntoPot();
+ if(over)return; tick++; busy=false; pendingAISeat=-1; clearTurnTimer(); clearBlindSequence(); clearActionTimers(); over=true; actQueue=[];  const survivors = live(); if (survivors.length === 1 && survivors[0].bet > 0) {   survivors[0].stack += survivors[0].bet;   survivors[0].bet = 0; }  collectBetsIntoPot();
  const survivors=live();let winners=[],winnerScore=null;humanWinnerReveal=false;winningCards=[];aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
  if(survivors.length===1)winners=survivors;else{street=4;const ranked=survivors.map(p=>({p,s:score([...p.hole,...board])})).sort((a,b)=>cmp(b.s,a.s));winnerScore=ranked[0].s;winners=ranked.filter(x=>cmp(x.s,winnerScore)===0).map(x=>x.p)}
  const each=Math.floor(pot/winners.length),rem=pot%winners.length;winnerIds=[];winnerPayouts={};
