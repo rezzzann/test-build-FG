@@ -447,6 +447,7 @@ const winnerCardsMarkup = showAISeatCards
 
     $('nextHand').classList.toggle('visible', over);
     $('exitButton').classList.toggle('visible', gameStarted);
+    $('exitButton').disabled = dealInProgress || initialDealInProgress;
   }
 
   return { render, renderHandBets, renderCommunity };
