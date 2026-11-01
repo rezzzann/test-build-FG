@@ -649,3 +649,22 @@ height: clamp(61px, 8.7vw, 96px);
 .action-label.action-label-animate:not(:empty) {
   animation: actionLabelAppear .45s cubic-bezier(.16, 1, .3, 1);
 }
+/* Рубашка карт ИИ перед вскрытием */
+.ai-seat-cards .mini-card.ai-reveal-back {
+  background: linear-gradient(145deg, #263b32, #101a16) !important;
+  border: 1px solid #d5bd83 !important;
+  color: transparent !important;
+  transform-style: preserve-3d;
+}
+
+.ai-seat-cards .mini-card.ai-reveal-back:after {
+  content: "♠" !important;
+  position: absolute;
+  inset: 3px;
+  border: 1px solid #d5bd83;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  color: #e4c98d;
+  font-size: clamp(17px, 2.5vw, 27px);
+}
