@@ -629,8 +629,7 @@ height: clamp(61px, 8.7vw, 96px);
   animation: ai-card-flip .55s ease-out both;
   transform-style: preserve-3d;
 }
-/* Центрирование карт пользователя при проигрыше без изменения высоты */
+/* Горизонтальное положение карт пользователя при проигрыше */
 .hole.ai-loser-hole {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  left: calc(50% + 12px) !important;
 }
