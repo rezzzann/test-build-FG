@@ -130,7 +130,7 @@ function showAction(i,text,amount=0,duration=2000){
  const p=players[i];if(!p)return;if(p.actionTimer){clearTimeout(p.actionTimer);p.actionTimer=null}
  p.actionId=(p.actionId||0)+1;const id=p.actionId,label=String(text).toUpperCase();
  p.action=label;p.actionAmount=Number(amount)||0;p.labelAction=label;p.labelAmount=0;
- p.actionTimer=setTimeout(()=>{if(p.actionId!==id)return;p.actionTimer=null;p.labelAction='';p.labelAmount=0;if(!gamePaused)render()},duration);
+ const actionDuration = label === 'ALL-IN' ? 1500 : duration; p.actionTimer = setTimeout(() => {   if (p.actionId !== id) return;   p.actionTimer = null;   p.labelAction = '';   p.labelAmount = 0;   if (!gamePaused) render(); }, actionDuration);
 }
 function showThinking(i){
  const p=players[i];if(!p)return;if(p.actionTimer){clearTimeout(p.actionTimer);p.actionTimer=null}
