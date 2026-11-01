@@ -345,8 +345,8 @@ if (
 if (previousLabelActions[i] !== action) {
   previousLabelActions[i] = action;
   labelAnimationUntil[i] = action
-    ? Date.now() + 350
-    : 0;
+  ? Date.now() + (action === 'ALL-IN' ? 800 : 350)
+  : 0;
 }
 
 const animateAction =
