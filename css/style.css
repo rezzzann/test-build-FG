@@ -628,11 +628,6 @@ height: clamp(61px, 8.7vw, 96px);
   animation: ai-card-flip .55s ease-out both;
   transform-style: preserve-3d;
 }
-
-.community-card-flip {
-  animation: ai-card-flip .10s ease-out both;
-  transform-style: preserve-3d;
-}
 /* Горизонтальное положение карт пользователя при проигрыше */
 .hole.ai-loser-hole {
   left: calc(50% + 12px) !important;
