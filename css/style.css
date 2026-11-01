@@ -647,3 +647,137 @@ height: clamp(61px, 8.7vw, 96px);
   color: #e4c98d;
   font-size: clamp(17px, 2.5vw, 27px);
 }
+
+/* ========================================
+   POKEREZA ALL-IN — VISUAL PREVIEW
+   Быстрая настройка эффектов в одном месте
+   ======================================== */
+
+:root {
+  --allin-gold: #ffe29a;
+  --allin-gold-bright: #fff4c2;
+  --allin-gold-glow: rgba(255, 174, 42, .75);
+
+  --allin-blue: #6bdcff;
+  --allin-blue-bright: #e1f8ff;
+  --allin-blue-glow: rgba(32, 158, 255, .85);
+
+  --allin-effect-speed: .65s;
+}
+
+/* Общая основа ALL-IN */
+.action-label.allin-label {
+  position: relative;
+  isolation: isolate;
+  padding: 5px 12px;
+  border-radius: 8px;
+  color: var(--allin-gold-bright);
+  -webkit-text-fill-color: var(--allin-gold-bright);
+  background: linear-gradient(
+    180deg,
+    rgba(91, 56, 12, .94),
+    rgba(27, 19, 12, .96)
+  );
+  border: 1px solid rgba(255, 215, 128, .9);
+  text-shadow:
+    0 0 4px var(--allin-gold),
+    0 0 12px var(--allin-gold-glow),
+    0 2px 3px #000;
+  filter: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .28),
+    0 0 8px var(--allin-gold-glow),
+    0 0 20px rgba(255, 139, 20, .28);
+}
+
+/* Световой ореол */
+.action-label.allin-label::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border-radius: 12px;
+  border: 1px solid var(--allin-gold);
+  box-shadow:
+    0 0 10px var(--allin-gold-glow),
+    inset 0 0 8px rgba(255, 210, 110, .18);
+  opacity: .75;
+  pointer-events: none;
+}
+
+/* Короткая вспышка при действии */
+.action-label.allin-label.action-label-animate {
+  animation: allin-impact var(--allin-effect-speed) ease-out both;
+}
+
+.action-label.allin-label.action-label-animate::before {
+  animation: allin-ring var(--allin-effect-speed) ease-out both;
+}
+
+@keyframes allin-impact {
+  0% {
+    transform: translateX(-50%) scale(.72);
+    opacity: .5;
+    box-shadow: 0 0 0 transparent;
+  }
+  40% {
+    transform: translateX(-50%) scale(1.12);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(-50%) scale(.98);
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes allin-ring {
+  0% {
+    inset: 0;
+    opacity: 1;
+  }
+  100% {
+    inset: -15px;
+    opacity: 0;
+  }
+}
+
+/* HIGH ROLLER — сине-золотая энергетика */
+#table.high-roller .action-label.allin-label {
+  color: var(--allin-blue-bright);
+  -webkit-text-fill-color: var(--allin-blue-bright);
+  background: linear-gradient(
+    135deg,
+    rgba(4, 35, 77, .98),
+    rgba(7, 100, 163, .96),
+    rgba(58, 39, 12, .98)
+  );
+  border-color: var(--allin-gold);
+  text-shadow:
+    0 0 5px var(--allin-blue),
+    0 0 12px var(--allin-blue-glow),
+    0 0 18px var(--allin-gold-glow),
+    0 2px 3px #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .35),
+    0 0 10px var(--allin-blue-glow),
+    0 0 20px var(--allin-gold-glow);
+}
+
+#table.high-roller .action-label.allin-label::before {
+  border-color: var(--allin-blue);
+  box-shadow:
+    0 0 10px var(--allin-blue-glow),
+    0 0 18px var(--allin-gold-glow),
+    inset 0 0 8px rgba(94, 212, 255, .2);
+}
+
+/* Уважение настройки уменьшения анимации */
+@media (prefers-reduced-motion: reduce) {
+  .action-label.allin-label.action-label-animate,
+  .action-label.allin-label.action-label-animate::before {
+    animation: none;
+  }
+}
