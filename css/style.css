@@ -843,20 +843,26 @@ transform: translate(-50%, -50%);
   }
 }
 
-/* ALL-IN ИИ: эффект ограничен границами места */
+
+/* ALL-IN ИИ: плашка заполняет место, не выходя за края */
 .seat:not(.user-seat):has(.action-label.allin-label.action-label-animate) {
   overflow: hidden;
 }
 
-/* Сохраняем размер и оформление надписи пользователя */
 .seat:not(.user-seat) .action-label.allin-label {
+  width: calc(100% - 8px);
   max-width: calc(100% - 8px);
+  padding: 5px 0;
   box-sizing: border-box;
+  text-align: center;
   white-space: nowrap;
+  font-size: clamp(15px, 2.8vw, 23px) !important;
+  letter-spacing: 0;
+  transform: translate(-50%, -50%);
 }
 
-/* Свечение и кольцо не выходят за границы места ИИ */
 .seat:not(.user-seat) .action-label.allin-label::before {
+  inset: 0;
   border-radius: 8px;
 }
 
