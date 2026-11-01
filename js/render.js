@@ -256,7 +256,7 @@ function renderCommunity() {
       gameStarted,
       dealInProgress,
       currentHandAnalysis,
-      aiWinnerAnalysis
+      aiWinnerAnalysis,
       userHoleRevealBack,
 aiShowdownRevealBack,
     } = s;
