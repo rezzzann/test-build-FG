@@ -624,9 +624,13 @@ height: clamp(61px, 8.7vw, 96px);
   left: calc(50% + 12px) !important;
 }
 /* Плавный переворот карт после раздачи */
-.user-card-flip,
-.community-card-flip {
+.user-card-flip {
   animation: ai-card-flip .55s ease-out both;
+  transform-style: preserve-3d;
+}
+
+.community-card-flip {
+  animation: ai-card-flip .32s ease-out both;
   transform-style: preserve-3d;
 }
 /* Горизонтальное положение карт пользователя при проигрыше */
