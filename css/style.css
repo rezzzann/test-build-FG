@@ -842,35 +842,24 @@ transform: translate(-50%, -50%);
     opacity: 0;
   }
 }
-/* ALL-IN: свечение строго в пределах иконки ИИ */
-.seat:not(.user-seat) .action-label.allin-label::before {
-  inset: 0;
-  border-radius: 8px;
-  box-shadow: inset 0 0 8px var(--allin-gold-glow);
+
+/* ALL-IN ИИ: эффект ограничен границами места */
+.seat:not(.user-seat):has(.action-label.allin-label.action-label-animate) {
+  overflow: hidden;
 }
 
-#table.high-roller .seat:not(.user-seat) .action-label.allin-label::before {
-  box-shadow: inset 0 0 8px var(--allin-blue-glow);
-}
-/* ALL-IN ИИ — компактная плашка без выхода за границы */
+/* Сохраняем размер и оформление надписи пользователя */
 .seat:not(.user-seat) .action-label.allin-label {
-  font-size: 9px !important;
-  line-height: 1 !important;
-  letter-spacing: 0 !important;
-  padding: 2px 3px !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  border-radius: 4px !important;
-  white-space: nowrap !important;
-  filter: none !important;
-  box-shadow: inset 0 0 4px var(--allin-gold-glow) !important;
+  max-width: calc(100% - 8px);
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
+/* Свечение и кольцо не выходят за границы места ИИ */
 .seat:not(.user-seat) .action-label.allin-label::before {
-  content: none !important;
-  animation: none !important;
+  border-radius: 8px;
 }
 
-#table.high-roller .seat:not(.user-seat) .action-label.allin-label {
-  box-shadow: inset 0 0 4px var(--allin-blue-glow) !important;
+.seat:not(.user-seat) .action-label.allin-label.action-label-animate::before {
+  animation: allin-ring 1.5s ease-out both;
 }
