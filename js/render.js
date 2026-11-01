@@ -327,6 +327,7 @@ if (animateWinnerEntrance) {
 
 if (
   (humanWinnerReveal || aiWinnerReveal) &&
+  !(humanWinnerReveal && winnerCombo === 'БЕЗ ВСКРЫТИЯ') &&
   !isInWinningHand
 ) {
   html = html.replace(
