@@ -517,7 +517,7 @@ if (communityCard && !reduceMotion) {
       { transform: 'perspective(700px) rotateY(90deg)' }
     ],
     {
-      duration: 120,
+      duration: 60,
       easing: 'ease-in',
       fill: 'forwards'
     }
@@ -547,7 +547,7 @@ if (communityCard && !reduceMotion) {
         }
       ],
       {
-        duration: 150,
+        duration: 75,
         easing: 'ease-out',
         fill: 'both'
       }
