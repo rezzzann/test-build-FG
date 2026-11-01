@@ -35,7 +35,7 @@ const suits=[['♠',0],['♥',1],['♦',1],['♣',0]];
 const $=id=>document.getElementById(id),user=0;
 const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
-const GAME_VERSION='v0.5.8 alpha';
+const GAME_VERSION='v0.5.10 alpha';
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
