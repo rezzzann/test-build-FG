@@ -633,3 +633,18 @@ height: clamp(61px, 8.7vw, 96px);
 .hole.ai-loser-hole {
   left: calc(50% + 12px) !important;
 }
+/* Всплытие надписей действий от иконки игрока */
+@keyframes actionLabelAppear {
+  from {
+    opacity: 0;
+    translate: 0 35px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.action-label:not(:empty) {
+  animation: actionLabelAppear .35s ease-out both;
+}
