@@ -255,6 +255,7 @@ function renderCommunity() {
       currentBet,
       gameStarted,
       dealInProgress,
+      initialDealInProgress,
       currentHandAnalysis,
       aiWinnerAnalysis,
       userHoleRevealBack,
@@ -295,7 +296,7 @@ aiShowdownRevealBack,
     holeEl.classList.toggle('folded-hole', humanFoldedCards);
 
     holeEl.innerHTML = players[0].hole   .slice(     0,     Number.isInteger(players[0].dealtCount)       ? players[0].dealtCount       : players[0].hole.length   )   .map(c => {
-         let html = (dealInProgress || userHoleRevealBack)
+        let html = (initialDealInProgress || userHoleRevealBack)
   ? '<div class="card back"></div>'
   : card(c);
 
