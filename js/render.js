@@ -15,6 +15,7 @@ export function createRenderer({
   setRenderedBoardCount
 }) {
     let previousDealInProgress = false;
+  let previousLabelActions = [];
   let userCardFlipPending = false;
   function actionClass(action) {
     const classes = {
@@ -336,7 +337,12 @@ if (
     $('seats').innerHTML = players.map((p, i) => {
       const cls = seatClass[i];
       const action = p.labelAction || '';
-      const thinking = action === 'ДУМАЕТ';
+const animateAction =
+  !!action && previousLabelActions[i] !== action;
+
+previousLabelActions[i] = action;
+
+const thinking = action === 'ДУМАЕТ';
       const labelClass = actionClass(action);
       const userClass = i === 0 ? 'user-seat' : '';
       const isWinner = winnerIds.includes(i);
@@ -378,7 +384,7 @@ const winnerCardsMarkup = showAISeatCards
     }).join('')}</div>`
   : '';
 
-      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
+      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
