@@ -14,6 +14,7 @@ export function createRenderer({
   getRenderedBoardCount,
   setRenderedBoardCount
 }) {
+  let winnerAnimationPlayed = false;
   let previousLabelActions = [];
   let labelAnimationUntil = [];
   function actionClass(action) {
@@ -261,7 +262,16 @@ function renderCommunity() {
       userHoleRevealBack,
 aiShowdownRevealBack,
     } = s;
+if (!over || !winnerIds.length) {
+  winnerAnimationPlayed = false;
+}
 
+const animateWinnerEntrance =
+  over && winnerIds.length > 0 && !winnerAnimationPlayed;
+
+if (animateWinnerEntrance) {
+  winnerAnimationPlayed = true;
+}
     const showComboCore = shouldShowComboCore(s);
     const showUserCombo =
   !dealInProgress && !userHoleRevealBack;
@@ -347,7 +357,7 @@ const thinking = action === 'ДУМАЕТ';
       const isWinner = winnerIds.includes(i);
 
      const winMarkup = isWinner
-  ? `<div class="win-display visible"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
+  ? `<div class="win-display visible ${animateWinnerEntrance ? 'win-entrance' : ''}"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
   : '';
 
 const showAISeatCards =
