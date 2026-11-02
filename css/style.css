@@ -1018,3 +1018,61 @@ transform: translate(-50%, -50%);
     transform: translateX(-50%) scale(1.25);
   }
 }
+/* ALL-IN: пламя над аватаром первого игрока */
+#seats .avatar-wrap.allin-flame-active {
+  z-index: 30;
+}
+
+#seats .avatar-wrap.allin-flame-active::after {
+  content: "🔥";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  z-index: 50;
+  font-size: 30px;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  animation: allinFlameBurn .45s ease-in-out infinite alternate;
+  filter:
+    drop-shadow(0 0 5px #ffd34d)
+    drop-shadow(0 0 12px #ff6500);
+}
+
+#seats .avatar-wrap.allin-flame-active::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 40;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #ff7900;
+  filter: blur(13px);
+  opacity: .65;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: allinFlameGlow .5s ease-in-out infinite alternate;
+}
+
+@keyframes allinFlameBurn {
+  from {
+    transform: translateX(-50%) scale(.85) rotate(-6deg);
+  }
+  to {
+    transform: translateX(-50%) scale(1.2) rotate(6deg);
+  }
+}
+
+@keyframes allinFlameGlow {
+  from {
+    opacity: .3;
+    scale: .8;
+  }
+  to {
+    opacity: .8;
+    scale: 1.3;
+  }
+}
