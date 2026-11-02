@@ -2,115 +2,590 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pokereza — ALL-IN 3D Test</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pokereza — Solar ALL-IN Prototype</title>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
-    }
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
   }
-  </script>
+}
+</script>
 
-  <style>
-    * { box-sizing: border-box; }
+<style>
+* { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: radial-gradient(ellipse, #174c35, #06130e 75%);
-      color: #f4d27c;
-      font-family: Arial, sans-serif;
-    }
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at center, #173c2b, #06110c 65%, #010403);
+  color: #ffe2a0;
+  font-family: Arial, sans-serif;
+}
 
-    main {
-      width: min(94vw, 900px);
-      text-align: center;
-    }
+main {
+  width: min(96vw, 1000px);
+  text-align: center;
+}
 
-    h1 {
-      letter-spacing: 5px;
-      font-size: clamp(28px, 5vw, 46px);
-    }
+h1 {
+  margin: 0 0 6px;
+  font-size: clamp(27px, 5vw, 48px);
+  letter-spacing: .22em;
+  color: #ffd477;
+  text-shadow: 0 0 24px #ff9d24;
+}
 
-    #stage {
-      position: relative;
-      height: min(55vh, 460px);
-      min-height: 280px;
-      overflow: hidden;
-      border: 1px solid #c99c45;
-      border-radius: 18px;
-      background: radial-gradient(ellipse, #205a40, #04110b);
-      box-shadow: 0 0 40px #0009;
-    }
+p {
+  color: #c7b995;
+  font-size: 13px;
+  letter-spacing: .18em;
+}
 
-    button {
-      margin-top: 22px;
-      padding: 15px 30px;
-      border: 1px solid #ffe6a0;
-      border-radius: 30px;
-      background: linear-gradient(135deg, #fff0b7, #bd8123);
-      color: #211506;
-      font-weight: bold;
-      cursor: pointer;
-    }
+#stage {
+  height: min(60vh, 520px);
+  min-height: 300px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #c99b4a80;
+  border-radius: 18px;
+  background: radial-gradient(ellipse, #16432d70, #020805);
+  box-shadow: 0 0 45px #000b, inset 0 0 50px #0008;
+}
 
-    #status {
-      margin-top: 14px;
-      color: #e1d3af;
-      font-size: 13px;
-    }
-  </style>
+#stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+button {
+  margin-top: 20px;
+  padding: 15px 34px;
+  border: 1px solid #fff0b0;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #fff3bd, #e8a52e 55%, #fff0a4);
+  color: #251504;
+  font-weight: 900;
+  letter-spacing: .12em;
+  cursor: pointer;
+}
+
+#status {
+  min-height: 18px;
+  color: #cdbb93;
+  font-size: 12px;
+}
+</style>
 </head>
 
 <body>
-  <main>
-    <h1>POKEREZA</h1>
-    <p>3D ALL-IN — визуальный тест</p>
+<main>
+  <h1>POKEREZA</h1>
+  <p>SOLAR CORE · ALL-IN VISUAL TEST</p>
+  <div id="stage"></div>
+  <button id="play">ЗАПУСТИТЬ ALL-IN</button>
+  <div id="status">Солнечное ядро готово</div>
+</main>
 
-    <div id="stage"></div>
+<script type="module">
+import * as THREE from "three";
 
-    <button id="play">ЗАПУСТИТЬ ALL-IN</button>
-    <div id="status">Нажми кнопку для запуска</div>
-  </main>
+const stage = document.querySelector("#stage");
+const button = document.querySelector("#play");
+const status = document.querySelector("#status");
 
-  <script type="module">
-    import { playAllIn3D } from "./js/3d-animation/allin.js";
+let renderer, scene, camera, resizeObserver;
+let running = false;
+let frame = 0;
+let cleanup = () => {};
 
-    const stage = document.querySelector("#stage");
-    const button = document.querySelector("#play");
-    const status = document.querySelector("#status");
+function init() {
+  scene = new THREE.Scene();
 
-    button.addEventListener("click", () => {
-      button.disabled = true;
-      status.textContent = "Анимация запускается…";
+  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.z = 6.2;
 
-      try {
-        const result = playAllIn3D({
-          container: stage,
-          duration: 3500,
-          onComplete: () => {
-            button.disabled = false;
-            status.textContent = "Готово. Можно запустить снова.";
-          }
-        });
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance"
+  });
 
-        if (result === null) {
-          button.disabled = false;
-          status.textContent =
-            "WebGL недоступен. Проверь консоль браузера.";
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.45;
+
+  stage.appendChild(renderer.domElement);
+
+  const resize = () => {
+    const w = Math.max(1, stage.clientWidth);
+    const h = Math.max(1, stage.clientHeight);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  };
+
+  resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(stage);
+  resize();
+
+  scene.add(new THREE.HemisphereLight(0xffd5a0, 0x190500, 1.4));
+
+  const sunLight = new THREE.PointLight(0xff8b19, 100, 25);
+  sunLight.position.set(0, 0, 2);
+  scene.add(sunLight);
+
+  const core = new THREE.Group();
+  scene.add(core);
+
+  // Многослойный процедурный солнечный диск.
+  const sunMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      heat: { value: 0 }
+    },
+
+    vertexShader: `
+      varying vec3 vPos;
+      varying vec3 vNormal;
+      uniform float time;
+      uniform float heat;
+
+      void main() {
+        vPos = position;
+        vNormal = normalMatrix * normal;
+
+        float wave =
+          sin(position.x * 14.0 + time * 2.4) *
+          sin(position.y * 12.0 - time * 2.0) *
+          sin(position.z * 13.0 + time * 1.7);
+
+        vec3 p = position + normal * wave * (0.008 + heat * 0.025);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }
+    `,
+
+    fragmentShader: `
+      varying vec3 vPos;
+      varying vec3 vNormal;
+      uniform float time;
+      uniform float heat;
+
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + 0.1);
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+      }
+
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f*f*(3.0-2.0*f);
+
+        return mix(
+          mix(
+            mix(hash(i), hash(i+vec3(1,0,0)), f.x),
+            mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)), f.x),
+            mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      float fbm(vec3 p) {
+        float n = 0.0;
+        float a = 0.5;
+
+        for (int i=0; i<5; i++) {
+          n += noise(p)*a;
+          p *= 2.02;
+          a *= 0.5;
         }
-      } catch (error) {
-        console.error(error);
-        button.disabled = false;
-        status.textContent =
-          "Ошибка запуска. Подробности в консоли браузера.";
+
+        return n;
+      }
+
+      void main() {
+        vec3 p = normalize(vPos);
+
+        p.x += sin(p.y*8.0 + time*0.5)*0.16;
+        p.y += cos(p.z*9.0 - time*0.4)*0.16;
+
+        float n = fbm(p*5.0 + time*0.18);
+        float detail = fbm(p*13.0 - time*0.24);
+        float veins = smoothstep(0.48, 0.75, n*0.75 + detail*0.5);
+
+        float t = n*0.85 + detail*0.5 + heat*0.23;
+
+        vec3 c = mix(vec3(0.24,0.018,0.001), vec3(1.0,0.12,0.005), smoothstep(0.18,0.43,t));
+        c = mix(c, vec3(1.0,0.42,0.025), smoothstep(0.35,0.61,t));
+        c = mix(c, vec3(1.0,0.78,0.20), smoothstep(0.52,0.78,t));
+        c = mix(c, vec3(1.0,0.97,0.73), smoothstep(0.72,0.96,t));
+
+        float light = 0.45 + 0.8*max(0.0, dot(normalize(vNormal), vec3(0.0,0.0,1.0)));
+        c *= light;
+        c += vec3(1.0,0.15,0.005)*veins*0.55;
+
+        gl_FragColor = vec4(c,1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `
+  });
+
+  const sun = new THREE.Mesh(
+    new THREE.SphereGeometry(0.78, 128, 96),
+    sunMaterial
+  );
+
+  core.add(sun);
+
+  // Мягкая внешняя корона.
+  const corona = new THREE.Mesh(
+    new THREE.SphereGeometry(0.98, 96, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0xff7b13,
+      transparent: true,
+      opacity: 0.20,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      depthWrite: false
+    })
+  );
+
+  core.add(corona);
+
+  // Длинные изогнутые солнечные протуберанцы.
+  const tendrils = [];
+
+  for (let i = 0; i < 32; i++) {
+    const a = i / 32 * Math.PI * 2;
+    const h = 0.15 + Math.random() * 0.55;
+
+    const points = [
+      new THREE.Vector3(Math.cos(a)*0.68, Math.sin(a)*0.68, 0),
+      new THREE.Vector3(Math.cos(a+0.12)*0.92, Math.sin(a+0.12)*0.92, 0.05),
+      new THREE.Vector3(Math.cos(a+0.28)*(0.92+h), Math.sin(a+0.28)*(0.92+h), 0.08),
+      new THREE.Vector3(Math.cos(a+0.45)*0.83, Math.sin(a+0.45)*0.83, 0.02)
+    ];
+
+    const curve = new THREE.CatmullRomCurve3(points);
+
+    const mesh = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 24, 0.009 + Math.random()*0.015, 5, false),
+      new THREE.MeshBasicMaterial({
+        color: i%4===0 ? 0xffefad : 0xff7919,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+
+    core.add(mesh);
+    tendrils.push(mesh);
+  }
+
+  // Точки взрыва.
+  const count = 2600;
+  const positions = new Float32Array(count*3);
+  const colors = new Float32Array(count*3);
+  const data = [];
+
+  const palette = [
+    new THREE.Color(0xfff8d5),
+    new THREE.Color(0xffd15c),
+    new THREE.Color(0xff861b),
+    new THREE.Color(0xff3c09)
+  ];
+
+  for (let i=0; i<count; i++) {
+    const dir = new THREE.Vector3(
+      Math.random()*2-1,
+      Math.random()*2-1,
+      (Math.random()*2-1)*0.8
+    ).normalize();
+
+    const speed = 1.4 + Math.random()*5.0;
+    const delay = Math.random()*0.12;
+    const size = 0.025 + Math.random()*0.065;
+    const color = palette[Math.floor(Math.random()*palette.length)];
+
+    data.push({dir, speed, delay, size, seed:Math.random()*10});
+
+    positions[i*3] = dir.x*0.8;
+    positions[i*3+1] = dir.y*0.8;
+    positions[i*3+2] = dir.z*0.8;
+
+    colors[i*3] = color.r;
+    colors[i*3+1] = color.g;
+    colors[i*3+2] = color.b;
+  }
+
+  const particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute("position", new THREE.BufferAttribute(positions,3));
+  particleGeo.setAttribute("color", new THREE.BufferAttribute(colors,3));
+
+  const particleMat = new THREE.PointsMaterial({
+    size: 0.06,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0,
+    sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  // Длинные светящиеся следы осколков.
+  const streakCount = 320;
+  const streakPositions = new Float32Array(streakCount*6);
+  const streakData = [];
+
+  for (let i=0; i<streakCount; i++) {
+    const dir = new THREE.Vector3(
+      Math.random()*2-1,
+      Math.random()*2-1,
+      Math.random()*2-1
+    ).normalize();
+
+    streakData.push({
+      dir,
+      speed: 2 + Math.random()*5,
+      length: 0.1 + Math.random()*0.4,
+      delay: Math.random()*0.12
+    });
+  }
+
+  const streakGeo = new THREE.BufferGeometry();
+  streakGeo.setAttribute("position",new THREE.BufferAttribute(streakPositions,3));
+
+  const streakMat = new THREE.LineBasicMaterial({
+    color: 0xffd984,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  scene.add(new THREE.LineSegments(streakGeo,streakMat));
+
+  // Сферические фронты ударной волны.
+  const waves = [];
+
+  for (let i=0; i<5; i++) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1,32,24),
+      new THREE.MeshBasicMaterial({
+        color: i%2 ? 0xffa52b : 0xfff0b0,
+        wireframe: true,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+
+    scene.add(mesh);
+    waves.push({mesh,delay:i*0.055});
+  }
+
+  // Краткая вспышка всего кадра.
+  const flash = new THREE.Mesh(
+    new THREE.PlaneGeometry(30,30),
+    new THREE.MeshBasicMaterial({
+      color: 0xffe4a0,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+
+  flash.position.z = 2;
+  scene.add(flash);
+
+  const clock = new THREE.Clock();
+  let done = false;
+
+  function smooth(a,b,x) {
+    const t = THREE.MathUtils.clamp((x-a)/(b-a),0,1);
+    return t*t*(3-2*t);
+  }
+
+  function dispose() {
+    if (done) return;
+    done = true;
+
+    cancelAnimationFrame(frame);
+    resizeObserver?.disconnect();
+    window.removeEventListener("resize",resize);
+
+    scene.traverse(o => {
+      o.geometry?.dispose();
+      if (o.material) {
+        (Array.isArray(o.material)?o.material:[o.material])
+          .forEach(m=>m.dispose());
       }
     });
-  </script>
+
+    renderer.dispose();
+    renderer.domElement.remove();
+    running = false;
+    button.disabled = false;
+    status.textContent = "Готово. Можно запустить снова.";
+  }
+
+  function resize() {
+    if (done) return;
+    const w = Math.max(1,stage.clientWidth);
+    const h = Math.max(1,stage.clientHeight);
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+
+  window.addEventListener("resize",resize);
+
+  function animate() {
+    if (done) return;
+
+    const t = clock.getElapsedTime();
+    const p = Math.min(t/4.5,1);
+
+    const charge = smooth(0,0.53,p);
+    const collapse = smooth(0.50,0.60,p);
+    const explosion = smooth(0.585,0.70,p);
+    const fade = 1-smooth(0.82,1,p);
+
+    const pulse = Math.pow(Math.max(0,Math.sin(t*(5+charge*18))),4);
+
+    sunMaterial.uniforms.time.value = t;
+    sunMaterial.uniforms.heat.value = charge + pulse*0.8;
+
+    const shrinking = 1-0.90*collapse;
+    const size = p<0.60
+      ? shrinking*(1+pulse*0.035)
+      : Math.max(0.001,0.1*(1-explosion));
+
+    core.scale.setScalar(size);
+    core.rotation.y = t*0.25;
+    core.rotation.x = Math.sin(t*0.35)*0.12;
+    core.rotation.z = Math.sin(t*0.24)*0.08;
+
+    corona.scale.setScalar(1.1+pulse*0.1);
+    corona.material.opacity = (0.17+charge*0.22)*fade;
+
+    tendrils.forEach((mesh,i)=>{
+      mesh.visible = p<0.61;
+      mesh.rotation.z = Math.sin(t*1.5+i)*0.035;
+      mesh.material.opacity = (0.45+charge*0.5)*(1-collapse);
+    });
+
+    sunLight.intensity = 70+charge*140+explosion*(1-explosion)*900;
+
+    const pos = particleGeo.attributes.position.array;
+
+    for (let i=0; i<count; i++) {
+      const d = data[i];
+      const local = Math.max(0,p-0.59-d.delay);
+      const distance = 0.8 + (1-Math.pow(1-Math.min(1,local/0.41),3))*d.speed;
+      const drift = Math.sin(t*2.5+d.seed)*0.035;
+
+      pos[i*3] = d.dir.x*distance+drift;
+      pos[i*3+1] = d.dir.y*distance+drift;
+      pos[i*3+2] = d.dir.z*distance;
+    }
+
+    particleGeo.attributes.position.needsUpdate = true;
+    particleMat.opacity = p<0.59 ? 0 : fade;
+    particleMat.size = 0.045+explosion*0.04;
+
+    const sp = streakGeo.attributes.position.array;
+
+    for (let i=0; i<streakCount; i++) {
+      const d = streakData[i];
+      const local = Math.max(0,p-0.59-d.delay);
+      const distance = 0.8+(1-Math.pow(1-Math.min(1,local/0.41),3))*d.speed;
+      const tail = distance-d.length*(0.4+local*2.0);
+      const k=i*6;
+
+      sp[k]=d.dir.x*tail;
+      sp[k+1]=d.dir.y*tail;
+      sp[k+2]=d.dir.z*tail;
+      sp[k+3]=d.dir.x*distance;
+      sp[k+4]=d.dir.y*distance;
+      sp[k+5]=d.dir.z*distance;
+    }
+
+    streakGeo.attributes.position.needsUpdate = true;
+    streakMat.opacity = p<0.59 ? 0 : fade*0.9;
+
+    waves.forEach(w=>{
+      const local = Math.max(0,p-0.59-w.delay);
+      const radius = 0.1+Math.min(1,local/0.35)*4.8;
+
+      w.mesh.scale.setScalar(radius);
+      w.mesh.rotation.x=t*0.4;
+      w.mesh.rotation.y=t*0.6;
+      w.mesh.material.opacity = local===0 ? 0 : Math.max(0,fade*(1-local/0.42)*0.55);
+    });
+
+    const flashIn = smooth(0.585,0.60,p);
+    const flashOut = 1-smooth(0.61,0.69,p);
+    flash.material.opacity = flashIn*flashOut*0.85;
+
+    camera.position.z = 6.2+explosion*0.8;
+    camera.position.x = Math.sin(t*0.7)*0.035;
+    camera.lookAt(0,0,0);
+
+    renderer.render(scene,camera);
+
+    if (p>=1) {
+      dispose();
+      return;
+    }
+
+    frame=requestAnimationFrame(animate);
+  }
+
+  frame=requestAnimationFrame(animate);
+
+  cleanup = dispose;
+}
+
+button.addEventListener("click",()=>{
+  if (running) return;
+
+  running = true;
+  button.disabled = true;
+  status.textContent = "Заряд солнечного ядра…";
+
+  try {
+    init();
+  } catch (error) {
+    console.error(error);
+    status.textContent = "Ошибка запуска. Открой консоль браузера.";
+    button.disabled = false;
+    running = false;
+  }
+});
+
+</script>
 </body>
 </html>
