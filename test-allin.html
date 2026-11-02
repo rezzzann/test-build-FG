@@ -168,16 +168,38 @@ const sphere = new THREE.Mesh(
 );
 orb.add(sphere);
 
-
-// Лицевая золотая медаль с надписью
-const face = new THREE.Group();
-face.position.z = 1.285;
-orb.add(face);
-
-// Текст на лицевой стороне
+// Надпись ALL IN непосредственно на поверхности сферы
 const textCanvas = document.createElement("canvas");
-textCanvas.width = 1024;
-textCanvas.height = 512;
+textCanvas.width = 2048;
+textCanvas.height = 1024;
+
+const ctx = textCanvas.getContext("2d");
+ctx.clearRect(0, 0, 2048, 1024);
+
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.font = "900 270px Arial";
+ctx.shadowColor = "#fff0a0";
+ctx.shadowBlur = 28;
+ctx.fillStyle = "#fff0b0";
+ctx.fillText("ALL IN", 1024, 512);
+ctx.shadowBlur = 0;
+
+const textTexture = new THREE.CanvasTexture(textCanvas);
+textTexture.colorSpace = THREE.SRGBColorSpace;
+
+const textSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(1.305, 128, 96),
+  new THREE.MeshBasicMaterial({
+    map: textTexture,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  })
+);
+
+orb.add(textSphere);
+textSphere.material.opacity = 0;
 
 const ctx = textCanvas.getContext("2d");
 ctx.clearRect(0, 0, 1024, 512);
@@ -197,18 +219,6 @@ ctx.strokeText("ALL IN", 512, 256);
 const textTexture = new THREE.CanvasTexture(textCanvas);
 textTexture.colorSpace = THREE.SRGBColorSpace;
 
-const inscription = new THREE.Mesh(
-  new THREE.PlaneGeometry(1.65, 0.82),
-  new THREE.MeshBasicMaterial({
-    map: textTexture,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false,
-    side: THREE.DoubleSide
-  })
-);
-inscription.position.z = 0.035;
-face.add(inscription);
 
 // Внешнее золотое свечение
 const halo = new THREE.Mesh(
@@ -223,54 +233,6 @@ const halo = new THREE.Mesh(
   })
 );
 orb.add(halo);
-
-// Огненные языки вокруг шара
-const flameGroup = new THREE.Group();
-orb.add(flameGroup);
-
-const flameMaterials = [];
-const flameItems = [];
-
-for (let i = 0; i < 55; i++) {
-  const angle = Math.random() * Math.PI * 2;
-  const radius = 1.22 + Math.random() * 0.22;
-  const length = 0.12 + Math.random() * 0.48;
-
-  const curve = new THREE.QuadraticBezierCurve3(
-    new THREE.Vector3(
-      Math.cos(angle) * radius,
-      Math.sin(angle) * radius,
-      (Math.random() - 0.5) * 0.2
-    ),
-    new THREE.Vector3(
-      Math.cos(angle + 0.15) * (radius + length * 0.35),
-      Math.sin(angle + 0.15) * (radius + length * 0.35),
-      0.05
-    ),
-    new THREE.Vector3(
-      Math.cos(angle + 0.3) * (radius + length),
-      Math.sin(angle + 0.3) * (radius + length),
-      0
-    )
-  );
-
-  const material = new THREE.MeshBasicMaterial({
-    color: i % 5 === 0 ? 0xfff0b0 : 0xffa51d,
-    transparent: true,
-    opacity: 0.65,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  const flame = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, 12, 0.008 + Math.random() * 0.012, 5, false),
-    material
-  );
-
-  flameGroup.add(flame);
-  flameItems.push(flame);
-  flameMaterials.push(material);
-}
 
 // Мелкие золотые фишки для финального взрыва
 const chips = [];
@@ -408,9 +370,8 @@ function reset() {
   orb.scale.setScalar(1);
   orb.rotation.set(0, 0, 0);
 
-  inscription.material.opacity = 0;
+  textSphere.material.opacity = 0;
   halo.material.opacity = 0.2;
-  flameGroup.visible = true;
 
   sparkMaterial.opacity = 0.85;
   flash.style.opacity = 0;
@@ -456,10 +417,12 @@ function animate(now) {
   }
 
   // 1.2–3.1 сек: полный оборот, постепенно замедляющийся
-  const spinProgress = smooth(1.2, 3.1, t);
-  const spinAngle = 2 * Math.PI * (1 - Math.pow(1 - spinProgress, 2));
+  const spinProgress = smooth(0.9, 2.9, t);
+const spinAngle = 2 * Math.PI * (
+  1 - Math.pow(1 - spinProgress, 3)
+);
 
-  orb.rotation.y = spinAngle;
+orb.rotation.y = spinAngle;
   orb.rotation.x = Math.sin(t * 1.7) * 0.07 * (1 - spinProgress);
   orb.rotation.z = Math.sin(t * 2.2) * 0.035 * (1 - spinProgress);
 
@@ -470,15 +433,9 @@ function animate(now) {
   halo.material.opacity = glowPulse;
   halo.scale.setScalar(pulse);
   goldLight.intensity = 95 + Math.sin(t * 4) * 20;
-  flameGroup.rotation.z = Math.sin(t * 1.5) * 0.04;
-
-  flameItems.forEach((f, i) => {
-    f.material.opacity = 0.38 + (Math.sin(t * 5 + i) + 1) * 0.2;
-  });
 
   // Надпись становится яркой, когда шар замедляет вращение
-  const textFade = smooth(2.35, 2.9, t);
-  inscription.material.opacity = textFade;
+ textSphere.material.opacity = smooth(2.0, 2.8, t);
 
   if (t > 2.4 && t < 3.15) {
     status.textContent = "ALL IN";
@@ -490,7 +447,7 @@ function animate(now) {
 
   if (t >= 3.25) {
     orb.visible = false;
-    flameGroup.visible = false;
+  
 
     flash.style.opacity = String(
       Math.max(0, (1 - explosionAge / 0.42) * 0.9)
