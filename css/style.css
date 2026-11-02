@@ -821,17 +821,14 @@ transform: translate(-50%, -50%);
 }
 /* ALL-IN: сама плашка не масштабируется и не перемещается */
 .action-label.allin-label.action-label-animate {
-  animation: allin-fade-out 2s ease-out forwards !important;
+  animation: allin-fade-out 2s linear forwards !important;
+  animation-delay: calc(-1 * var(--allin-elapsed, 0s)) !important;
   opacity: 1;
 }
 
 @keyframes allin-fade-out {
-  0%, 55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  0%, 55% { opacity: 1; }
+  100% { opacity: 0; }
 }
 .action-label.allin-label.action-label-animate::before {
   animation: allin-ring 1.5s ease-out both;
