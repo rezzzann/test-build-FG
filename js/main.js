@@ -54,6 +54,11 @@ function startAllInTableLight(playerIndex) {
   if (firstAllInSeat !== -1) return;
 
   firstAllInSeat = playerIndex;
+  const avatarWrap = document.querySelector(
+  `#seats .${seatClass[playerIndex]} .avatar-wrap`
+);
+
+avatarWrap?.classList.add('allin-flame-active');
 
   const table = $('table');
   if (!table) return;
@@ -113,7 +118,11 @@ function resetAllInTableLight() {
   }
 
   firstAllInSeat = -1;
-
+document.querySelectorAll(
+  '#seats .avatar-wrap.allin-flame-active'
+).forEach(el => {
+  el.classList.remove('allin-flame-active');
+});
   const table = $('table');
   if (!table) return;
 
