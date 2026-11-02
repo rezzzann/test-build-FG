@@ -345,14 +345,14 @@ if (
 if (previousLabelActions[i] !== action) {
   previousLabelActions[i] = action;
   labelAnimationUntil[i] = action
-  ? Date.now() + (action === 'ALL-IN' ? 2000 : 350)
+  ? Date.now() + (action === 'ALL-IN' ? 3500 : 350)
   : 0;
 }
 
 const animateAction =
   !!action && Date.now() < (labelAnimationUntil[i] || 0);
 const allinElapsed = action === 'ALL-IN'
-  ? Math.max(0, 2 - Math.max(0, labelAnimationUntil[i] - Date.now()) / 1000)
+  ? Math.max(0, 3,5 - Math.max(0, labelAnimationUntil[i] - Date.now()) / 1000)
   : 0;
 
 const animationStyle = action === 'ALL-IN' && animateAction
