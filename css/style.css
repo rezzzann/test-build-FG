@@ -27,7 +27,7 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
   border: 3px solid transparent;
   background:
     conic-gradient(
-      from var(--allin-start-angle, 0deg),
+      from var(--allin-light-angle, 0deg),
       transparent 0deg,
       transparent 275deg,
       #ffad16 310deg,
@@ -68,22 +68,21 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
     0 10px 30px #0009;
 }
 
-@keyframes allinLightRun {
-  0% {
-    background-position: 0 0;
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.5);
-  }
-  100% {
-    filter: brightness(1.2);
-  }
+@property --allin-light-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .table.allin-light-active .allin-light-trail {
-    animation-duration: 1ms;
+@keyframes allinLightRun {
+  from {
+    --allin-light-angle: var(--allin-start-angle, 0deg);
+    filter: brightness(1.2);
+  }
+
+  to {
+    --allin-light-angle: calc(var(--allin-start-angle, 0deg) + 360deg);
+    filter: brightness(1.5);
   }
 }
 .wm{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:clamp(8px,1.5vw,17px);white-space:nowrap;z-index:1;pointer-events:none;color:#d8b45f;font-size:clamp(13px,2.5vw,25px);font-weight:900;letter-spacing:.17em;text-shadow:0 0 5px #c5a15b55,0 1px 2px #0008;opacity:.78}
