@@ -1076,7 +1076,9 @@ function restoreSavedGame(){
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
  savedGameState=null;render();renderHandBets();tournamentClock.start();
- if (!over && actQueue.length && hasActedThisStreet(actQueue[0])) {   advanceQueue(); } else if (!over && actor !== user && eligible(actor) &&            actQueue.includes(actor) && !hasActedThisStreet(actor)) {   scheduleAI(actor); }
+if (!over && !dealInProgress) {
+  advanceQueue();
+}
 }
 function resetStacksAndRestart(){
  cancelAllInAdvanceTimer();
