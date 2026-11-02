@@ -1,525 +1,470 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Pokereza — Golden ALL IN</title>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
-  }
-}
-</script>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Pokereza ALL IN 3D</title>
 <style>
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #050403;
-  font-family: Arial, sans-serif;
-}
-
-#stage {
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 45%, #35200b 0%, #100b05 42%, #030302 100%);
-}
-
-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#brand {
-  position: fixed;
-  top: 22px;
-  left: 0;
-  width: 100%;
-  text-align: center;
-  color: #f8d68b;
-  font-size: clamp(20px, 4vw, 30px);
-  font-weight: 800;
-  letter-spacing: .25em;
-  text-shadow: 0 0 22px #ffb32e66;
-  pointer-events: none;
-}
-
-#controls {
-  position: fixed;
-  bottom: max(25px, env(safe-area-inset-bottom));
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  pointer-events: none;
-}
-
-button {
-  pointer-events: auto;
-  padding: 15px 30px;
-  border: 1px solid #fff0b1;
-  border-radius: 40px;
-  background: linear-gradient(135deg, #fff4c8, #dca02f 50%, #fff0a3);
-  color: #291704;
-  font-weight: 900;
-  font-size: 14px;
-  letter-spacing: .12em;
-  box-shadow: 0 0 30px #e9a62b33;
-  cursor: pointer;
-}
-
-#status {
-  color: #d9bd84;
-  font-size: 12px;
-  text-shadow: 0 1px 8px #000;
-}
-
-#flash {
-  position: fixed;
-  inset: 0;
-  background: #fff1bc;
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (max-height: 500px) {
-  #brand { top: 10px; }
-  #controls { bottom: 10px; }
-  button { padding: 10px 22px; }
-}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050403;font-family:Arial,sans-serif}
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,#32170f,#100a08 48%,#030303)}
+canvas{display:block;width:100%;height:100%}
+#brand{position:fixed;top:max(16px,env(safe-area-inset-top));width:100%;text-align:center;color:#f8d58b;font-weight:900;letter-spacing:.28em;font-size:clamp(18px,4vw,28px);pointer-events:none;text-shadow:0 0 20px #ff8a2870}
+#controls{position:fixed;bottom:max(18px,env(safe-area-inset-bottom));width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+button{pointer-events:auto;border:1px solid #fff0b1;border-radius:40px;padding:13px 24px;color:#281607;background:linear-gradient(135deg,#fff3c1,#d99a27 50%,#fff0a1);font-weight:900;letter-spacing:.1em;box-shadow:0 0 25px #e9a62b40}
+#status{color:#d9bd84;font-size:12px;text-shadow:0 1px 8px #000}
+#flash{position:fixed;inset:0;background:#fff0c2;opacity:0;pointer-events:none}
+@media(max-height:500px){#brand{top:8px}#controls{bottom:8px}button{padding:9px 18px}}
 </style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
+</script>
 </head>
-
 <body>
 <div id="stage"></div>
 <div id="brand">POKEREZA</div>
 <div id="flash"></div>
-
 <div id="controls">
   <button id="play">ЗАПУСТИТЬ ALL-IN</button>
-  <div id="status">Золотой шар готов</div>
+  <div id="status">3D-эффект готов</div>
 </div>
-
 <script type="module">
 import * as THREE from "three";
+import {FontLoader} from "three/addons/loaders/FontLoader.js";
+import {TextGeometry} from "three/addons/geometries/TextGeometry.js";
 
-const stage = document.querySelector("#stage");
-const button = document.querySelector("#play");
-const status = document.querySelector("#status");
-const flash = document.querySelector("#flash");
+const $=s=>document.querySelector(s);
+const stage=$("#stage"),button=$("#play"),status=$("#status"),flash=$("#flash");
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);
+camera.position.set(0,0,8.4);
 
-const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(
-  42, innerWidth / innerHeight, 0.1, 100
-);
-camera.position.set(0, 0, 7);
-
-const renderer = new THREE.WebGLRenderer({
-  antialias: true,
-  alpha: true,
-  powerPreference: "high-performance"
+const renderer=new THREE.WebGLRenderer({
+  antialias:true,alpha:true,powerPreference:"high-performance"
 });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
-renderer.setSize(innerWidth, innerHeight);
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.35;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.35;
 stage.appendChild(renderer.domElement);
 
-// Освещение
-scene.add(new THREE.AmbientLight(0xffd99a, 1.2));
+scene.add(new THREE.HemisphereLight(0xffd7a0,0x170806,2.1));
+const key=new THREE.PointLight(0xffc15a,130,30);
+key.position.set(2,3,4);
+scene.add(key);
+const red=new THREE.PointLight(0xff2418,90,18);
+red.position.set(-3,-1,1);
+scene.add(red);
 
-const goldLight = new THREE.PointLight(0xffb52e, 110, 30);
-goldLight.position.set(0, 1, 3);
-scene.add(goldLight);
+const root=new THREE.Group();
+scene.add(root);
+const orb=new THREE.Group();
+root.add(orb);
 
-const rimLight = new THREE.PointLight(0xff6b12, 70, 20);
-rimLight.position.set(-3, -1, -2);
-scene.add(rimLight);
+// Тёмное стеклянное ядро
+orb.add(new THREE.Mesh(
+  new THREE.SphereGeometry(1.18,64,48),
+  new THREE.MeshPhysicalMaterial({
+    color:0x260f13,metalness:.65,roughness:.17,
+    clearcoat:1,clearcoatRoughness:.07,
+    emissive:0x6d0b13,emissiveIntensity:.7
+  })
+));
 
-// Золотой шар
-const orb = new THREE.Group();
-scene.add(orb);
+// Процедурная красная энергетическая текстура
+const cv=document.createElement("canvas");
+cv.width=1024;
+cv.height=512;
+const cx=cv.getContext("2d");
+cx.fillStyle="#18080d";
+cx.fillRect(0,0,1024,512);
 
-const bodyMaterial = new THREE.MeshPhysicalMaterial({
-  color: 0xe5a52c,
-  metalness: 0.88,
-  roughness: 0.2,
-  clearcoat: 1,
-  clearcoatRoughness: 0.12,
-  emissive: 0x9b4a08,
-  emissiveIntensity: 0.24
-});
+for(let i=0;i<100;i++){
+  let x=Math.random()*1024,y=Math.random()*512;
+  cx.beginPath();
+  cx.moveTo(x,y);
+  for(let j=0;j<5;j++){
+    x+=(Math.random()-.5)*130;
+    y+=(Math.random()-.5)*70;
+    cx.lineTo(x,y);
+  }
+  cx.strokeStyle=i%3?"rgba(170,15,30,.55)":"rgba(255,55,35,.9)";
+  cx.lineWidth=1+Math.random()*3;
+  cx.shadowColor="#ff3c22";
+  cx.shadowBlur=12;
+  cx.stroke();
+}
+cx.shadowBlur=0;
 
-const sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(1.3, 96, 72),
-  bodyMaterial
-);
-orb.add(sphere);
-
-// Надпись ALL IN непосредственно на поверхности сферы
-const textCanvas = document.createElement("canvas");
-textCanvas.width = 2048;
-textCanvas.height = 1024;
-
-const ctx = textCanvas.getContext("2d");
-ctx.clearRect(0, 0, 2048, 1024);
-
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.font = "900 270px Arial";
-ctx.shadowColor = "#fff0a0";
-ctx.shadowBlur = 28;
-ctx.fillStyle = "#fff0b0";
-ctx.fillText("ALL IN", 1024, 512);
-ctx.shadowBlur = 0;
-
-  const textTexture = new THREE.CanvasTexture(textCanvas);
-textTexture.colorSpace = THREE.SRGBColorSpace;
-const textSphere = new THREE.Mesh(
-  new THREE.SphereGeometry(1.305, 128, 96),
+const energyTex=new THREE.CanvasTexture(cv);
+energyTex.colorSpace=THREE.SRGBColorSpace;
+orb.add(new THREE.Mesh(
+  new THREE.SphereGeometry(1.19,64,48),
   new THREE.MeshBasicMaterial({
-    map: textTexture,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending
+    map:energyTex,transparent:true,opacity:.72,
+    blending:THREE.AdditiveBlending,depthWrite:false
   })
-);
+));
 
-
-  
-orb.add(textSphere);
-textSphere.material.opacity = 0;
-
-
-
-
-// Внешнее золотое свечение
-const halo = new THREE.Mesh(
-  new THREE.SphereGeometry(1.48, 48, 40),
-  new THREE.MeshBasicMaterial({
-    color: 0xffa51d,
-    transparent: true,
-    opacity: 0.2,
-    side: THREE.BackSide,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
+// Стеклянная внешняя оболочка
+orb.add(new THREE.Mesh(
+  new THREE.SphereGeometry(1.205,64,48),
+  new THREE.MeshPhysicalMaterial({
+    color:0xff8b55,metalness:.2,roughness:.07,
+    transparent:true,opacity:.15,clearcoat:1,
+    side:THREE.BackSide
   })
-);
-orb.add(halo);
+));
 
-// Мелкие золотые фишки для финального взрыва
-const chips = [];
-const chipGeometry = new THREE.CylinderGeometry(0.09, 0.09, 0.035, 24);
-
-const chipMaterials = [
-  new THREE.MeshStandardMaterial({
-    color: 0xffd46a, metalness: 0.85, roughness: 0.22,
-    emissive: 0x8c4c08, emissiveIntensity: 0.35
-  }),
-  new THREE.MeshStandardMaterial({
-    color: 0xfff0b5, metalness: 0.9, roughness: 0.18,
-    emissive: 0x9a690f, emissiveIntensity: 0.3
-  }),
-  new THREE.MeshStandardMaterial({
-    color: 0xc78319, metalness: 0.9, roughness: 0.25,
-    emissive: 0x6d3300, emissiveIntensity: 0.3
-  })
-];
-
-for (let i = 0; i < 95; i++) {
-  const chip = new THREE.Mesh(
-    chipGeometry,
-    chipMaterials[i % chipMaterials.length]
+// Вращающиеся золотисто-красные кольца
+const rings=[];
+for(let i=0;i<3;i++){
+  const r=new THREE.Mesh(
+    new THREE.TorusGeometry(1.43+i*.09,.012,8,100),
+    new THREE.MeshStandardMaterial({
+      color:i===1?0xff4027:0xffc45d,
+      metalness:.9,roughness:.18,
+      emissive:i===1?0xff210d:0xff7b16,
+      emissiveIntensity:2.5
+    })
   );
+  r.rotation.set(.7+i*.6,.25+i*.8,.4+i*.4);
+  orb.add(r);
+  rings.push(r);
+}
 
-  chip.visible = false;
-  scene.add(chip);
+// Чёрная лента вокруг шара
+const bandGroup=new THREE.Group();
+orb.add(bandGroup);
 
-  const direction = new THREE.Vector3(
-    Math.random() * 2 - 1,
-    Math.random() * 2 - 1,
-    Math.random() * 0.8 + 0.3
-  ).normalize();
+const band=new THREE.Mesh(
+  new THREE.CylinderGeometry(
+    1.235,1.235,.55,96,1,true,
+    Math.PI*.12,Math.PI*1.76
+  ),
+  new THREE.MeshStandardMaterial({
+    color:0x100b0a,metalness:.6,
+    roughness:.28,side:THREE.DoubleSide
+  })
+);
+band.rotation.z=Math.PI/2;
+band.rotation.y=Math.PI;
+bandGroup.add(band);
 
+// Золотые края ленты
+for(const y of [-.275,.275]){
+  const e=new THREE.Mesh(
+    new THREE.TorusGeometry(1.235,.018,8,96),
+    new THREE.MeshStandardMaterial({
+      color:0xe8a744,metalness:.9,roughness:.2,
+      emissive:0x8c3508
+    })
+  );
+  e.position.y=y;
+  e.rotation.x=Math.PI/2;
+  bandGroup.add(e);
+}
+
+// Эмблема пик
+const sp=document.createElement("canvas");
+sp.width=256;
+sp.height=256;
+const sc=sp.getContext("2d");
+sc.translate(128,128);
+sc.fillStyle="#f5c56c";
+sc.strokeStyle="#7e390d";
+sc.lineWidth=7;
+sc.beginPath();
+sc.moveTo(0,-88);
+sc.bezierCurveTo(-22,-53,-78,-26,-68,12);
+sc.bezierCurveTo(-60,46,-22,46,0,22);
+sc.bezierCurveTo(22,46,60,46,68,12);
+sc.bezierCurveTo(78,-26,22,-53,0,-88);
+sc.closePath();
+sc.fill();
+sc.stroke();
+sc.beginPath();
+sc.moveTo(-8,22);
+sc.lineTo(-20,62);
+sc.lineTo(20,62);
+sc.lineTo(8,22);
+sc.fill();
+
+const spTex=new THREE.CanvasTexture(sp);
+spTex.colorSpace=THREE.SRGBColorSpace;
+const emblem=new THREE.Mesh(
+  new THREE.PlaneGeometry(.24,.24),
+  new THREE.MeshBasicMaterial({
+    map:spTex,transparent:true,
+    side:THREE.DoubleSide,depthWrite:false
+  })
+);
+emblem.position.set(0,.38,1.18);
+bandGroup.add(emblem);
+
+// Настоящая объёмная надпись ALL IN
+let fontReady=false;
+new FontLoader().load(
+  "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/fonts/helvetiker_bold.typeface.json",
+  font=>{
+    const g=new TextGeometry("ALL IN",{
+      font,size:.39,depth:.055,curveSegments:8,
+      bevelEnabled:true,bevelThickness:.012,
+      bevelSize:.008,bevelSegments:3
+    });
+    g.computeBoundingBox();
+    g.translate(
+      -(g.boundingBox.max.x-g.boundingBox.min.x)/2,
+      -(g.boundingBox.max.y-g.boundingBox.min.y)/2,
+      0
+    );
+    const m=new THREE.Mesh(
+      g,
+      new THREE.MeshStandardMaterial({
+        color:0xffd77c,metalness:.9,roughness:.18,
+        emissive:0x9b4b0a,emissiveIntensity:1.2
+      })
+    );
+    m.position.set(0,-.01,1.255);
+    bandGroup.add(m);
+    fontReady=true;
+  },
+  undefined,
+  ()=>status.textContent="Не удалось загрузить 3D-шрифт"
+);
+
+// Светящийся круг под шаром
+const ground=new THREE.Group();
+scene.add(ground);
+ground.position.y=-1.6;
+
+for(let i=0;i<3;i++){
+  const q=new THREE.Mesh(
+    new THREE.TorusGeometry(.75+i*.16,.012,8,96),
+    new THREE.MeshBasicMaterial({
+      color:i===1?0xff321d:0xffb33c,
+      transparent:true,opacity:.9
+    })
+  );
+  q.rotation.x=-Math.PI/2;
+  q.scale.set(1.45,1,1);
+  ground.add(q);
+}
+const glow=new THREE.Mesh(
+  new THREE.CircleGeometry(1.4,64),
+  new THREE.MeshBasicMaterial({
+    color:0xff2d19,transparent:true,opacity:.13,
+    blending:THREE.AdditiveBlending,depthWrite:false
+  })
+);
+glow.rotation.x=-Math.PI/2;
+glow.position.y=-.015;
+ground.add(glow);
+
+// Чёрно-золотые покерные фишки
+const chips=[];
+const cg=new THREE.CylinderGeometry(.16,.16,.075,32);
+
+for(let i=0;i<9;i++){
+  const g=new THREE.Group();
+  g.add(new THREE.Mesh(
+    cg,
+    new THREE.MeshStandardMaterial({
+      color:0x171514,metalness:.6,roughness:.22
+    })
+  ));
+  const rim=new THREE.Mesh(
+    new THREE.TorusGeometry(.145,.025,8,32),
+    new THREE.MeshStandardMaterial({
+      color:0xe3ad54,metalness:.9,roughness:.18,
+      emissive:0x9c4c12
+    })
+  );
+  rim.rotation.x=Math.PI/2;
+  g.add(rim);
+  g.visible=false;
+  scene.add(g);
   chips.push({
-    mesh: chip,
-    direction,
-    speed: 1.5 + Math.random() * 4.2,
-    spin: (Math.random() - 0.5) * 12,
-    delay: Math.random() * 0.22,
-    scale: 0.55 + Math.random() * 1.1,
-    rotation: new THREE.Vector3(
-      Math.random() * 6,
-      Math.random() * 6,
-      Math.random() * 6
-    )
+    g,a:i/9*Math.PI*2,
+    r:1.6+Math.random()*1.15,
+    s:.7+Math.random()*1.4,
+    spin:(Math.random()-.5)*12,
+    delay:1.9+Math.random()*.25,
+    k:.65+Math.random()*.65
   });
 }
 
-// Искры вокруг шара
-const SPARK_COUNT = 500;
-const sparkPositions = new Float32Array(SPARK_COUNT * 3);
-const sparkColors = new Float32Array(SPARK_COUNT * 3);
-const sparkData = [];
+// Золотые и красные искры
+const N=280;
+const pos=new Float32Array(N*3);
+const cols=new Float32Array(N*3);
+const sd=[];
 
-for (let i = 0; i < SPARK_COUNT; i++) {
-  const direction = new THREE.Vector3(
-    Math.random() * 2 - 1,
-    Math.random() * 2 - 1,
-    Math.random() * 2 - 1
+for(let i=0;i<N;i++){
+  const d=new THREE.Vector3(
+    Math.random()*2-1,
+    Math.random()*2-1,
+    Math.random()*2-1
   ).normalize();
-
-  sparkData.push({
-    direction,
-    speed: 0.3 + Math.random() * 1.5,
-    phase: Math.random() * Math.PI * 2,
-    radius: 1.2 + Math.random() * 0.5
+  sd.push({
+    d,r:1.25+Math.random()*.8,
+    p:Math.random()*6.28
   });
-
-  const color = new THREE.Color(
-    Math.random() > 0.55 ? 0xffe6a0 : 0xff9a19
+  const c=new THREE.Color(
+    Math.random()>.45?0xffd88a:0xff3c1c
   );
-
-  sparkColors[i * 3] = color.r;
-  sparkColors[i * 3 + 1] = color.g;
-  sparkColors[i * 3 + 2] = color.b;
+  cols.set([c.r,c.g,c.b],i*3);
 }
 
-const sparkGeometry = new THREE.BufferGeometry();
-sparkGeometry.setAttribute(
-  "position", new THREE.BufferAttribute(sparkPositions, 3)
-);
-sparkGeometry.setAttribute(
-  "color", new THREE.BufferAttribute(sparkColors, 3)
-);
+const sg=new THREE.BufferGeometry();
+sg.setAttribute("position",new THREE.BufferAttribute(pos,3));
+sg.setAttribute("color",new THREE.BufferAttribute(cols,3));
 
-const sparkMaterial = new THREE.PointsMaterial({
-  size: 0.035,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.85,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false
-});
-
-const sparks = new THREE.Points(sparkGeometry, sparkMaterial);
+const sparks=new THREE.Points(
+  sg,
+  new THREE.PointsMaterial({
+    size:.035,vertexColors:true,transparent:true,
+    opacity:.9,blending:THREE.AdditiveBlending,
+    depthWrite:false
+  })
+);
 scene.add(sparks);
 
-// Вспышка взрыва
-const flashLight = new THREE.PointLight(0xffd36b, 0, 35);
+const flashLight=new THREE.PointLight(0xffc45e,0,24);
 scene.add(flashLight);
 
-let running = false;
-let startTime = 0;
-let frameId = 0;
-let previousTime = 0;
+let running=false,start=0,raf=0,last=0;
+const clamp=x=>Math.max(0,Math.min(1,x));
+const smooth=(a,b,t)=>{
+  const x=clamp((t-a)/(b-a));
+  return x*x*(3-2*x);
+};
 
-function easeOutBounce(x) {
-  const n1 = 7.5625;
-  const d1 = 2.75;
+function reset(){
+  orb.visible=true;
+  orb.scale.setScalar(.02);
+  orb.position.set(0,.08,0);
+  orb.rotation.set(0,0,0);
+  ground.visible=true;
+  ground.scale.setScalar(.65);
 
-  if (x < 1 / d1) return n1 * x * x;
-  if (x < 2 / d1) {
-    x -= 1.5 / d1;
-    return n1 * x * x + 0.75;
-  }
-  if (x < 2.5 / d1) {
-    x -= 2.25 / d1;
-    return n1 * x * x + 0.9375;
-  }
-
-  x -= 2.625 / d1;
-  return n1 * x * x + 0.984375;
-}
-
-function smooth(a, b, x) {
-  const v = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1);
-  return v * v * (3 - 2 * v);
-}
-
-function reset() {
-  orb.visible = true;
-  orb.position.set(0, 3.5, 0);
-  orb.scale.setScalar(1);
-  orb.rotation.set(0, 0, 0);
-
-  textSphere.material.opacity = 0;
-  halo.material.opacity = 0.2;
-
-  sparkMaterial.opacity = 0.85;
-  flash.style.opacity = 0;
-  flashLight.intensity = 0;
-
-  chips.forEach(c => {
-    c.mesh.visible = false;
-    c.mesh.position.set(0, 0, 0);
-    c.mesh.rotation.set(
-      c.rotation.x, c.rotation.y, c.rotation.z
-    );
+  rings.forEach((r,i)=>{
+    r.rotation.set(.7+i*.6,.25+i*.8,.4+i*.4);
   });
 
-  const p = sparkGeometry.attributes.position.array;
-  for (let i = 0; i < SPARK_COUNT; i++) {
-    const d = sparkData[i];
-    p[i * 3] = d.direction.x * d.radius;
-    p[i * 3 + 1] = d.direction.y * d.radius;
-    p[i * 3 + 2] = d.direction.z * d.radius;
-  }
-  sparkGeometry.attributes.position.needsUpdate = true;
+  chips.forEach(c=>{
+    c.g.visible=false;
+    c.g.scale.setScalar(c.k);
+  });
+
+  sparks.visible=true;
+  sparks.material.opacity=.9;
+  flash.style.opacity="0";
+  flashLight.intensity=0;
 }
 
-function animate(now) {
-  if (!running) return;
+function animate(now){
+  if(!running)return;
 
-  const t = (now - startTime) / 1000;
-  const dt = Math.min((now - previousTime) / 1000, 0.04);
-  previousTime = now;
+  const t=(now-start)/1000;
+  const dt=Math.min((now-last)/1000,.04);
+  last=now;
 
-  // 0–1.1 сек: падение и пружинящий отскок
-  const fall = smooth(0, 0.85, t);
-  const bounceTime = Math.max(0, t - 0.85);
-  const bounce = Math.sin(bounceTime * 8) *
-                 Math.exp(-bounceTime * 2.5);
+  const appear=smooth(0,.55,t);
+  const fade=1-smooth(3.05,3.5,t);
 
-  orb.position.y = THREE.MathUtils.lerp(3.5, 0, fall);
+  orb.scale.setScalar((.02+.98*appear)*fade);
+  orb.position.y=.08+Math.sin(t*8)*.035*(1-smooth(.5,1,t));
+  orb.rotation.y=t*1.4;
+  orb.rotation.x=Math.sin(t*2)*.04;
 
-  if (t >= 0.85 && t < 1.65) {
-    orb.position.y = bounce * 0.32;
-  } else if (t >= 1.65) {
-    orb.position.y = 0;
+  rings.forEach((r,i)=>{
+    r.rotation.z+=dt*(i%2?-.9:1.15);
+    r.rotation.x+=dt*.16*(i+1);
+  });
+
+  bandGroup.rotation.y=Math.sin(t*1.4)*.04;
+  ground.scale.setScalar(.65+.35*appear);
+  key.intensity=105+Math.sin(t*5)*20;
+  red.intensity=70+Math.sin(t*7)*30;
+
+  const p=sg.attributes.position.array;
+  for(let i=0;i<N;i++){
+    const d=sd[i];
+    const rr=d.r+Math.sin(t*4+d.p)*.09;
+    p[i*3]=d.d.x*rr;
+    p[i*3+1]=d.d.y*rr;
+    p[i*3+2]=d.d.z*rr;
   }
+  sg.attributes.position.needsUpdate=true;
+  sparks.material.opacity=.9*fade;
 
-  // 1.2–3.1 сек: полный оборот, постепенно замедляющийся
-  const spinProgress = smooth(0.9, 2.9, t);
-const spinAngle = 2 * Math.PI * (
-  1 - Math.pow(1 - spinProgress, 3)
-);
-
-orb.rotation.y = spinAngle;
-  orb.rotation.x = Math.sin(t * 1.7) * 0.07 * (1 - spinProgress);
-  orb.rotation.z = Math.sin(t * 2.2) * 0.035 * (1 - spinProgress);
-
-  // Мягкое пульсирующее золотое свечение
-  const pulse = 1 + Math.sin(t * 4.5) * 0.025;
-  const glowPulse = 0.2 + (Math.sin(t * 3.2) + 1) * 0.06;
-
-  halo.material.opacity = glowPulse;
-  halo.scale.setScalar(pulse);
-  goldLight.intensity = 95 + Math.sin(t * 4) * 20;
-
-  // Надпись становится яркой, когда шар замедляет вращение
- textSphere.material.opacity = smooth(2.0, 2.8, t);
-
-  if (t > 2.4 && t < 3.15) {
-    status.textContent = "ALL IN";
-  }
-
-  // 3.3 сек: яркая вспышка и распад шара на фишки
-  const explode = smooth(3.2, 3.38, t);
-  const explosionAge = Math.max(0, t - 3.25);
-
-  if (t >= 3.25) {
-    orb.visible = false;
-  
-
-    flash.style.opacity = String(
-      Math.max(0, (1 - explosionAge / 0.42) * 0.9)
-    );
-
-    flashLight.position.copy(orb.position);
-    flashLight.intensity = Math.max(0, 700 * (1 - explosionAge / 0.35));
-
-    chips.forEach(c => {
-      if (explosionAge < c.delay) return;
-
-      c.mesh.visible = true;
-
-      const local = explosionAge - c.delay;
-      const distance = local * c.speed;
-
-      c.mesh.position.set(
-        c.direction.x * distance,
-        c.direction.y * distance,
-        c.direction.z * distance
-      );
-
-      c.mesh.rotation.x += dt * c.spin;
-      c.mesh.rotation.y += dt * c.spin * 0.75;
-      c.mesh.rotation.z += dt * c.spin * 0.55;
-
-      const scale = c.scale * (1 - smooth(1.4, 2.5, local));
-      c.mesh.scale.setScalar(Math.max(0.001, scale));
-    });
-
-    sparkMaterial.opacity = Math.max(0, 1 - explosionAge / 1.6);
-    status.textContent = "ЗОЛОТОЙ ВЗРЫВ";
-  } else {
-    // Искры продолжают вращаться вокруг шара
-    const p = sparkGeometry.attributes.position.array;
-
-    for (let i = 0; i < SPARK_COUNT; i++) {
-      const d = sparkData[i];
-      const radius = d.radius + Math.sin(t * 3 + d.phase) * 0.09;
-
-      p[i * 3] = d.direction.x * radius;
-      p[i * 3 + 1] = d.direction.y * radius;
-      p[i * 3 + 2] = d.direction.z * radius;
+  chips.forEach(c=>{
+    if(t<c.delay){
+      c.g.visible=false;
+      return;
     }
+    c.g.visible=t<3.5;
+    const age=t-c.delay;
+    const a=c.a+age*c.s;
+    c.g.position.set(
+      Math.cos(a)*c.r*Math.min(age*1.6,1),
+      Math.sin(a*1.4)*.5,
+      Math.sin(a)*.8
+    );
+    c.g.rotation.set(age*c.spin,age*c.spin*.7,a);
+    c.g.scale.setScalar(c.k*(1-smooth(2.9,3.5,t)));
+  });
 
-    sparkGeometry.attributes.position.needsUpdate = true;
-  }
+  const peak=smooth(2.55,2.72,t)*(1-smooth(2.82,3.12,t));
+  flash.style.opacity=String(.72*peak);
+  flashLight.intensity=450*peak;
+  flashLight.position.copy(orb.position);
 
-  renderer.render(scene, camera);
+  status.textContent=t<2.4
+    ?"Шар появляется · кольца вращаются"
+    :t<3.05?"ALL IN":"Вспышка · исчезновение";
 
-  if (t >= 5.7) {
-    running = false;
-    button.disabled = false;
-    status.textContent = "Готово. Можно запустить снова.";
+  renderer.render(scene,camera);
+
+  if(t>=3.5){
+    running=false;
+    button.disabled=false;
+    status.textContent="Готово. Можно запустить снова.";
+    reset();
+    renderer.render(scene,camera);
     return;
   }
 
-  frameId = requestAnimationFrame(animate);
+  raf=requestAnimationFrame(animate);
 }
 
-function launch() {
-  if (running) return;
-
-  cancelAnimationFrame(frameId);
+function launch(){
+  if(running)return;
+  cancelAnimationFrame(raf);
   reset();
-
-  running = true;
-  button.disabled = true;
-  status.textContent = "Золотой шар падает…";
-
-  startTime = performance.now();
-  previousTime = startTime;
-  frameId = requestAnimationFrame(animate);
+  running=true;
+  button.disabled=true;
+  status.textContent=fontReady?"ALL IN":"Загрузка 3D-шрифта…";
+  start=performance.now();
+  last=start;
+  raf=requestAnimationFrame(animate);
 }
 
-button.addEventListener("click", launch);
+button.addEventListener("click",launch);
 
-function resize() {
-  camera.aspect = innerWidth / innerHeight;
+function resize(){
+  camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
 }
 
-window.addEventListener("resize", resize);
-
+window.addEventListener("resize",resize,{passive:true});
 reset();
-renderer.render(scene, camera);
+renderer.render(scene,camera);
 </script>
 </body>
 </html>
