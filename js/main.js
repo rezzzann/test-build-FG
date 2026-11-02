@@ -55,17 +55,13 @@ function startAllInTableLight(playerIndex) {
 
   firstAllInSeat = playerIndex;
  requestAnimationFrame(() => {
-  requestAnimationFrame(() => {
-    if (firstAllInSeat !== playerIndex) return;
+  const avatarWrap = document.querySelector(
+    `#seats .${seatClass[playerIndex]} .avatar-wrap`
+  );
 
-    const avatarWrap = document.querySelector(
-      `#seats .${seatClass[playerIndex]} .avatar-wrap`
-    );
-
-    if (avatarWrap) {
-      avatarWrap.classList.add('allin-flame-active');
-    }
-  });
+  if (firstAllInSeat === playerIndex) {
+    avatarWrap?.classList.add('allin-flame-active');
+  }
 });
   const table = $('table');
   if (!table) return;
