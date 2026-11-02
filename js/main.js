@@ -62,23 +62,39 @@ function startAllInTableLight(playerIndex) {
     clearTimeout(allInLightTimer);
   }
 
-  const seats = [
-    { angle: 270 },
-    { angle: 0 },
-    { angle: 90 },
-    { angle: 180 }
-  ];
+    const seat = document.querySelector(
+    `#seats .${seatClass[playerIndex]} .avatar`
+  );
+
+  const tableRect = table.getBoundingClientRect();
+
+  let startAngle = 0;
+
+  if (seat) {
+    const rect = seat.getBoundingClientRect();
+
+    const avatarX = rect.left + rect.width / 2;
+    const avatarY = rect.top + rect.height / 2;
+    const centerX = tableRect.left + tableRect.width / 2;
+    const centerY = tableRect.top + tableRect.height / 2;
+
+    startAngle = Math.atan2(
+      avatarX - centerX,
+      -(avatarY - centerY)
+    ) * 180 / Math.PI;
+
+    if (startAngle < 0) startAngle += 360;
+  }
 
   const trail = document.createElement('div');
   trail.className = 'allin-light-trail';
 
   table.querySelector('.allin-light-trail')?.remove();
 
-  trail.style.setProperty(
+   trail.style.setProperty(
     '--allin-start-angle',
-    `${seats[playerIndex]?.angle ?? 0}deg`
+    `${startAngle}deg`
   );
-
   table.appendChild(trail);
   table.classList.remove('allin-light-finished');
   table.classList.add('allin-light-active');
