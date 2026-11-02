@@ -959,3 +959,62 @@ transform: translate(-50%, -50%);
     opacity: 1;
   }
 }
+/* ALL-IN: пламя над аватаром игрока */
+.avatar-wrap.allin-flame-active::after {
+  content: "🔥";
+  position: absolute;
+  left: 50%;
+  top: -30px;
+  z-index: 30;
+  font-size: 30px;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  filter:
+    drop-shadow(0 0 4px #ffb21c)
+    drop-shadow(0 0 10px #ff6a00);
+  animation: allinFlameBurn 0.55s ease-in-out infinite alternate;
+}
+
+.avatar-wrap.allin-flame-active::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -15px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ff8c00;
+  opacity: 0.45;
+  filter: blur(15px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: allinFlameGlow 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes allinFlameBurn {
+  from {
+    transform: translateX(-50%) scale(0.85) rotate(-5deg);
+    filter: drop-shadow(0 0 4px #ffb21c);
+  }
+
+  to {
+    transform: translateX(-50%) scale(1.2) rotate(5deg);
+    filter:
+      drop-shadow(0 0 7px #fff0a0)
+      drop-shadow(0 0 14px #ff6a00);
+  }
+}
+
+@keyframes allinFlameGlow {
+  from {
+    opacity: 0.25;
+    transform: translateX(-50%) scale(0.8);
+  }
+
+  to {
+    opacity: 0.65;
+    transform: translateX(-50%) scale(1.25);
+  }
+}
