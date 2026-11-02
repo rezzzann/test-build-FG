@@ -125,7 +125,7 @@ function init() {
 
   stage.appendChild(renderer.domElement);
 
-  const resize = () => {
+  const resizeStage = () => {
     const w = Math.max(1, stage.clientWidth);
     const h = Math.max(1, stage.clientHeight);
     renderer.setSize(w, h, false);
@@ -133,9 +133,9 @@ function init() {
     camera.updateProjectionMatrix();
   };
 
-  resizeObserver = new ResizeObserver(resize);
-  resizeObserver.observe(stage);
-  resize();
+  resizeObserver = new ResizeObserver(resizeStage);
+resizeObserver.observe(stage);
+resizeStage();
 
   scene.add(new THREE.HemisphereLight(0xffd5a0, 0x190500, 1.4));
 
