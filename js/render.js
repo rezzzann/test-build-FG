@@ -17,6 +17,7 @@ export function createRenderer({
   let winnerAnimationPlayed = false;
   let previousLabelActions = [];
   let labelAnimationUntil = [];
+  let allinInfoAppearUntil = [];
   function actionClass(action) {
     const classes = {
       'РЕЙЗ': 'raise-label',
@@ -341,6 +342,14 @@ if (
     $('seats').innerHTML = players.map((p, i) => {
       const cls = seatClass[i];
       const action = p.labelAction || '';
+      const wasAllIn = previousLabelActions[i] === 'ALL-IN';
+
+if (wasAllIn && action !== 'ALL-IN') {
+  allinInfoAppearUntil[i] = Date.now() + 500;
+}
+
+const animateInfoReturn =
+  Date.now() < (allinInfoAppearUntil[i] || 0);
 
 if (previousLabelActions[i] !== action) {
   previousLabelActions[i] = action;
@@ -400,7 +409,7 @@ const winnerCardsMarkup = showAISeatCards
     }).join('')}</div>`
   : '';
 
-      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
+      return `<div class="seat ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
