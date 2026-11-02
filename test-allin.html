@@ -185,6 +185,8 @@ ctx.fillStyle = "#fff0b0";
 ctx.fillText("ALL IN", 1024, 512);
 ctx.shadowBlur = 0;
 
+  const textTexture = new THREE.CanvasTexture(textCanvas);
+textTexture.colorSpace = THREE.SRGBColorSpace;
 const textSphere = new THREE.Mesh(
   new THREE.SphereGeometry(1.305, 128, 96),
   new THREE.MeshBasicMaterial({
@@ -195,8 +197,7 @@ const textSphere = new THREE.Mesh(
   })
 );
 
-  const textTexture = new THREE.CanvasTexture(textCanvas);
-textTexture.colorSpace = THREE.SRGBColorSpace;
+
   
 orb.add(textSphere);
 textSphere.material.opacity = 0;
