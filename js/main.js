@@ -54,12 +54,15 @@ function startAllInTableLight(playerIndex) {
   if (firstAllInSeat !== -1) return;
 
   firstAllInSeat = playerIndex;
+ requestAnimationFrame(() => {
   const avatarWrap = document.querySelector(
-  `#seats .${seatClass[playerIndex]} .avatar-wrap`
-);
+    `#seats .${seatClass[playerIndex]} .avatar-wrap`
+  );
 
-avatarWrap?.classList.add('allin-flame-active');
-
+  if (firstAllInSeat === playerIndex) {
+    avatarWrap?.classList.add('allin-flame-active');
+  }
+});
   const table = $('table');
   if (!table) return;
 
