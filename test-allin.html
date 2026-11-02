@@ -1,116 +1,790 @@
+import * as THREE from "three";
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pokereza — тест 3D ALL-IN</title>
+/**
+ * Pokereza Poker — 3D ALL-IN
+ * Build: visual prototype 2
+ * Отдельный модуль. Игровую логику не затрагивает.
+ *
+ * Длительность по умолчанию: 3500 мс.
+ */
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
-    }
+export function playAllIn3D({
+  container = document.body,
+  duration = 3500,
+  onComplete = null
+} = {}) {
+  if (!container || typeof container.appendChild !== "function") {
+    throw new TypeError("[Pokereza 3D] Некорректный контейнер.");
   }
-  </script>
 
-  <style>
-    * { box-sizing: border-box; }
+  let renderer;
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #07100c;
-      color: #f3d58b;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+  try {
+    renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+  } catch (error) {
+    console.warn("[Pokereza 3D] WebGL недоступен.", error);
+    return null;
+  }
 
-    h1 { letter-spacing: 3px; }
+  const scene = new THREE.Scene();
 
-    #stage {
-      position: relative;
-      width: min(90vw, 700px);
-      height: min(65vh, 460px);
-      min-height: 280px;
-      overflow: hidden;
-      border: 1px solid #86652a;
-      border-radius: 18px;
-      background: radial-gradient(ellipse, #174c35, #07140e 75%);
-    }
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+  camera.position.set(0, 0, 7.2);
 
-    #stage canvas {
-      display: block;
-    }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setSize(1, 1);
+  renderer.setClearColor(0x000000, 0);
 
-    button {
-      margin-top: 22px;
-      padding: 14px 28px;
-      border: 1px solid #e8bf62;
-      border-radius: 8px;
-      background: #8a641d;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
+  if ("outputColorSpace" in renderer) {
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+  }
 
-    #status {
-      margin-top: 14px;
-      color: #c7d5ca;
-      text-align: center;
-    }
-  </style>
-</head>
+  if ("toneMapping" in renderer) {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+  }
 
-<body>
-  <h1>POKEREZA</h1>
-  <p>ТЕСТ 3D ALL-IN</p>
+  Object.assign(renderer.domElement.style, {
+    position: "absolute",
+    inset: "0",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    zIndex: "30"
+  });
 
-  <div id="stage"></div>
-  <button id="play">ЗАПУСТИТЬ ALL-IN</button>
-  <div id="status">Готов к тесту</div>
+  renderer.domElement.setAttribute("aria-hidden", "true");
 
-  <script type="module">
-    import { playAllIn3D } from "./js/3d-animation/allin.js";
+  const previousPosition = container.style.position;
 
-    const stage = document.getElementById("stage");
-    const status = document.getElementById("status");
-    const button = document.getElementById("play");
+  if (getComputedStyle(container).position === "static") {
+    container.style.position = "relative";
+  }
 
-    let currentEffect = null;
+  container.appendChild(renderer.domElement);
 
-    button.addEventListener("click", () => {
-      if (currentEffect) {
-        currentEffect.stop();
-        currentEffect = null;
+  // --------------------------------------------------
+  // ОСВЕЩЕНИЕ
+  // --------------------------------------------------
+
+  scene.add(new THREE.HemisphereLight(0xffe6b0, 0x100b18, 1.8));
+
+  const keyLight = new THREE.DirectionalLight(0xffe3a0, 4.5);
+  keyLight.position.set(-3, 4, 5);
+  scene.add(keyLight);
+
+  const goldLight = new THREE.PointLight(0xffa52b, 16, 12, 2);
+  goldLight.position.set(2.4, 0.8, 2);
+  scene.add(goldLight);
+
+  const rimLight = new THREE.PointLight(0xff5b14, 12, 10, 2);
+  rimLight.position.set(-2, -1.5, -2);
+  scene.add(rimLight);
+
+  const coreLight = new THREE.PointLight(0xffd56b, 0, 8, 2);
+  coreLight.position.set(0, 0, 0.5);
+  scene.add(coreLight);
+
+  // --------------------------------------------------
+  // ОБЪЁМНАЯ ЗОЛОТАЯ СФЕРА
+  // --------------------------------------------------
+
+  const sphereGroup = new THREE.Group();
+  scene.add(sphereGroup);
+
+  const sphereGeometry = new THREE.SphereGeometry(0.92, 128, 96);
+
+  // Процедурный материал:
+  // золотая поверхность, микрорельеф, блики и Fresnel.
+  const sphereMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uEnergy: { value: 0 },
+      uBurst: { value: 0 },
+      uFlash: { value: 0 }
+    },
+
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      varying vec3 vWorldPosition;
+      varying vec3 vObjectPosition;
+
+      uniform float uTime;
+      uniform float uEnergy;
+      uniform float uBurst;
+
+      void main() {
+        vec3 p = position;
+
+        float wave = sin(p.y * 12.0 + uTime * 2.5)
+                   * cos(p.x * 10.0 - uTime * 1.8);
+
+        float ripple = sin(p.z * 18.0 + uTime * 4.0);
+
+        float displacement =
+          (wave * 0.009 + ripple * 0.004) * uEnergy;
+
+        p += normal * displacement;
+
+        vec4 worldPosition = modelMatrix * vec4(p, 1.0);
+        vec4 mvPosition = viewMatrix * worldPosition;
+
+        vNormal = normalize(normalMatrix * normal);
+        vViewPosition = -mvPosition.xyz;
+        vWorldPosition = worldPosition.xyz;
+        vObjectPosition = p;
+
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+
+    fragmentShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      varying vec3 vWorldPosition;
+      varying vec3 vObjectPosition;
+
+      uniform float uTime;
+      uniform float uEnergy;
+      uniform float uBurst;
+      uniform float uFlash;
+
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
       }
 
-      status.textContent = "Запуск 3D-анимации…";
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
 
-      try {
-        currentEffect = playAllIn3D({
-          container: stage,
-          duration: 3500,
-          onComplete: () => {
-            currentEffect = null;
-            status.textContent = "Анимация завершена";
-          }
-        });
+        f = f * f * (3.0 - 2.0 * f);
 
-        if (currentEffect) {
-          status.textContent = "3D-анимация запущена";
-        } else {
-          status.textContent = "WebGL недоступен";
-        }
-      } catch (error) {
-        console.error(error);
-        status.textContent = "Ошибка — смотри Console (F12)";
+        return mix(
+          mix(
+            mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+            mix(hash(i + vec3(0,1,0)),
+                hash(i + vec3(1,1,0)), f.x),
+            f.y
+          ),
+          mix(
+            mix(hash(i + vec3(0,0,1)),
+                hash(i + vec3(1,0,1)), f.x),
+            mix(hash(i + vec3(0,1,1)),
+                hash(i + vec3(1,1,1)), f.x),
+            f.y
+          ),
+          f.z
+        );
+      }
+
+      void main() {
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(vViewPosition);
+
+        vec3 L1 = normalize(vec3(-0.6, 0.8, 1.0));
+        vec3 L2 = normalize(vec3(0.9, 0.2, 0.7));
+
+        float diffuse1 = max(dot(N, L1), 0.0);
+        float diffuse2 = max(dot(N, L2), 0.0);
+
+        vec3 H1 = normalize(L1 + V);
+        vec3 H2 = normalize(L2 + V);
+
+        float spec1 = pow(max(dot(N, H1), 0.0), 100.0);
+        float spec2 = pow(max(dot(N, H2), 0.0), 55.0);
+
+        float fresnel = pow(
+          1.0 - max(dot(N, V), 0.0),
+          3.2
+        );
+
+        float grain = noise(vObjectPosition * 115.0);
+        float clouds = noise(vObjectPosition * 9.0 + uTime * 0.12);
+
+        vec3 darkGold = vec3(0.24, 0.095, 0.012);
+        vec3 gold = vec3(0.78, 0.39, 0.055);
+        vec3 brightGold = vec3(1.0, 0.78, 0.30);
+        vec3 hotGold = vec3(1.0, 0.94, 0.69);
+
+        vec3 base = mix(darkGold, gold, diffuse1 * 0.75 + 0.15);
+        base = mix(base, brightGold, diffuse2 * 0.32);
+        base *= 0.86 + grain * 0.18 + clouds * 0.12;
+
+        base += brightGold * spec1 * 1.8;
+        base += hotGold * spec2 * 0.65;
+        base += vec3(1.0, 0.38, 0.035) * fresnel * 1.2;
+
+        float energyLines = sin(
+          vObjectPosition.y * 25.0 +
+          vObjectPosition.x * 17.0 -
+          uTime * 5.0
+        );
+
+        float energyMask = smoothstep(0.82, 1.0, energyLines);
+
+        base += vec3(1.0, 0.55, 0.10)
+              * energyMask * uEnergy * 0.75;
+
+        base = mix(
+          base,
+          hotGold * 1.8,
+          clamp(uFlash, 0.0, 1.0) * 0.9
+        );
+
+        float alpha = 1.0;
+
+        gl_FragColor = vec4(base, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `,
+
+    transparent: false
+  });
+
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  sphereGroup.add(sphere);
+
+  // Внутреннее раскалённое ядро.
+  const coreMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffd16a,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(0.57, 48, 40),
+    coreMaterial
+  );
+
+  sphereGroup.add(core);
+
+  // Светящийся внешний обод.
+  const haloMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uOpacity: { value: 0.25 },
+      uTime: { value: 0 }
+    },
+
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vNormal = normalize(normalMatrix * normal);
+        vViewPosition = -mv.xyz;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+
+    fragmentShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+
+      uniform float uOpacity;
+      uniform float uTime;
+
+      void main() {
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(vViewPosition);
+
+        float fresnel = pow(1.0 - abs(dot(N, V)), 2.2);
+        float pulse = 0.85 + 0.15 * sin(uTime * 5.0);
+
+        vec3 color = mix(
+          vec3(1.0, 0.25, 0.015),
+          vec3(1.0, 0.88, 0.42),
+          fresnel
+        );
+
+        gl_FragColor = vec4(
+          color,
+          fresnel * uOpacity * pulse
+        );
+      }
+    `,
+
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.BackSide
+  });
+
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(1.02, 64, 48),
+    haloMaterial
+  );
+
+  sphereGroup.add(halo);
+
+  // --------------------------------------------------
+  // ЭНЕРГЕТИЧЕСКИЕ КОЛЬЦА
+  // --------------------------------------------------
+
+  function makeShockwave(color, tube) {
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    const mesh = new THREE.Mesh(
+      new THREE.TorusGeometry(0.85, tube, 12, 128),
+      material
+    );
+
+    mesh.rotation.x = Math.PI / 2.4;
+    scene.add(mesh);
+
+    return mesh;
+  }
+
+  const shockwaves = [
+    makeShockwave(0xffc04c, 0.025),
+    makeShockwave(0xffedb0, 0.012),
+    makeShockwave(0xff7b20, 0.035)
+  ];
+
+  // --------------------------------------------------
+  // ВСПЫШКА В ЦЕНТРЕ ВЗРЫВА
+  // --------------------------------------------------
+
+  const flashMaterial = new THREE.MeshBasicMaterial({
+    color: 0xfff0c0,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const flash = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 32, 24),
+    flashMaterial
+  );
+
+  scene.add(flash);
+
+  // --------------------------------------------------
+  // ЧАСТИЦЫ: РАЗЛЁТ С ИНДИВИДУАЛЬНОЙ СКОРОСТЬЮ
+  // --------------------------------------------------
+
+  const particleCount = 850;
+  const particlePositions = new Float32Array(particleCount * 3);
+  const particleColors = new Float32Array(particleCount * 3);
+  const particleSizes = new Float32Array(particleCount);
+  const velocities = [];
+  const seeds = [];
+
+  const goldColor = new THREE.Color(0xffbf45);
+  const hotColor = new THREE.Color(0xfff0b5);
+  const emberColor = new THREE.Color(0xff5a12);
+
+  for (let i = 0; i < particleCount; i++) {
+    const direction = new THREE.Vector3(
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1
+    ).normalize();
+
+    const speed = 1.2 + Math.pow(Math.random(), 0.6) * 5.4;
+
+    velocities.push(direction.multiplyScalar(speed));
+    seeds.push(Math.random() * Math.PI * 2);
+
+    const mix = Math.random();
+    const color = mix > 0.82
+      ? hotColor
+      : mix < 0.15
+        ? emberColor
+        : goldColor;
+
+    particleColors[i * 3] = color.r;
+    particleColors[i * 3 + 1] = color.g;
+    particleColors[i * 3 + 2] = color.b;
+
+    particleSizes[i] = 0.45 + Math.random() * 1.3;
+  }
+
+  const particleGeometry = new THREE.BufferGeometry();
+
+  particleGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(particlePositions, 3)
+  );
+
+  particleGeometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(particleColors, 3)
+  );
+
+  particleGeometry.setAttribute(
+    "aSize",
+    new THREE.BufferAttribute(particleSizes, 1)
+  );
+
+  const particleMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uOpacity: { value: 0 },
+      uPixelRatio: {
+        value: Math.min(window.devicePixelRatio || 1, 1.5)
+      }
+    },
+
+    vertexShader: `
+      attribute float aSize;
+      attribute vec3 color;
+
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      uniform float uOpacity;
+      uniform float uPixelRatio;
+
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+
+        gl_Position = projectionMatrix * mv;
+
+        gl_PointSize = clamp(
+          aSize * uPixelRatio * (10.0 / -mv.z),
+          1.0,
+          16.0
+        );
+
+        vColor = color;
+        vAlpha = uOpacity;
+      }
+    `,
+
+    fragmentShader: `
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      void main() {
+        vec2 uv = gl_PointCoord - 0.5;
+        float d = length(uv);
+
+        if (d > 0.5) discard;
+
+        float glow = exp(-d * 12.0);
+        float core = exp(-d * 45.0);
+
+        vec3 color = vColor * (glow * 1.4 + core * 1.5);
+
+        gl_FragColor = vec4(
+          color,
+          vAlpha * smoothstep(0.5, 0.03, d)
+        );
+      }
+    `,
+
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+
+  const particles = new THREE.Points(
+    particleGeometry,
+    particleMaterial
+  );
+
+  scene.add(particles);
+
+  // --------------------------------------------------
+  // КОРОТКИЕ СВЕТОВЫЕ СЛЕДЫ ЧАСТИЦ
+  // --------------------------------------------------
+
+  const trailCount = 90;
+  const trailPositions = new Float32Array(trailCount * 6);
+  const trailColors = new Float32Array(trailCount * 6);
+
+  const trailGeometry = new THREE.BufferGeometry();
+
+  trailGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(trailPositions, 3)
+  );
+
+  trailGeometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(trailColors, 3)
+  );
+
+  const trailMaterial = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  const trails = new THREE.LineSegments(trailGeometry, trailMaterial);
+  scene.add(trails);
+
+  // --------------------------------------------------
+  // АНИМАЦИЯ
+  // --------------------------------------------------
+
+  const clock = new THREE.Clock();
+
+  let frameId = 0;
+  let finished = false;
+  let startedAt = null;
+
+  const durationSeconds = Math.max(duration / 1000, 0.5);
+
+  const smooth = (a, b, x) => {
+    const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+
+  const easeOut = (x) => 1 - Math.pow(1 - x, 4);
+  const easeIn = (x) => x * x * x;
+
+  function resize() {
+    if (finished) return;
+
+    const bounds = container.getBoundingClientRect();
+    const width = Math.max(1, Math.round(bounds.width));
+    const height = Math.max(1, Math.round(bounds.height));
+
+    renderer.setSize(width, height, false);
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    particleMaterial.uniforms.uPixelRatio.value =
+      Math.min(window.devicePixelRatio || 1, 1.5);
+  }
+
+  function cleanup() {
+    if (finished) return;
+
+    finished = true;
+
+    window.cancelAnimationFrame(frameId);
+    window.removeEventListener("resize", resize);
+
+    scene.traverse((object) => {
+      if (object.geometry) {
+        object.geometry.dispose();
+      }
+
+      if (object.material) {
+        const materials = Array.isArray(object.material)
+          ? object.material
+          : [object.material];
+
+        materials.forEach((material) => material.dispose());
       }
     });
-  </script>
-</body>
-</html>
+
+    renderer.dispose();
+    renderer.domElement.remove();
+
+    if (previousPosition === "" && container.style.position === "relative") {
+      container.style.position = "";
+    }
+
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+  }
+
+  function animate() {
+    if (finished) return;
+
+    const elapsed = clock.getElapsedTime();
+
+    if (startedAt === null) startedAt = elapsed;
+
+    const t = Math.min(
+      (elapsed - startedAt) / durationSeconds,
+      1
+    );
+
+    // Фазы: накопление → сжатие → взрыв → затухание.
+    const charge = smooth(0.0, 0.43, t);
+    const contract = smooth(0.34, 0.49, t);
+    const burst = smooth(0.47, 0.56, t);
+    const decay = smooth(0.56, 1.0, t);
+
+    const preBurst = 1 - smooth(0.45, 0.50, t);
+    const explosionAge = Math.max(0, (t - 0.49) / 0.51);
+
+    const pulse = Math.pow(
+      Math.max(0, Math.sin(elapsed * (8 + charge * 12))),
+      3
+    );
+
+    // Сфера сначала постепенно набирает энергию,
+    // затем резко сжимается и исчезает во вспышке.
+    const chargeScale = 1 + charge * 0.055 + pulse * charge * 0.025;
+    const contractScale = 1 - easeIn(contract) * 0.78;
+
+    const finalScale = t < 0.49
+      ? chargeScale * contractScale
+      : Math.max(0.001, 0.22 * (1 - burst) * (1 - decay));
+
+    sphereGroup.scale.setScalar(finalScale);
+
+    sphereGroup.rotation.y = elapsed * 0.55;
+    sphereGroup.rotation.x = Math.sin(elapsed * 0.7) * 0.15;
+    sphereGroup.rotation.z = Math.sin(elapsed * 0.45) * 0.08;
+
+    sphereMaterial.uniforms.uTime.value = elapsed;
+    sphereMaterial.uniforms.uEnergy.value = charge * preBurst;
+    sphereMaterial.uniforms.uBurst.value = burst;
+    sphereMaterial.uniforms.uFlash.value =
+      Math.max(0, 1 - Math.abs(t - 0.495) / 0.035);
+
+    core.scale.setScalar(
+      0.4 + charge * 0.8 + pulse * charge * 0.18
+    );
+
+    coreMaterial.opacity = Math.min(
+      0.95,
+      charge * 0.72 + pulse * charge * 0.25
+    ) * preBurst;
+
+    haloMaterial.uniforms.uTime.value = elapsed;
+    haloMaterial.uniforms.uOpacity.value =
+      (0.18 + charge * 0.6 + pulse * 0.2) * preBurst;
+
+    coreLight.intensity = (charge * 20 + pulse * 12) * preBurst;
+    goldLight.intensity = 16 + pulse * charge * 9;
+
+    // Вспышка на моменте взрыва.
+    const flashPulse = Math.max(0, 1 - Math.abs(t - 0.495) / 0.035);
+
+    flash.scale.setScalar(0.3 + flashPulse * 5.5);
+    flashMaterial.opacity = flashPulse * 0.85;
+
+    // Ударные волны расширяются независимо друг от друга.
+    shockwaves.forEach((wave, index) => {
+      const delay = index * 0.045;
+      const waveProgress = Math.max(
+        0,
+        Math.min((t - 0.49 - delay) / (0.42 - delay), 1)
+      );
+
+      const waveActive =
+        t >= 0.49 + delay && t < 0.94 + delay;
+
+      wave.scale.setScalar(0.2 + easeOut(waveProgress) * (4.4 + index * 0.8));
+
+      wave.material.opacity = waveActive
+        ? Math.sin(waveProgress * Math.PI) * (0.8 - index * 0.14)
+        : 0;
+
+      wave.rotation.x = Math.PI / 2.4 + index * 0.5;
+      wave.rotation.y = elapsed * (0.5 + index * 0.3);
+    });
+
+    // Физический разлёт частиц с ускорением и сопротивлением.
+    const positions = particleGeometry.attributes.position.array;
+    const trailArray = trailGeometry.attributes.position.array;
+    const trailColorArray = trailGeometry.attributes.color.array;
+
+    const particleAge = Math.max(0, t - 0.49);
+    const particleLife = Math.min(particleAge / 0.42, 1);
+    const travelTime = easeOut(particleLife) * 2.9;
+
+    particleMaterial.uniforms.uOpacity.value =
+      t < 0.49 ? 0 : Math.max(0, 1 - particleLife * 0.9) * (1 - decay * 0.7);
+
+    trailMaterial.opacity =
+      t < 0.49 ? 0 : Math.max(0, 1 - particleLife) * (1 - decay);
+
+    for (let i = 0; i < particleCount; i++) {
+      const velocity = velocities[i];
+      const seed = seeds[i];
+
+      const startX = velocity.x * 0.035;
+      const startY = velocity.y * 0.035;
+      const startZ = velocity.z * 0.035;
+
+      const drag = 1 - particleLife * 0.25;
+      const gravity = 1.5 * particleLife * particleLife;
+
+      const x = startX + velocity.x * travelTime * drag;
+      const y = startY + velocity.y * travelTime * drag - gravity;
+      const z = startZ + velocity.z * travelTime * drag;
+
+      const wobble = Math.sin(elapsed * 7 + seed) * 0.018 * particleLife;
+
+      positions[i * 3] = x + wobble;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
+    }
+
+    // Выбранные частицы получают короткие световые следы.
+    for (let i = 0; i < trailCount; i++) {
+      const particleIndex = Math.floor(i * particleCount / trailCount);
+      const velocity = velocities[particleIndex];
+
+      const px = positions[particleIndex * 3];
+      const py = positions[particleIndex * 3 + 1];
+      const pz = positions[particleIndex * 3 + 2];
+
+      const tail = Math.max(0, 0.12 * (1 - particleLife));
+
+      const base = i * 6;
+
+      trailArray[base] = px;
+      trailArray[base + 1] = py;
+      trailArray[base + 2] = pz;
+
+      trailArray[base + 3] = px - velocity.x * tail;
+      trailArray[base + 4] = py - velocity.y * tail;
+      trailArray[base + 5] = pz - velocity.z * tail;
+
+      const colorIntensity = Math.max(0, 1 - particleLife);
+
+      for (let j = 0; j < 2; j++) {
+        trailColorArray[base + j * 3] = colorIntensity;
+        trailColorArray[base + j * 3 + 1] = colorIntensity * 0.72;
+        trailColorArray[base + j * 3 + 2] = colorIntensity * 0.3;
+      }
+    }
+
+    particleGeometry.attributes.position.needsUpdate = true;
+    trailGeometry.attributes.position.needsUpdate = true;
+    trailGeometry.attributes.color.needsUpdate = true;
+
+    renderer.render(scene, camera);
+
+    if (t >= 1) {
+      cleanup();
+      return;
+    }
+
+    frameId = window.requestAnimationFrame(animate);
+  }
+
+  resize();
+
+  window.addEventListener("resize", resize, { passive: true });
+
+  frameId = window.requestAnimationFrame(animate);
+
+  return {
+    stop: cleanup,
+    renderer,
+    scene,
+    camera
+  };
+}
