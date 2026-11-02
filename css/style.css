@@ -874,3 +874,19 @@ transform: translate(-50%, -50%);
 .seat:not(.user-seat) .action-label.allin-label.action-label-animate::before {
   animation: allin-ring 1.5s ease-out both;
 }
+/* Плавное возвращение информации после ALL-IN */
+.seat.allin-info-appear .avatar-wrap,
+.seat.allin-info-appear .name,
+.seat.allin-info-appear .stack,
+.seat.allin-info-appear .state {
+  animation: allin-info-appear 0.5s ease-out both;
+}
+
+@keyframes allin-info-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
