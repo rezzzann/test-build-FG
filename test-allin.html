@@ -195,11 +195,13 @@ const textSphere = new THREE.Mesh(
   })
 );
 
+  const textTexture = new THREE.CanvasTexture(textCanvas);
+textTexture.colorSpace = THREE.SRGBColorSpace;
+  
 orb.add(textSphere);
 textSphere.material.opacity = 0;
 
-const textTexture = new THREE.CanvasTexture(textCanvas);
-textTexture.colorSpace = THREE.SRGBColorSpace;
+
 
 
 // Внешнее золотое свечение
