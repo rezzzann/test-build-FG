@@ -172,7 +172,6 @@ orb.add(sphere);
 // Лицевая золотая медаль с надписью
 const face = new THREE.Group();
 face.position.z = 1.285;
-inscription.position.z = 0.035;
 orb.add(face);
 
 // Текст на лицевой стороне
@@ -208,7 +207,7 @@ const inscription = new THREE.Mesh(
     side: THREE.DoubleSide
   })
 );
-inscription.position.z = 0.025;
+inscription.position.z = 0.035;
 face.add(inscription);
 
 // Внешнее золотое свечение
