@@ -351,6 +351,13 @@ if (previousLabelActions[i] !== action) {
 
 const animateAction =
   !!action && Date.now() < (labelAnimationUntil[i] || 0);
+const allinElapsed = action === 'ALL-IN'
+  ? Math.max(0, 2 - Math.max(0, labelAnimationUntil[i] - Date.now()) / 1000)
+  : 0;
+
+const animationStyle = action === 'ALL-IN' && animateAction
+  ? `style="--allin-elapsed:${allinElapsed}s"`
+  : '';
 
 const thinking = action === 'ДУМАЕТ';
       const labelClass = actionClass(action);
@@ -393,7 +400,7 @@ const winnerCardsMarkup = showAISeatCards
     }).join('')}</div>`
   : '';
 
-      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
+      return `<div class="seat ${cls} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}">${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
