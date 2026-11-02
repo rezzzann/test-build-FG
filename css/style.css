@@ -827,7 +827,7 @@ transform: translate(-50%, -50%);
 }
 
 @keyframes allin-fade-out {
-  0%, 55% { opacity: 1; }
+  0%, 85% { opacity: 1; }
   100% { opacity: 0; }
 }
 .action-label.allin-label.action-label-animate::before {
