@@ -48,6 +48,14 @@ let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3;
 let allInAnimationUntil = 0;
 let allInAdvanceTimer = null;
+function cancelAllInAdvanceTimer() {
+  if (allInAdvanceTimer !== null) {
+    clearTimeout(allInAdvanceTimer);
+    allInAdvanceTimer = null;
+  }
+
+  allInAnimationUntil = 0;
+}
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
@@ -1050,13 +1058,14 @@ function captureGameState(){
 }
 function pauseGameForMenu(){
  if(!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;
- savedGameState=captureGameState();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
+ savedGameState=captureGameState();cancelAllInAdvanceTimer();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
 $('gameVersionDisplay').textContent=DISPLAY_VERSION;
 }
 function restoreSavedGame(){
  if(!savedGameState)return;
+ cancelAllInAdvanceTimer();
  const s=savedGameState;
  players=s.players.map(p=>({...p,actionTimer:null}));deck=s.deck.map(c=>({...c}));board=s.board.map(c=>({...c}));
  pot=s.pot;currentBet=s.currentBet;street=s.street;actor=s.actor;handNo=s.handNo;over=s.over;sb=s.sb;bb=s.bb;log=[...s.log];tick=Math.max(tick,s.tick)+1;
@@ -1070,6 +1079,7 @@ function restoreSavedGame(){
  if(!over&&actor!==user&&eligible(actor)&&actQueue.includes(actor)&&!hasActedThisStreet(actor))scheduleAI(actor);
 }
 function resetStacksAndRestart(){
+ cancelAllInAdvanceTimer();
  gamePaused=false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;clearDealSequence();busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiShowdownRevealBack=false;userHoleRevealBack=false;aiWinnerId=-1;aiWinningCards=[];
  tournamentClock.stop(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
