@@ -47,6 +47,67 @@ const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/re
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3;
 let allInAnimationUntil = 0;
+      let firstAllInSeat = -1;
+let allInLightTimer = null;
+
+function startAllInTableLight(playerIndex) {
+  if (firstAllInSeat !== -1) return;
+
+  firstAllInSeat = playerIndex;
+
+  const table = $('table');
+  if (!table) return;
+
+  if (allInLightTimer !== null) {
+    clearTimeout(allInLightTimer);
+  }
+
+  const seats = [
+    { angle: 270 },
+    { angle: 0 },
+    { angle: 90 },
+    { angle: 180 }
+  ];
+
+  const trail = document.createElement('div');
+  trail.className = 'allin-light-trail';
+
+  table.querySelector('.allin-light-trail')?.remove();
+
+  trail.style.setProperty(
+    '--allin-start-angle',
+    `${seats[playerIndex]?.angle ?? 0}deg`
+  );
+
+  table.appendChild(trail);
+  table.classList.remove('allin-light-finished');
+  table.classList.add('allin-light-active');
+
+  allInLightTimer = setTimeout(() => {
+    table.classList.remove('allin-light-active');
+    table.classList.add('allin-light-finished');
+    allInLightTimer = null;
+  }, 3000);
+}
+
+function resetAllInTableLight() {
+  if (allInLightTimer !== null) {
+    clearTimeout(allInLightTimer);
+    allInLightTimer = null;
+  }
+
+  firstAllInSeat = -1;
+
+  const table = $('table');
+  if (!table) return;
+
+  table.classList.remove(
+    'allin-light-active',
+    'allin-light-finished'
+  );
+
+  table.querySelector('.allin-light-trail')?.remove();
+}
 let allInAdvanceTimer = null;
 function cancelAllInAdvanceTimer() {
   if (allInAdvanceTimer !== null) {
@@ -779,7 +840,7 @@ aiShowdownRevealBack = false;
 
   handNo++;
   shuffle();
-
+  resetAllInTableLight();
   board = [];
   renderedBoardCount = 0;
   $('community').innerHTML = '';
@@ -952,7 +1013,7 @@ function applyAction(i,a,myTick){
  else if(a.t==='bet'||a.t==='raise'){const requested=Number(a.amt)||bb*2,target=Math.max(currentBet===0?bb:currentBet+bb,requested),amount=Math.min(Math.max(0,target-p.bet),p.stack);
   if(amount>0){p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;const label=p.allin?'ALL-IN':(oldBet>0?'РЕЙЗ':'СТАВКА');showAction(i,label,amount);logit(p.name+': '+label+' '+fmt(amount)+' PP')}
   else if(call>0){const amountToCall=Math.min(call,p.stack);p.stack-=amountToCall;p.bet+=amountToCall;p.total+=amountToCall;chipAmount=amountToCall;if(p.stack===0)p.allin=true;showAction(i,p.allin?'ALL-IN':'КОЛЛ');logit(p.name+': '+(p.allin?'ALL-IN':'КОЛЛ'))}else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
- else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
+ else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;if (firstAllInSeat === -1) {   startAllInTableLight(i); } showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
  p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(i, chipAmount);       resolve();     });   }); }
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
