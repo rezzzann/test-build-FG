@@ -112,37 +112,6 @@
 <section class="actions"><button class="act next-hand" id="nextHand">РАЗДАЧА</button><button class="act fold" id="fold">ФОЛД</button><button class="act call" id="checkCall">ЧЕК</button><button class="act raise bet-mode" id="raise">СТАВКА</button><button class="act allin" id="allin">ALL-IN</button><div class="betbox">РАЗМЕР <input id="betRange" type="range" min="20" max="1000" step="10" value="20"><b id="betValue">20</b> PP</div></section>
 <footer class="bottom"><span id="message">Против трёх ИИ · виртуальные PP</span><span><button id="newHand">НОВАЯ РАЗДАЧА</button> · <button id="reset">СБРОСИТЬ СТЕК</button></span></footer>
 </div>
-<!-- Three.js: подключение через CDN -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
-  }
-}
-</script>
-
-<script type="module">
-  import * as THREE from "three";
-
-  try {
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: false
-    });
-
-    renderer.dispose();
-
-    console.info(
-      "[Pokereza WebGL] Three.js подключён. Версия:",
-      THREE.REVISION
-    );
-  } catch (error) {
-    console.warn(
-      "[Pokereza WebGL] Не удалось создать WebGL-рендерер:",
-      error
-    );
-  }
-</script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
