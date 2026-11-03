@@ -54,15 +54,7 @@ function startAllInTableLight(playerIndex) {
   if (firstAllInSeat !== -1) return;
 
   firstAllInSeat = playerIndex;
- requestAnimationFrame(() => {
-  const avatarWrap = document.querySelector(
-    `#seats .${seatClass[playerIndex]} .avatar-wrap`
-  );
 
-  if (firstAllInSeat === playerIndex) {
-    avatarWrap?.classList.add('allin-flame-active');
-  }
-});
   const table = $('table');
   if (!table) return;
 
@@ -121,10 +113,8 @@ function resetAllInTableLight() {
   }
 
   firstAllInSeat = -1;
-document.querySelectorAll(
-  '#seats .avatar-wrap.allin-flame-active'
-).forEach(el => {
-  el.classList.remove('allin-flame-active');
+  players.forEach(player => {
+  player.allinFlame = false;
 });
   const table = $('table');
   if (!table) return;
@@ -1041,7 +1031,10 @@ function applyAction(i,a,myTick){
  else if(a.t==='bet'||a.t==='raise'){const requested=Number(a.amt)||bb*2,target=Math.max(currentBet===0?bb:currentBet+bb,requested),amount=Math.min(Math.max(0,target-p.bet),p.stack);
   if(amount>0){p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;const label=p.allin?'ALL-IN':(oldBet>0?'РЕЙЗ':'СТАВКА');showAction(i,label,amount);logit(p.name+': '+label+' '+fmt(amount)+' PP')}
   else if(call>0){const amountToCall=Math.min(call,p.stack);p.stack-=amountToCall;p.bet+=amountToCall;p.total+=amountToCall;chipAmount=amountToCall;if(p.stack===0)p.allin=true;showAction(i,p.allin?'ALL-IN':'КОЛЛ');logit(p.name+': '+(p.allin?'ALL-IN':'КОЛЛ'))}else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
- else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;if (firstAllInSeat === -1) {   startAllInTableLight(i); } showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
+ else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;if (firstAllInSeat === -1) {
+  players[i].allinFlame = true;
+  startAllInTableLight(i);
+} showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
  p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(i, chipAmount);       resolve();     });   }); }
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
