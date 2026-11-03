@@ -960,152 +960,72 @@ transform: translate(-50%, -50%);
   }
 }
 /* =====================================================
-   POKEREZA ALL-IN FLAME
-   Пламя над всей карточкой первого игрока
+   POKEREZA ALL-IN FLAME SPRITE
+   Анимированное пламя над карточкой игрока
    ===================================================== */
 
 #seats .seat.allin-flame-active {
   overflow: visible !important;
   isolation: isolate;
+  z-index: 15;
 }
 
-/* Внешнее пламя */
+/* Спрайт огня */
 #seats .seat.allin-flame-active::before {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: calc(100% - 3px);
-  width: clamp(48px, 7vw, 72px);
-  height: clamp(55px, 8vw, 82px);
+  bottom: calc(100% - 2px);
+
+  width: calc(100% + 24px);
+  max-width: 220px;
+  height: clamp(64px, 9vw, 100px);
+
   transform: translateX(-50%);
-  transform-origin: center bottom;
   pointer-events: none;
-  z-index: 10;
+  z-index: 9;
 
-  background:
-    radial-gradient(
-      ellipse at 50% 78%,
-      #fff7b0 0%,
-      #ffd52f 16%,
-      #ff941b 38%,
-      #ff4a13 64%,
-      #c91b12 82%,
-      transparent 100%
-    );
-
-  clip-path: polygon(
-    50% 0%,
-    61% 18%,
-    72% 8%,
-    75% 29%,
-    94% 17%,
-    87% 43%,
-    100% 56%,
-    83% 72%,
-    76% 91%,
-    60% 100%,
-    36% 100%,
-    19% 87%,
-    8% 69%,
-    0% 55%,
-    17% 37%,
-    23% 17%,
-    37% 31%
-  );
+  background-image: url("../pokereza-allin-flame-strip.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 2400% 100%;
 
   filter:
-    drop-shadow(0 0 4px #ffb21c)
-    drop-shadow(0 0 10px #ff5a00)
-    drop-shadow(0 0 18px #ff2800);
+    drop-shadow(0 0 4px rgba(255, 174, 35, .8))
+    drop-shadow(0 0 10px rgba(255, 75, 10, .55));
 
-  animation: pokerezaFlameOuter 0.48s ease-in-out infinite alternate;
+  animation: pokerezaAllInSprite 1.2s steps(24) infinite;
 }
 
-/* Яркое золотое ядро огня */
+/* Отключаем старое внутреннее пламя */
 #seats .seat.allin-flame-active::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% - 1px);
-  width: clamp(26px, 4vw, 38px);
-  height: clamp(36px, 5.5vw, 49px);
-  transform: translateX(-50%);
-  transform-origin: center bottom;
-  pointer-events: none;
-  z-index: 11;
-
-  background:
-    radial-gradient(
-      ellipse at 50% 80%,
-      #ffffff 0%,
-      #fff7b0 20%,
-      #ffe34e 45%,
-      #ff9b20 72%,
-      transparent 100%
-    );
-
-  clip-path: polygon(
-    50% 0%,
-    66% 27%,
-    83% 17%,
-    80% 45%,
-    100% 63%,
-    76% 87%,
-    60% 100%,
-    36% 100%,
-    17% 82%,
-    0% 61%,
-    25% 40%,
-    33% 18%,
-    43% 38%
-  );
-
-  filter:
-    drop-shadow(0 0 5px #fff4a0)
-    drop-shadow(0 0 10px #ffb21c);
-
-  animation: pokerezaFlameInner 0.32s ease-in-out infinite alternate;
+  content: none !important;
 }
 
-/* Колебание и изменение формы внешнего пламени */
-@keyframes pokerezaFlameOuter {
-  0% {
-    transform: translateX(-50%) scaleX(0.92) scaleY(0.94) rotate(-3deg);
-    filter:
-      drop-shadow(0 0 4px #ffb21c)
-      drop-shadow(0 0 8px #ff5a00);
-  }
-
-  50% {
-    transform: translateX(-48%) scaleX(1.06) scaleY(1.08) rotate(2deg);
-  }
-
-  100% {
-    transform: translateX(-50%) scaleX(0.96) scaleY(1.13) rotate(-1deg);
-    filter:
-      drop-shadow(0 0 7px #ffe27a)
-      drop-shadow(0 0 15px #ff5a00)
-      drop-shadow(0 0 22px #ff2800);
-  }
-}
-
-/* Быстрое движение внутреннего огня */
-@keyframes pokerezaFlameInner {
+/* Проигрывание 24 кадров */
+@keyframes pokerezaAllInSprite {
   from {
-    transform: translateX(-53%) scaleX(0.88) scaleY(0.91) skewX(-3deg);
-    opacity: 0.85;
+    background-position: 0 0;
   }
 
   to {
-    transform: translateX(-47%) scaleX(1.08) scaleY(1.12) skewX(3deg);
-    opacity: 1;
+    background-position: 100% 0;
   }
 }
 
-/* Уважение настройки уменьшения движения */
+/* Мобильные устройства */
+@media (max-width: 600px) {
+  #seats .seat.allin-flame-active::before {
+    width: calc(100% + 20px);
+    max-width: 190px;
+    height: clamp(58px, 17vw, 82px);
+  }
+}
+
+/* Уменьшение движения */
 @media (prefers-reduced-motion: reduce) {
-  #seats .seat.allin-flame-active::before,
-  #seats .seat.allin-flame-active::after {
+  #seats .seat.allin-flame-active::before {
     animation: none;
+    background-position: 100% 0;
   }
 }
