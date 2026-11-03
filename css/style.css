@@ -994,7 +994,7 @@ transform: translate(-50%, -50%);
     drop-shadow(0 0 4px rgba(255, 174, 35, .8))
     drop-shadow(0 0 10px rgba(255, 75, 10, .55));
 
-  animation: pokerezaAllInSprite 1.2s steps(24) infinite;
+  animation: pokerezaAllInSprite 1.2s steps(23, end) infinite;
 }
 
 /* Отключаем старое внутреннее пламя */
