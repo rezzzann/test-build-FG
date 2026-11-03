@@ -959,120 +959,153 @@ transform: translate(-50%, -50%);
     opacity: 1;
   }
 }
-/* ALL-IN: пламя над аватаром игрока */
-.avatar-wrap.allin-flame-active::after {
-  content: "🔥";
+/* =====================================================
+   POKEREZA ALL-IN FLAME
+   Пламя над всей карточкой первого игрока
+   ===================================================== */
+
+#seats .seat.allin-flame-active {
+  overflow: visible !important;
+  isolation: isolate;
+}
+
+/* Внешнее пламя */
+#seats .seat.allin-flame-active::before {
+  content: "";
   position: absolute;
   left: 50%;
-  top: -30px;
-  z-index: 30;
-  font-size: 30px;
-  line-height: 1;
-  pointer-events: none;
+  bottom: calc(100% - 3px);
+  width: clamp(48px, 7vw, 72px);
+  height: clamp(55px, 8vw, 82px);
   transform: translateX(-50%);
   transform-origin: center bottom;
+  pointer-events: none;
+  z-index: 10;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 78%,
+      #fff7b0 0%,
+      #ffd52f 16%,
+      #ff941b 38%,
+      #ff4a13 64%,
+      #c91b12 82%,
+      transparent 100%
+    );
+
+  clip-path: polygon(
+    50% 0%,
+    61% 18%,
+    72% 8%,
+    75% 29%,
+    94% 17%,
+    87% 43%,
+    100% 56%,
+    83% 72%,
+    76% 91%,
+    60% 100%,
+    36% 100%,
+    19% 87%,
+    8% 69%,
+    0% 55%,
+    17% 37%,
+    23% 17%,
+    37% 31%
+  );
+
   filter:
     drop-shadow(0 0 4px #ffb21c)
-    drop-shadow(0 0 10px #ff6a00);
-  animation: allinFlameBurn 0.55s ease-in-out infinite alternate;
+    drop-shadow(0 0 10px #ff5a00)
+    drop-shadow(0 0 18px #ff2800);
+
+  animation: pokerezaFlameOuter 0.48s ease-in-out infinite alternate;
 }
 
-.avatar-wrap.allin-flame-active::before {
+/* Яркое золотое ядро огня */
+#seats .seat.allin-flame-active::after {
   content: "";
   position: absolute;
   left: 50%;
-  top: -15px;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #ff8c00;
-  opacity: 0.45;
-  filter: blur(15px);
-  transform: translateX(-50%);
-  pointer-events: none;
-  animation: allinFlameGlow 0.7s ease-in-out infinite alternate;
-}
-
-@keyframes allinFlameBurn {
-  from {
-    transform: translateX(-50%) scale(0.85) rotate(-5deg);
-    filter: drop-shadow(0 0 4px #ffb21c);
-  }
-
-  to {
-    transform: translateX(-50%) scale(1.2) rotate(5deg);
-    filter:
-      drop-shadow(0 0 7px #fff0a0)
-      drop-shadow(0 0 14px #ff6a00);
-  }
-}
-
-@keyframes allinFlameGlow {
-  from {
-    opacity: 0.25;
-    transform: translateX(-50%) scale(0.8);
-  }
-
-  to {
-    opacity: 0.65;
-    transform: translateX(-50%) scale(1.25);
-  }
-}
-/* ALL-IN: пламя над аватаром первого игрока */
-#seats .avatar-wrap.allin-flame-active {
-  z-index: 30;
-}
-
-#seats .avatar-wrap.allin-flame-active::after {
-  content: "🔥";
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 2px);
-  z-index: 50;
-  font-size: 30px;
-  line-height: 1;
-  pointer-events: none;
+  bottom: calc(100% - 1px);
+  width: clamp(26px, 4vw, 38px);
+  height: clamp(36px, 5.5vw, 49px);
   transform: translateX(-50%);
   transform-origin: center bottom;
-  animation: allinFlameBurn .45s ease-in-out infinite alternate;
-  filter:
-    drop-shadow(0 0 5px #ffd34d)
-    drop-shadow(0 0 12px #ff6500);
-}
-
-#seats .avatar-wrap.allin-flame-active::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  z-index: 40;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: #ff7900;
-  filter: blur(13px);
-  opacity: .65;
-  transform: translateX(-50%);
   pointer-events: none;
-  animation: allinFlameGlow .5s ease-in-out infinite alternate;
+  z-index: 11;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 80%,
+      #ffffff 0%,
+      #fff7b0 20%,
+      #ffe34e 45%,
+      #ff9b20 72%,
+      transparent 100%
+    );
+
+  clip-path: polygon(
+    50% 0%,
+    66% 27%,
+    83% 17%,
+    80% 45%,
+    100% 63%,
+    76% 87%,
+    60% 100%,
+    36% 100%,
+    17% 82%,
+    0% 61%,
+    25% 40%,
+    33% 18%,
+    43% 38%
+  );
+
+  filter:
+    drop-shadow(0 0 5px #fff4a0)
+    drop-shadow(0 0 10px #ffb21c);
+
+  animation: pokerezaFlameInner 0.32s ease-in-out infinite alternate;
 }
 
-@keyframes allinFlameBurn {
-  from {
-    transform: translateX(-50%) scale(.85) rotate(-6deg);
+/* Колебание и изменение формы внешнего пламени */
+@keyframes pokerezaFlameOuter {
+  0% {
+    transform: translateX(-50%) scaleX(0.92) scaleY(0.94) rotate(-3deg);
+    filter:
+      drop-shadow(0 0 4px #ffb21c)
+      drop-shadow(0 0 8px #ff5a00);
   }
-  to {
-    transform: translateX(-50%) scale(1.2) rotate(6deg);
+
+  50% {
+    transform: translateX(-48%) scaleX(1.06) scaleY(1.08) rotate(2deg);
+  }
+
+  100% {
+    transform: translateX(-50%) scaleX(0.96) scaleY(1.13) rotate(-1deg);
+    filter:
+      drop-shadow(0 0 7px #ffe27a)
+      drop-shadow(0 0 15px #ff5a00)
+      drop-shadow(0 0 22px #ff2800);
   }
 }
 
-@keyframes allinFlameGlow {
+/* Быстрое движение внутреннего огня */
+@keyframes pokerezaFlameInner {
   from {
-    opacity: .3;
-    scale: .8;
+    transform: translateX(-53%) scaleX(0.88) scaleY(0.91) skewX(-3deg);
+    opacity: 0.85;
   }
+
   to {
-    opacity: .8;
-    scale: 1.3;
+    transform: translateX(-47%) scaleX(1.08) scaleY(1.12) skewX(3deg);
+    opacity: 1;
+  }
+}
+
+/* Уважение настройки уменьшения движения */
+@media (prefers-reduced-motion: reduce) {
+  #seats .seat.allin-flame-active::before,
+  #seats .seat.allin-flame-active::after {
+    animation: none;
   }
 }
