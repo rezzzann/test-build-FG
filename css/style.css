@@ -988,13 +988,13 @@ transform: translate(-50%, -50%);
   background-image: url("../pokereza-allin-flame-strip.png");
   background-repeat: no-repeat;
   background-position: 0 0;
-  background-size: 2400% 100%;
+  background-size: 6000% 100%;
 
   filter:
     drop-shadow(0 0 4px rgba(255, 174, 35, .8))
     drop-shadow(0 0 10px rgba(255, 75, 10, .55));
 
-  animation: pokerezaAllInSprite 1.2s steps(23, end) infinite;
+ animation: pokerezaAllInSprite 1s steps(59, end) infinite;
 }
 
 /* Отключаем старое внутреннее пламя */
