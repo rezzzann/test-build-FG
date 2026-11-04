@@ -456,7 +456,8 @@ function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('
 
 function clearDealSequence() {
   dealInProgress = false;
-  communityDealingIndices.clear();
+initialDealInProgress = false;
+communityDealingIndices.clear();
 
   document.querySelectorAll('.dealing-card').forEach(el => {
     el.getAnimations().forEach(animation => animation.cancel());
@@ -933,6 +934,14 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
 
 
 function newHand() {
+  // Очищаем незавершённые события предыдущей раздачи.
+  cancelAllInAdvanceTimer();
+
+  // Не переносим ожидание анимации фишек в новую раздачу.
+  lastBetFlight = Promise.resolve();
+
+  initialDealInProgress = false;
+
   tick++;
   const thisHandTick = tick;
 
@@ -1294,9 +1303,16 @@ if (!over && !dealInProgress) {
 }
 }
 function resetStacksAndRestart(){
- cancelAllInAdvanceTimer();
-    resetAllInTableLight();
- gamePaused=false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;clearDealSequence();busy=false;pendingAISeat=-1;
+  cancelAllInAdvanceTimer();
+  resetAllInTableLight();
+
+  // Полный сброс ожиданий предыдущей игры.
+  lastBetFlight = Promise.resolve();
+  initialDealInProgress = false;
+  dealInProgress = false;
+  busy = false;
+
+  gamePaused = false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;clearDealSequence();busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiShowdownRevealBack=false;userHoleRevealBack=false;aiWinnerId=-1;aiWinningCards=[];
  tournamentClock.stop(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
  deck=[];board=[];pot=0;currentBet=0;street=0;actor=-1;handNo=0;over=true;actQueue=[];firstToAct=3;log=[];renderedBoardCount=0;savedGameState=null;gameStarted=true;
