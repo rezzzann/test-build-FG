@@ -1457,7 +1457,7 @@ const cardRadiusLocation = gl.getUniformLocation(
     let intensity = 1;
     let secondary = 1;
     let sideOpacity = 1;
-
+const regularFireHeight = playerIndex === 0 ? 30 : 15;
     // -----------------------------------------
     // WARMUP
     // -----------------------------------------
@@ -1469,7 +1469,7 @@ const cardRadiusLocation = gl.getUniformLocation(
       if (state.mode === 'regular') {
         // Последующие игроки:
         // верхнее пламя 0 → 30 px.
-        height = 30 * eased;
+        height = regularFireHeight * eased;
 
         // Боковое пламя 0 → 100%.
         sideOpacity = eased;
@@ -1574,10 +1574,9 @@ const cardRadiusLocation = gl.getUniformLocation(
     // -----------------------------------------
 
     else if (state.phase === 'burning') {
-      height = state.mode === 'regular'
-        ? 30
-        : baseHeight;
-
+     height = state.mode === 'regular'
+  ? regularFireHeight
+  : baseHeight;
       intensity = 1;
       secondary = 1;
       sideOpacity = 1;
