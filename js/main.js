@@ -45,7 +45,7 @@ let blindLevel = 0;
 let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
-let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3;
+let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3; let dealerSeat=0;
 let allInAnimationUntil = 0; let allInAdvanceTimer = null;
   let firstAllInSeat = -1;
 let allInLightTimer = null;
@@ -451,7 +451,17 @@ function activeCount() {
 function eligible(i) {
   return isEligible(players, i);
 }
+function nextSeatWithChips(fromSeat) {
+  for (let step = 1; step <= N; step++) {
+    const index = (fromSeat + step) % N;
 
+    if (players[index] && players[index].stack > 0) {
+      return index;
+    }
+  }
+
+  return -1;
+}
 function clearActedFlags() {
   resetActedFlags(players);
 }
@@ -537,7 +547,7 @@ aiWinnerAnalysis: aiWinningCards.length &&
   }
 });
 
-function post(i,n){const p=players[i],v=Math.min(n,p.stack);p.stack-=v;p.bet+=v;p.total+=v;if(!p.stack)p.allin=true;return v}
+function post(i, n) {   const p = players[i];    if (!p || p.folded || p.stack <= 0) return 0;    const v = Math.min(n, p.stack);    if (v <= 0) return 0;    p.stack -= v;   p.bet += v;   p.total += v;    if (p.stack === 0) {     p.allin = true;   }    return v; }
 function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('betValue').textContent=slider.value}
 
 function clearDealSequence() {
@@ -945,7 +955,7 @@ if (communityCard && !reduceMotion) {
     return;
   }
 
-  rebuildQueueFromStart((firstToAct + N - 2) % N);
+  rebuildQueueFromStart(nextSeatWithChips(dealerSeat));
   advanceQueue();
 }
 
@@ -1001,8 +1011,13 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
   // Только после раздачи карт начинаем выставление блайндов.
   const sbAmount = post(smallBlindSeat, sb);
   const bbAmount = post(bigBlindSeat, bb);
+ if (sbAmount > 0 && players[smallBlindSeat].allin) {
   registerPlayerAllIn(smallBlindSeat);
-registerPlayerAllIn(bigBlindSeat);
+}
+
+if (bbAmount > 0 && players[bigBlindSeat].allin) {
+  registerPlayerAllIn(bigBlindSeat);
+}
 
   currentBet = Math.max(...players.map(p => p.bet));
 
@@ -1101,11 +1116,42 @@ aiShowdownRevealBack = false;
     p.actedStreet = -1;
   });
 
-  firstToAct = (firstToAct + 1) % N;
+  const playersWithChips = players.filter(
+  p => p.stack > 0
+).length;
 
-  const smallBlindSeat = (firstToAct + N - 2) % N;
-  const bigBlindSeat = (firstToAct + N - 1) % N;
+if (playersWithChips < 2) {
+  over = true;
+  dealInProgress = false;
+  busy = false;
 
+  const champion = players.find(p => p.stack > 0);
+  logit(`Турнир завершён. Победитель: ${champion?.name || '—'}`);
+  render();
+  return;
+}
+
+// Передвигаем дилера к следующему игроку с фишками.
+dealerSeat = nextSeatWithChips(dealerSeat);
+
+let smallBlindSeat;
+let bigBlindSeat;
+
+if (playersWithChips === 2) {
+  // Хедз-ап: дилер ставит малый блайнд.
+  smallBlindSeat = dealerSeat;
+  bigBlindSeat = nextSeatWithChips(dealerSeat);
+
+  // Дилер первым действует на префлопе.
+  firstToAct = dealerSeat;
+} else {
+  // Обычная игра: дилер → малый → большой блайнд.
+  smallBlindSeat = nextSeatWithChips(dealerSeat);
+  bigBlindSeat = nextSeatWithChips(smallBlindSeat);
+
+  // Первый ход после большого блайнда.
+  firstToAct = nextSeatWithChips(bigBlindSeat);
+}
   clearActedFlags();
   rebuildQueueFromStart(firstToAct);
 
@@ -1352,7 +1398,7 @@ function captureGameState(){
  return{
   players:players.map(p=>({...p,hole:p.hole?.map(c=>({...c})),bet:Number(p.bet)||0,total:Number(p.total)||0,actionTimer:null,actionId:(p.actionId||0)+1})),
   deck:deck.map(c=>({...c})),board:board.map(c=>({...c})),pot,currentBet,street,actor,handNo,over,sb,bb,log:[...log],tick,
-  actQueue:[...actQueue],firstToAct,renderedBoardCount,winnerIds:[...winnerIds],winnerPayouts:{...winnerPayouts},winnerCombo,
+  actQueue:[...actQueue],firstToAct,dealerSeat,renderedBoardCount,winnerIds:[...winnerIds],winnerPayouts:{...winnerPayouts},winnerCombo,
   humanWinnerReveal,winningCards:winningCards.map(c=>({...c})),humanFoldedCards,aiWinnerReveal,aiWinnerId,aiWinningCards:aiWinningCards.map(c=>({...c})),
   pendingAISeat,tournamentMode,blindLevel,blindRemaining,betRangeValue:$('betRange').value,blindSequencePending:blindSequenceTimer!==null
  };
@@ -1370,7 +1416,7 @@ function restoreSavedGame(){
  const s=savedGameState;
  players=s.players.map(p=>({...p,actionTimer:null}));deck=s.deck.map(c=>({...c}));board=s.board.map(c=>({...c}));
  pot=s.pot;currentBet=s.currentBet;street=s.street;actor=s.actor;handNo=s.handNo;over=s.over;sb=s.sb;bb=s.bb;log=[...s.log];tick=Math.max(tick,s.tick)+1;
- actQueue=[...s.actQueue];firstToAct=s.firstToAct;renderedBoardCount=s.renderedBoardCount;winnerIds=[...s.winnerIds];winnerPayouts={...s.winnerPayouts};winnerCombo=s.winnerCombo;
+ actQueue=[...s.actQueue]; firstToAct=s.firstToAct; dealerSeat=s.dealerSeat??dealerSeat; renderedBoardCount=s.renderedBoardCount;winnerIds=[...s.winnerIds];winnerPayouts={...s.winnerPayouts};winnerCombo=s.winnerCombo;
  humanWinnerReveal=s.humanWinnerReveal;winningCards=s.winningCards.map(c=>({...c}));humanFoldedCards=s.humanFoldedCards;aiWinnerReveal=s.aiWinnerReveal;aiWinnerId=s.aiWinnerId;aiWinningCards=s.aiWinningCards.map(c=>({...c}));
  pendingAISeat=s.pendingAISeat;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
  $('betRange').value=String(Math.min(Number($('betRange').max),Math.max(Number($('betRange').min),Number(s.betRangeValue)||Number($('betRange').min))));$('betValue').textContent=$('betRange').value;
@@ -1394,7 +1440,7 @@ function resetStacksAndRestart(){
   gamePaused = false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;clearDealSequence();busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiShowdownRevealBack=false;userHoleRevealBack=false;aiWinnerId=-1;aiWinningCards=[];
  tournamentClock.stop(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.allinFlame = false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
- deck=[];board=[];pot=0;currentBet=0;street=0;actor=-1;handNo=0;over=true;actQueue=[];firstToAct=3;log=[];renderedBoardCount=0;savedGameState=null;gameStarted=true;
+ deck=[];board=[];pot=0;currentBet=0;street=0;actor=-1;handNo=0;over=true;actQueue=[];firstToAct=3;dealerSeat=0;log=[];renderedBoardCount=0;savedGameState=null;gameStarted=true;
  $('community').innerHTML='';$('hole').innerHTML='';$('opponentCards').innerHTML='';$('handBets').innerHTML='';$('seats').innerHTML='';$('pot').textContent='0';$('message').textContent='Новая игра';resetBetSlider();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
  $('feedbackReminder').classList.remove('visible');
