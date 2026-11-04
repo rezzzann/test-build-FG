@@ -1329,7 +1329,7 @@ fireSecondaryIntensity = 0;
       now - firePhaseStart
     );
 
-    if (firePhase === 'warmup') {   fireIntensity = 0.32;  } else if (firePhase === 'igniting') {
+    if (firePhase === 'warmup') {   fireIntensity = 0.62;  } else if (firePhase === 'igniting') {
       const progress = Math.min(
         elapsed / 900,
         1
