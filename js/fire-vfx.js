@@ -1430,7 +1430,7 @@ function getAnimatedFireHeight(now, baseHeight) {
     }
 
     // Плавное снижение — 60 → обычная высота.
-    if (elapsed < 1650) {
+    if (elapsed < 1200) {
       const progress = (elapsed - 700) / 500;
       const eased = ease(progress);
 
