@@ -1688,32 +1688,40 @@ function draw(now) {
 
   // Если карточки временно отсутствуют,
   // всё равно завершаем запущенное затухание.
-  if (!activeSeats.length) {
-    [...playerFireStates.entries()].forEach(
-      ([playerIndex, state]) => {
-        if (state.phase === 'extinguishing') {
-          updatePlayerFireState(
-            state,
-            now,
-            30,
-            playerIndex
-          );
-        }
+if (!activeSeats.length) {
+  [...playerFireStates.entries()].forEach(
+    ([playerIndex, state]) => {
+      if (state.phase === 'extinguishing') {
+        updatePlayerFireState(
+          state,
+          now,
+          30,
+          playerIndex
+        );
+      } else {
+        playerFireStates.delete(playerIndex);
       }
-    );
+    }
+  );
 
-    clearCanvas();
+  clearCanvas();
+
+  if (playerFireStates.size > 0) {
     requestFireFrame();
-    return;
   }
 
+  return;
+}
   const tableWidth = table.clientWidth;
   const tableHeight = table.clientHeight;
 
-  if (!tableWidth || !tableHeight) {
+ if (!tableWidth || !tableHeight) {
+  if (playerFireStates.size > 0) {
     requestFireFrame();
-    return;
   }
+
+  return;
+}
 
   const dpr = resizeCanvas();
   const tableRect = table.getBoundingClientRect();
@@ -1952,9 +1960,13 @@ function draw(now) {
     );
   });
 
-  gl.disable(gl.SCISSOR_TEST);
+ gl.disable(gl.SCISSOR_TEST);
 
+if (playerFireStates.size > 0) {
   requestFireFrame();
+} else {
+  clearCanvas();
+}
 }
   // =========================================
   // UPDATE
