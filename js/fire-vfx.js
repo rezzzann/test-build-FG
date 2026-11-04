@@ -1,10 +1,14 @@
 
 export function createFireVfx({ table, seatsRoot }) {
   if (!table || !seatsRoot) {
-    return {
-      update() {},
-      destroy() {}
-    };
+   return {
+  update() {},
+  ignite() {},
+  extinguish(callback) {
+    callback?.();
+  },
+  destroy() {}
+};
   }
 
   // Один постоянный Canvas для всего стола.
@@ -27,10 +31,14 @@ export function createFireVfx({ table, seatsRoot }) {
 
     canvas.remove();
 
-    return {
-      update() {},
-      destroy() {}
-    };
+   return {
+  update() {},
+  ignite() {},
+  extinguish(callback) {
+    callback?.();
+  },
+  destroy() {}
+};
   }
 
   // =========================================
@@ -60,7 +68,7 @@ const fragmentSource = `
   varying vec2 v_uv;
 
   uniform float u_time;
-
+uniform float u_fireIntensity;
   uniform vec4 u_effectRect;
   uniform vec4 u_cardRect;
   uniform vec2 u_effectSize;
@@ -1044,10 +1052,10 @@ vec3 glowColor = mix(
     vec3 finalColor =
       resultColor / max(resultAlpha, 0.001);
 
-    gl_FragColor = vec4(
-      finalColor,
-      clamp(resultAlpha, 0.0, 1.0)
-    );
+  gl_FragColor = vec4(
+  finalColor,
+  clamp(resultAlpha * u_fireIntensity, 0.0, 1.0)
+);
   }
 `;
 
@@ -1107,10 +1115,14 @@ vec3 glowColor = mix(
 
     canvas.remove();
 
-    return {
-      update() {},
-      destroy() {}
-    };
+   return {
+  update() {},
+  ignite() {},
+  extinguish(callback) {
+    callback?.();
+  },
+  destroy() {}
+};
   }
 
   gl.deleteShader(vertexShader);
@@ -1190,6 +1202,10 @@ const cardRadiusLocation = gl.getUniformLocation(
   program,
   'u_cardRadius'
 );
+  const fireIntensityLocation = gl.getUniformLocation(
+  program,
+  'u_fireIntensity'
+);
   // =========================================
   // ANIMATION STATE
   // =========================================
@@ -1199,6 +1215,138 @@ const cardRadiusLocation = gl.getUniformLocation(
   let destroyed = false;
 
   const startTime = performance.now();
+
+    // =========================================
+  // ALL-IN FIRE PHASES
+  // =========================================
+
+  let firePhase = 'off';
+  let firePhaseStart = 0;
+  let firePhaseFrom = 0;
+  let fireIntensity = 0;
+  let extinguishCallback = null;
+
+  function requestFireFrame() {
+    if (
+      !destroyed &&
+      !document.hidden &&
+      raf === 0
+    ) {
+      raf = requestAnimationFrame(draw);
+    }
+  }
+
+  function ignite() {
+    if (
+      destroyed ||
+      firePhase === 'burning' ||
+      firePhase === 'igniting'
+    ) {
+      return;
+    }
+
+    extinguishCallback = null;
+
+    firePhaseFrom = fireIntensity;
+    firePhaseStart = performance.now();
+    firePhase = 'igniting';
+
+    requestFireFrame();
+  }
+
+  function extinguish(onComplete) {
+    extinguishCallback =
+      typeof onComplete === 'function'
+        ? onComplete
+        : null;
+
+    if (
+      firePhase === 'off' ||
+      fireIntensity <= 0.001
+    ) {
+      firePhase = 'off';
+      fireIntensity = 0;
+
+      const callback = extinguishCallback;
+      extinguishCallback = null;
+
+      callback?.();
+      return;
+    }
+
+    firePhaseFrom = fireIntensity;
+    firePhaseStart = performance.now();
+    firePhase = 'extinguishing';
+
+    requestFireFrame();
+  }
+
+  function updateFireIntensity(now) {
+    const elapsed = Math.max(
+      0,
+      now - firePhaseStart
+    );
+
+    if (firePhase === 'igniting') {
+      const progress = Math.min(
+        elapsed / 900,
+        1
+      );
+
+      if (progress < 0.22) {
+        const p = progress / 0.22;
+        const eased = p * p * (3.0 - 2.0 * p);
+
+        // Короткая яркая вспышка.
+        fireIntensity =
+          firePhaseFrom
+          + (1.16 - firePhaseFrom) * eased;
+
+      } else {
+        const p = (progress - 0.22) / 0.78;
+        const eased = p * p * (3.0 - 2.0 * p);
+
+        // Плавный переход к обычному горению.
+        fireIntensity =
+          1.16 + (1.0 - 1.16) * eased;
+      }
+
+      if (progress >= 1) {
+        fireIntensity = 1.0;
+        firePhase = 'burning';
+      }
+
+    } else if (firePhase === 'burning') {
+      fireIntensity = 1.0;
+
+    } else if (firePhase === 'extinguishing') {
+      const progress = Math.min(
+        elapsed / 850,
+        1
+      );
+
+      const eased =
+        progress * progress * (3.0 - 2.0 * progress);
+
+      fireIntensity =
+        firePhaseFrom * (1.0 - eased);
+
+      if (progress >= 1) {
+        fireIntensity = 0;
+        firePhase = 'off';
+
+        const callback = extinguishCallback;
+        extinguishCallback = null;
+
+        callback?.();
+      }
+    }
+
+    return Math.max(
+      0,
+      Math.min(1.2, fireIntensity)
+    );
+  }
 
   // =========================================
   // CANVAS RESIZE
@@ -1295,7 +1443,11 @@ function draw(now) {
     timeLocation,
     (now - startTime) / 1000
   );
-
+gl.uniform1f(
+  fireIntensityLocation,
+  updateFireIntensity(now)
+);
+  
   gl.enable(gl.SCISSOR_TEST);
 
   activeSeats.forEach(seat => {
@@ -1505,15 +1657,19 @@ const cardRadius = Math.min(
       '.seat.allin-flame-active'
     );
 
+    const shouldAnimate =
+      !!hasActiveFire ||
+      firePhase !== 'off';
+
     if (
-      hasActiveFire &&
+      shouldAnimate &&
       !document.hidden &&
       raf === 0
     ) {
       raf = requestAnimationFrame(draw);
     }
 
-    if (!hasActiveFire && raf !== 0) {
+    if (!shouldAnimate && raf !== 0) {
       cancelAnimationFrame(raf);
 
       raf = 0;
@@ -1565,9 +1721,11 @@ const cardRadius = Math.min(
       ?.loseContext();
   }
 
-  return {
-    update,
-    destroy
-  };
+return {
+  update,
+  ignite,
+  extinguish,
+  destroy
+};
 }
 
