@@ -206,6 +206,9 @@ const fragmentSource = `
 // Боковая граница:
 // нижнее скругление сохраняется,
 // верхняя сторона продолжается строго вертикально.
+// Нижняя дуга карточки.
+// Используется для точного совпадения огня
+// с реальным скруглением нижних углов.
 float roundedSideX(
   float y,
   vec2 mn,
@@ -213,6 +216,22 @@ float roundedSideX(
   float r,
   float sideIndex
 ) {
+  float inset = 0.0;
+
+  if (y < mn.y + r) {
+    float dy = (mn.y + r) - y;
+
+    inset = r - sqrt(
+      max(r * r - dy * dy, 0.0)
+    );
+  }
+
+  return mix(
+    mn.x + inset,
+    mx.x - inset,
+    sideIndex
+  );
+} {
   float inset = 0.0;
 
   // Только нижний угол слегка огибается.
@@ -453,9 +472,10 @@ float roundedSideX(
     // =========================================
    
     // =========================================
+ 
+    // =========================================
     // LAYER 2 — SIDE FIRE
-    // Полное огибание нижних углов.
-    // После угла — строго вертикальный подъём.
+    // Точная дуга нижнего угла + вертикальный подъём.
     // =========================================
 
     float sideIndex = step(
@@ -471,7 +491,7 @@ float roundedSideX(
 
     float lowerCornerRadius = max(radius, 0.001);
 
-    // Центр нижнего скругления выбранной стороны.
+    // Центр настоящего нижнего скругления.
     float cornerCenterX = mix(
       cardMin.x + lowerCornerRadius,
       cardMax.x - lowerCornerRadius,
@@ -481,55 +501,73 @@ float roundedSideX(
     float cornerCenterY =
       cardMin.y + lowerCornerRadius;
 
-    // =========================================
-    // ГЕОМЕТРИЯ НИЖНЕГО УГЛА
-    // =========================================
-
-    float sideBoundaryX = roundedSideX(
-      pixel.y,
-      cardMin,
-      cardMax,
-      radius,
-      sideIndex
+    vec2 cornerCenter = vec2(
+      cornerCenterX,
+      cornerCenterY
     );
-
-    float sidePathS = 0.0;
-    float sideOffset = 0.0;
 
     float cornerArcLength =
       lowerCornerRadius * 1.5707963;
 
+    float sidePathS = 0.0;
+    float sideOffset = 0.0;
+
+    // =========================================
+    // НИЖНЕЕ СКРУГЛЕНИЕ — ТОЧНАЯ ЧЕТВЕРТЬ КРУГА
+    // =========================================
+
     if (pixel.y < cornerCenterY) {
 
-      // Нижнее скругление:
-      // движение начинается от самой нижней точки
-      // и проходит всю четверть окружности.
+      vec2 cornerDelta =
+        pixel - cornerCenter;
 
-      float normalizedCornerY = clamp(
-        (pixel.y - cornerCenterY) / lowerCornerRadius,
-        -1.0,
-        0.0
+      float cornerAngle = atan(
+        cornerDelta.y,
+        cornerDelta.x
       );
 
-      float cornerAngle =
-        asin(normalizedCornerY) + 1.5707963;
+      float arcProgress;
+
+      if (sideIndex < 0.5) {
+        // Левая нижняя дуга:
+        // от нижней точки к левой вертикальной стороне.
+        arcProgress = clamp(
+          (-1.5707963 - cornerAngle) / 1.5707963,
+          0.0,
+          1.0
+        );
+      } else {
+        // Правая нижняя дуга:
+        // от нижней точки к правой вертикальной стороне.
+        arcProgress = clamp(
+          (cornerAngle + 1.5707963) / 1.5707963,
+          0.0,
+          1.0
+        );
+      }
 
       sidePathS =
-        lowerCornerRadius * cornerAngle;
+        cornerArcLength * arcProgress;
 
-      // Расстояние до круглой границы скругления.
-      vec2 cornerCenter = vec2(
-        cornerCenterX,
-        cornerCenterY
-      );
-
+      // Реальное расстояние до дуги.
+      // Не приблизительное расстояние только по Y.
       sideOffset =
-        length(pixel - cornerCenter) - lowerCornerRadius;
+        length(cornerDelta) - lowerCornerRadius;
 
     } else {
 
-      // После окончания нижнего скругления
-      // боковая линия идёт строго вертикально.
+      // =========================================
+      // ВЕРТИКАЛЬНЫЙ УЧАСТОК БОКОВИНЫ
+      // =========================================
+
+      float sideBoundaryX = roundedSideX(
+        pixel.y,
+        cardMin,
+        cardMax,
+        radius,
+        sideIndex
+      );
+
       sidePathS =
         cornerArcLength
         + (pixel.y - cornerCenterY);
@@ -538,11 +576,11 @@ float roundedSideX(
         (pixel.x - sideBoundaryX) * sideDirection;
     }
 
-    // Ширина области пламени вокруг боковой границы.
+    // Область пламени вокруг точного контура.
     float sideWeight =
       1.0 - smoothstep(
-        13.0,
-        27.0,
+        10.0,
+        28.0,
         abs(sideOffset)
       );
 
@@ -550,27 +588,24 @@ float roundedSideX(
     float sideHeat = 0.0;
 
     // =========================================
-    // ВЫСОТА БОКОВОГО ПЛАМЕНИ
+    // ВЫСОТА — ЕЩЁ НА 20 PX НИЖЕ ТЕКУЩЕЙ
     // =========================================
 
-    // Максимальная высота верхней короны.
     float crownMaximumY =
       cardMax.y + u_flameHeight * 1.08;
 
-    // В текущем коде прежнее значение было -5 px.
-    // Опускаем его ещё на 20 px: итого -25 px
-    // относительно максимума верхней короны.
+    // Было: -25 px.
+    // Теперь: -45 px.
     float sideTargetY =
-      crownMaximumY - 25.0;
+      crownMaximumY - 45.0;
 
-    // Полная длина траектории:
-    // нижнее скругление + вертикальная боковина.
+    // Путь от нижней точки скругления
+    // до заданной верхушки бокового пламени.
     float targetPathS =
       cornerArcLength
       + max(sideTargetY - cornerCenterY, 0.0);
 
-    // Мягкое завершение бокового огня
-    // на едином горизонтальном уровне.
+    // Одинаковая конечная высота слева и справа.
     float sideEndFade =
       1.0 - smoothstep(
         sideTargetY - 2.0,
@@ -579,12 +614,12 @@ float roundedSideX(
       );
 
     // =========================================
-    // ОГНЕННЫЕ ЯЗЫКИ
+    // ЯЗЫКИ ПЛАМЕНИ
     // =========================================
 
     if (
       sideWeight > 0.01
-      && abs(sideOffset) < 27.0
+      && abs(sideOffset) < 28.0
       && sideEndFade > 0.001
     ) {
 
@@ -592,7 +627,6 @@ float roundedSideX(
 
         float fi = float(i);
 
-        // Индивидуальная форма и положение основания.
         float rootNoise = noise(
           vec2(
             fi * 2.31 + sideIndex * 9.7,
@@ -600,16 +634,13 @@ float roundedSideX(
           )
         );
 
-        // Первый язык начинается точно от нижней точки.
-        float rootFraction = fi / 7.0;
+        // Первое основание — строго в самой нижней точке.
+        float rootS = targetPathS
+          * (fi / 7.0)
+          * 0.78;
 
-        float rootS =
-          rootFraction * targetPathS * 0.78;
-
-        // Небольшая вариативность остальных оснований.
         if (i > 0) {
-          rootS +=
-            (rootNoise - 0.5) * 5.0;
+          rootS += (rootNoise - 0.5) * 4.0;
         }
 
         rootS = clamp(
@@ -618,33 +649,28 @@ float roundedSideX(
           targetPathS * 0.82
         );
 
-        // Все верхушки стремятся к одной горизонтали.
+        // Общий верхний уровень для всех языков.
         float tongueLength = max(
           targetPathS - rootS,
           8.0
         );
 
-        // Прогресс вдоль траектории:
-        // сначала нижний угол, затем вертикальная сторона.
+        // Движение по нижней дуге,
+        // затем строго вверх по боковине.
         float progress =
           (sidePathS - rootS) / tongueLength;
 
+        // Начало у основания.
+        // Верхнее затухание задаётся единым sideEndFade.
         float riseMask =
           smoothstep(
             0.015,
             0.09,
             progress
-          )
-          * (
-            1.0 - smoothstep(
-              0.88,
-              1.0,
-              progress
-            )
           );
 
         // =====================================
-        // ДИНАМИКА ПЛАМЕНИ
+        // ДИНАМИКА
         // =====================================
 
         float turbulence = fbm(
@@ -657,16 +683,13 @@ float roundedSideX(
           )
         );
 
-        // Лёгкое колебание поперёк контура.
-        // Основное направление остаётся вдоль траектории.
         float sway =
-          1.8
-          + sin(
+          sin(
             progress * 5.0
             - t * 2.1
             + fi * 2.3
-          ) * 1.25
-          + (turbulence - 0.5) * 1.3;
+          ) * 1.1
+          + (turbulence - 0.5) * 1.1;
 
         // Широкое основание, узкая верхушка.
         float tongueWidth =
@@ -689,7 +712,7 @@ float roundedSideX(
           );
 
         // =====================================
-        // ФОРМИРОВАНИЕ ПЛАМЕНИ
+        // ФОРМИРОВАНИЕ ОГНЯ
         // =====================================
 
         float lick =
@@ -712,7 +735,7 @@ float roundedSideX(
     }
 
     // =========================================
-    // НЕПРЕРЫВНОЕ ОСНОВАНИЕ БОКОВОГО ОГНЯ
+    // НЕПРЕРЫВНОЕ ОСНОВАНИЕ ПО ВСЕЙ ДУГЕ
     // =========================================
 
     float sideFlowNoise = fbm(
@@ -745,6 +768,7 @@ float roundedSideX(
       clamp(sideHeat, 0.0, 1.0),
       clamp(sideHeat * 0.58, 0.0, 0.72)
     );
+
 
     // =========================================
     // LAYER 3 — BOTTOM FIRE
@@ -1248,10 +1272,10 @@ function draw(now) {
   Math.min(92, seatRect.width * 0.34)
 );
     // Выход огня за боковые границы.
-    const sidePadding = 26;
+    const sidePadding = 32;
 
     // Небольшое пространство под нижним краем.
-    const bottomPadding = 18;
+    const bottomPadding = 32;
 
     // Вся область, которую будет обрабатывать шейдер.
     const effectWidth =
@@ -1294,18 +1318,25 @@ const effectHeight =
       seatRect.height / effectHeight;
 
     // Берём реальный радиус скругления .seat.
-    const computedStyle = getComputedStyle(seat);
+const computedStyle = getComputedStyle(seat);
 
-    const radiusValue = parseFloat(
-      computedStyle.borderTopLeftRadius
-    ) || 12;
+// Считываем именно нижние углы карточки.
+const bottomLeftRadius =
+  parseFloat(computedStyle.borderBottomLeftRadius) || 12;
 
-    const cardRadius = Math.min(
-      radiusValue,
-      seatRect.width * 0.5,
-      seatRect.height * 0.5
-    );
+const bottomRightRadius =
+  parseFloat(computedStyle.borderBottomRightRadius) || 12;
 
+// В текущем дизайне оба нижних угла одинаковые.
+// Используем их фактический радиус.
+const radiusValue =
+  (bottomLeftRadius + bottomRightRadius) * 0.5;
+
+const cardRadius = Math.min(
+  radiusValue,
+  seatRect.width * 0.5,
+  seatRect.height * 0.5
+);
     // =========================================
     // NORMALIZED EFFECT RECT
     // =========================================
