@@ -48,7 +48,7 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 
 .table.allin-light-active .allin-light-trail {
   opacity: 1;
-  animation: allinLightRun 3s linear forwards;
+  animation: allinLightRun 2s linear forwards;
 }
 
 .table.allin-light-finished .allin-light-trail {
