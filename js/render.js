@@ -61,7 +61,7 @@ const fireVfx = createFireVfx({
     const { players } = getState();
 
     $('handBets').innerHTML = players.map((p, i) => {
-      if (p.folded || p.bet <= 0) return '';
+      if (p.folded || p.bet <= 0 || p.blindBetPending) return '';
 
       const config = getBetChipConfig(p.bet);
       const cls = config.color === 'blue' ? 'blue-chip' : 'gold-chip';
