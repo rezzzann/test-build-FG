@@ -1409,7 +1409,7 @@ function getAnimatedFireHeight(now, baseHeight) {
     return 0 + 30 * ease(progress);
   }
 
-  // ФАЗА 2: вспышка — 15 → 60.
+  // ФАЗА 2: вспышка — 30 → 60.
   if (fireHeightPhase === 'flare') {
 
     // Плавный подъём за 450 мс.
@@ -1423,15 +1423,15 @@ function getAnimatedFireHeight(now, baseHeight) {
     }
 
     // Удержание максимальной высоты — 500 мс.
-    if (elapsed < 700) {
+    if (elapsed < 450) {
       fireSecondaryIntensity = 1;
 
       return 60;
     }
 
     // Плавное снижение — 60 → обычная высота.
-    if (elapsed < 1200) {
-      const progress = (elapsed - 700) / 500;
+    if (elapsed < 750) {
+      const progress = (elapsed - 450) / 300;
       const eased = ease(progress);
 
       fireSecondaryIntensity = 1;
