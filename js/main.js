@@ -142,7 +142,7 @@ function startAllInTableLight(playerIndex) {
 
     if (hasAllInPlayers) {
       render();
-      igniteFire();
+flareFire();
     }
   }
 
@@ -160,6 +160,14 @@ function startAllInTableLight(playerIndex) {
   );
 
   table.classList.add('allin-light-active');
+  // Запускаем слабое верхнее пламя одновременно с лучом.
+const firstPlayer = players[playerIndex];
+
+if (firstPlayer) {
+  firstPlayer.allinFlame = true;
+  startFireWarmup();
+  render();
+}
 
   // Резервный запуск, если браузер не отправит animationend.
   allInLightTimer = setTimeout(
@@ -392,7 +400,8 @@ function logit(s) {
   $('message').textContent = s;
 }
 
-const {   render,   renderHandBets,   renderCommunity,   igniteFire,   extinguishFire } = createRenderer({
+const {   render,   renderHandBets,   renderCommunity,   startFireWarmup,
+flareFire,   extinguishFire } = createRenderer({
   $,
   getState: () => ({
     players,
