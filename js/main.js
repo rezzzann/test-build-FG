@@ -226,13 +226,19 @@ function resetAllInTableLight() {
   if (hasActiveFlame) {
     // Сначала затухает пламя.
     // Флаги убираются только после завершения анимации.
-    extinguishFire(() => {
-      players.forEach(player => {
-        player.allinFlame = false;
-      });
+extinguishFire(() => {
+  players.forEach(player => {
+    player.allinFlame = false;
+  });
 
-      render();
+  // Убираем только класс пламени,
+  // не перерисовывая весь игровой интерфейс.
+  document
+    .querySelectorAll('#seats .seat.allin-flame-active')
+    .forEach(seat => {
+      seat.classList.remove('allin-flame-active');
     });
+});
 
   } else {
     players.forEach(player => {
