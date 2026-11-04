@@ -52,234 +52,414 @@ export function createFireVfx({ table, seatsRoot }) {
   // Процедурный огонь из Fire VFX Prototype 002
   // =========================================
 
-  const fragmentSource = `
-    precision highp float;
+  
+const fragmentSource = `
+  precision highp float;
 
-    varying vec2 v_uv;
+  varying vec2 v_uv;
 
-    uniform float u_time;
-    uniform vec4 u_fireRect;
+  uniform float u_time;
 
-    float hash(vec2 p) {
-      p = fract(p * vec2(123.34, 456.21));
-      p += dot(p, p + 45.32);
-      return fract(p.x * p.y);
+  // Геометрия области эффекта.
+  uniform vec4 u_effectRect;
+
+  // Геометрия самой карточки внутри области эффекта.
+  uniform vec4 u_cardRect;
+
+  // Размер области эффекта в CSS-пикселях.
+  uniform vec2 u_effectSize;
+
+  // Высота основного пламени над карточкой.
+  uniform float u_flameHeight;
+
+  // Радиус скругления карточки.
+  uniform float u_cardRadius;
+
+  // =========================================
+  // NOISE
+  // =========================================
+
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+
+    f = f * f * (3.0 - 2.0 * f);
+
+    return mix(
+      mix(
+        hash(i),
+        hash(i + vec2(1.0, 0.0)),
+        f.x
+      ),
+      mix(
+        hash(i + vec2(0.0, 1.0)),
+        hash(i + vec2(1.0, 1.0)),
+        f.x
+      ),
+      f.y
+    );
+  }
+
+  float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+
+    for (int i = 0; i < 5; i++) {
+      v += a * noise(p);
+      p = p * 2.03 + vec2(7.1, 3.7);
+      a *= 0.5;
     }
 
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
+    return v;
+  }
 
-      f = f * f * (3.0 - 2.0 * f);
+  // =========================================
+  // ROUNDED RECTANGLE SDF
+  // Геометрия всей карточки игрока.
+  // =========================================
 
-      return mix(
-        mix(
-          hash(i),
-          hash(i + vec2(1.0, 0.0)),
-          f.x
-        ),
-        mix(
-          hash(i + vec2(0.0, 1.0)),
-          hash(i + vec2(1.0, 1.0)),
-          f.x
-        ),
-        f.y
-      );
-    }
+  float sdRoundedBox(
+    vec2 p,
+    vec2 halfSize,
+    float radius
+  ) {
+    vec2 q = abs(p) - halfSize + radius;
 
-    float fbm(vec2 p) {
-      float v = 0.0;
-      float a = 0.5;
+    return length(max(q, 0.0))
+      + min(max(q.x, q.y), 0.0)
+      - radius;
+  }
 
-      for (int i = 0; i < 5; i++) {
-        v += a * noise(p);
+  // =========================================
+  // FIRE RENDER
+  // =========================================
 
-        p = p * 2.03 + vec2(7.1, 3.7);
+  vec4 renderFire(vec2 uv, float time) {
 
-        a *= 0.5;
-      }
+    float t = time * 1.85;
 
-      return v;
-    }
+    // Перевод координат в пиксели области эффекта.
+    vec2 pixel = uv * u_effectSize;
 
-    vec4 renderFire(vec2 uv, float time) {
+    // Реальные размеры карточки.
+    vec2 cardMin = u_cardRect.xy * u_effectSize;
+    vec2 cardSize = u_cardRect.zw * u_effectSize;
 
-      vec2 localUV = uv;
+    vec2 cardMax = cardMin + cardSize;
+    vec2 cardCenter = cardMin + cardSize * 0.5;
 
-      float t = time * 1.85;
+    // SDF: отрицательное значение внутри карточки,
+    // положительное — снаружи.
+    float sd = sdRoundedBox(
+      pixel - cardCenter,
+      cardSize * 0.5,
+      u_cardRadius
+    );
 
-      // Коррекция под широкое соотношение 2.84:1.
-      float x = (localUV.x - 0.5) * 2.0;
-      float y = localUV.y;
+    float localX =
+      (pixel.x - cardMin.x) / cardSize.x;
 
-      // Основное движение огня.
-      float n1 = fbm(
-        vec2(x * 5.2, y * 3.4 - t * 2.15)
-      );
+    float localY =
+      (pixel.y - cardMin.y) / cardSize.y;
 
-      float n2 = fbm(
-        vec2(x * 10.5 + 2.4, y * 5.5 - t * 3.05)
-      );
+    // =========================================
+    // LAYER 1 — ОСНОВНОЕ ПЛАМЯ НАД КАРТОЧКОЙ
+    // =========================================
 
-      float n3 = fbm(
-        vec2(x * 18.0 - 4.0, y * 8.0 - t * 4.0)
-      );
+    float abovePx = pixel.y - cardMax.y;
 
-      // Основные языки пламени.
-      float tongues = 0.5
-        + 0.22 * sin(x * 17.0 + t * 2.0)
-        + 0.13 * sin(x * 31.0 - t * 2.5)
-        + 0.10 * sin(x * 47.0 + t * 1.65);
+    float fireY = abovePx / u_flameHeight;
 
-      tongues = clamp(tongues, 0.08, 0.94);
+    float x = (localX - 0.5) * 2.0;
 
-      float height =
-        0.25
-        + 0.42 * tongues
-        + 0.28 * n1
-        + 0.12 * n2;
+    float n1 = fbm(
+      vec2(x * 5.2, fireY * 3.4 - t * 2.15)
+    );
 
-      height *=
-        (1.0 - smoothstep(0.78, 1.05, abs(x)));
+    float n2 = fbm(
+      vec2(x * 10.5 + 2.4, fireY * 5.5 - t * 3.05)
+    );
 
-      height = max(height, 0.17);
+    float n3 = fbm(
+      vec2(x * 18.0 - 4.0, fireY * 8.0 - t * 4.0)
+    );
 
-      float edgeNoise =
-        (n1 - 0.5) * 0.10
-        + (n2 - 0.5) * 0.045;
+    float tongues = 0.5
+      + 0.22 * sin(x * 17.0 + t * 2.0)
+      + 0.13 * sin(x * 31.0 - t * 2.5)
+      + 0.10 * sin(x * 47.0 + t * 1.65);
 
-      float bodyEdge = height + edgeNoise - y;
+    tongues = clamp(tongues, 0.08, 0.94);
 
-      float body = smoothstep(
-        -0.035,
-        0.025,
-        bodyEdge
-      );
+    float height =
+      0.25
+      + 0.42 * tongues
+      + 0.28 * n1
+      + 0.12 * n2;
 
-      // Дополнительные узкие языки.
-      float fineHeight =
-        0.18 + 0.64 * n2 + 0.18 * tongues;
+    height *=
+      1.0 - smoothstep(0.86, 1.08, abs(x));
 
-      float fineShape =
-        fineHeight - y + (n3 - 0.5) * 0.11;
+    float edgeNoise =
+      (n1 - 0.5) * 0.10
+      + (n2 - 0.5) * 0.045;
 
-      float fine = smoothstep(
-        -0.018,
-        0.035,
-        fineShape
-      ) * (
-        1.0 - smoothstep(0.68, 1.02, abs(x))
-      );
+    float bodyEdge = height + edgeNoise - fireY;
 
-      // Стабильное основание огня.
-      float base =
-        exp(-pow((y - 0.115) / 0.075, 2.0))
-        * (1.0 - smoothstep(0.78, 1.08, abs(x)));
+    float body = smoothstep(
+      -0.035,
+      0.025,
+      bodyEdge
+    );
 
-      float core =
-        exp(-pow((y - (0.12 + 0.11 * n1)) / 0.19, 2.0))
-        * body;
+    float fineHeight =
+      0.18 + 0.64 * n2 + 0.18 * tongues;
 
-      float tonguesMask = max(
-        body * 0.78,
-        fine * 0.68
-      );
+    float fineShape =
+      fineHeight - fireY + (n3 - 0.5) * 0.11;
 
-      float alpha = clamp(
-        max(tonguesMask, base * 0.92),
+    float fine = smoothstep(
+      -0.018,
+      0.035,
+      fineShape
+    );
+
+    // Основание огня остаётся на верхнем крае карточки.
+    float edgeFade =
+      1.0 - smoothstep(0.92, 1.08, abs(x));
+
+    float aboveGate =
+      smoothstep(-2.0, 1.5, abovePx)
+      * (1.0 - smoothstep(0.96, 1.08, fireY));
+
+    float base = exp(
+      -pow((abovePx - 0.7) / 4.2, 2.0)
+    ) * edgeFade;
+
+    float topAlpha = clamp(
+      max(body * 0.78, fine * 0.68)
+        * edgeFade
+        * aboveGate
+        + base * 0.95 * aboveGate,
+      0.0,
+      1.0
+    );
+
+    // Цвет основного пламени.
+    vec3 outer = vec3(0.95, 0.075, 0.008);
+    vec3 orange = vec3(1.0, 0.25, 0.012);
+    vec3 gold = vec3(1.0, 0.60, 0.055);
+    vec3 hot = vec3(1.0, 0.91, 0.34);
+
+    float edgeBand = smoothstep(
+      0.02,
+      0.20,
+      bodyEdge
+    );
+
+    float innerBand = smoothstep(
+      0.16,
+      0.42,
+      bodyEdge + 0.10 * n2
+    );
+
+    float hotCore = clamp(
+      body * 0.72 + base * 0.55,
+      0.0,
+      0.90
+    );
+
+    vec3 topColor = mix(
+      outer,
+      orange,
+      edgeBand
+    );
+
+    topColor = mix(
+      topColor,
+      gold,
+      innerBand * 0.85
+    );
+
+    topColor = mix(
+      topColor,
+      hot,
+      hotCore
+    );
+
+    float topGlow =
+      exp(-pow((fireY - 0.18) / 0.25, 2.0))
+      * edgeFade
+      * 0.18;
+
+    topColor += vec3(1.0, 0.16, 0.015) * topGlow;
+
+    // =========================================
+    // LAYER 2 — ОГОНЬ ВОКРУГ БОКОВЫХ КРАЁВ
+    // =========================================
+
+    float sideSign = step(0.5, localX);
+
+    float sideN1 = fbm(
+      vec2(
+        localY * 7.0 + sideSign * 2.2,
+        t * 1.1
+      )
+    );
+
+    float sideN2 = fbm(
+      vec2(
+        localY * 15.0 - t * 1.6,
+        sideSign * 4.0
+      )
+    );
+
+    // Изменение высоты языков вдоль боковых границ.
+    float sidePulse = 0.5
+      + 0.28 * sin(
+        localY * 28.0 - t * 2.4 + sideSign * 1.7
+      )
+      + 0.25 * (sideN1 - 0.5)
+      + 0.16 * (sideN2 - 0.5);
+
+    sidePulse = clamp(sidePulse, 0.0, 1.0);
+
+    // Дальность распространения бокового пламени.
+    float sideReach = 3.0 + sidePulse * 13.0;
+
+    // Не даём боковому огню закрывать весь низ карточки.
+    float sideGate =
+      smoothstep(0.04, 0.18, localY)
+      * (1.0 - smoothstep(0.88, 1.0, localY));
+
+    float sideDistance = max(sd, 0.0);
+
+    float sideMask =
+      (1.0 - smoothstep(
+        sideReach,
+        sideReach + 5.0,
+        sideDistance
+      ))
+      * step(0.0, sd)
+      * sideGate
+      * smoothstep(0.22, 0.48, sidePulse);
+
+    float sideAlpha = clamp(
+      sideMask * (0.50 + sidePulse * 0.50),
+      0.0,
+      1.0
+    );
+
+    vec3 sideColor = mix(
+      outer,
+      orange,
+      smoothstep(0.15, 0.70, sidePulse)
+    );
+
+    sideColor = mix(
+      sideColor,
+      gold,
+      smoothstep(0.65, 0.95, sidePulse) * 0.55
+    );
+
+    // =========================================
+    // LAYER 3 — ВНУТРЕННЕЕ СВЕЧЕНИЕ ПО КОНТУРУ
+    // =========================================
+
+    float glowNoise = noise(
+      vec2(
+        localX * 12.0 - t * 0.45,
+        localY * 13.0 + t * 0.35
+      )
+    );
+
+    float glowFlicker =
+      0.68 + 0.32 * glowNoise;
+
+    // Свет только внутри границ карточки.
+    float innerGlowBand =
+      smoothstep(-11.0, -5.0, sd)
+      * (1.0 - smoothstep(-1.5, 1.5, sd));
+
+    float innerGlowAlpha = innerGlowBand
+      * (0.18 + 0.18 * glowFlicker);
+
+    // Мягкий внешний ореол.
+    float outerGlowBand =
+      (1.0 - smoothstep(
         0.0,
-        1.0
-      );
+        11.0,
+        sideDistance
+      ))
+      * step(0.0, sd);
 
-      // Цветовая палитра.
-      float intensity = clamp(
-        0.25 + 0.45 * n1 + 0.35 * n2 + 0.24 * n3,
-        0.0,
-        1.0
-      );
+    float outerGlowAlpha =
+      outerGlowBand
+      * (0.18 + 0.12 * glowFlicker);
 
-      vec3 outer = vec3(0.95, 0.075, 0.008);
-      vec3 orange = vec3(1.0, 0.25, 0.012);
-      vec3 gold = vec3(1.0, 0.60, 0.055);
-      vec3 hot = vec3(1.0, 0.91, 0.34);
+    vec3 rimColor = mix(
+      vec3(1.0, 0.13, 0.008),
+      vec3(1.0, 0.56, 0.07),
+      glowFlicker
+    );
 
-      float edgeBand = smoothstep(
-        0.02,
-        0.20,
-        bodyEdge
-      );
+    // =========================================
+    // FINAL COMPOSITION
+    // =========================================
 
-      float innerBand = smoothstep(
-        0.16,
-        0.42,
-        bodyEdge + 0.10 * n2
-      );
+    float flameAlpha = max(
+      topAlpha,
+      sideAlpha
+    );
 
-      float hotCore = clamp(
-        core * 0.92 + base * 0.42,
-        0.0,
-        1.0
-      );
+    float glowAlpha = max(
+      innerGlowAlpha,
+      outerGlowAlpha
+    );
 
-      vec3 color = mix(
-        outer,
-        orange,
-        edgeBand
-      );
+    float alpha = clamp(
+      flameAlpha + glowAlpha * (1.0 - flameAlpha),
+      0.0,
+      1.0
+    );
 
-      color = mix(
-        color,
-        gold,
-        innerBand * (0.68 + 0.22 * intensity)
-      );
+    float sideMix =
+      sideAlpha / max(topAlpha + sideAlpha, 0.001);
 
-      color = mix(
-        color,
-        hot,
-        clamp(hotCore, 0.0, 0.82)
-      );
+    vec3 flameColor = mix(
+      topColor,
+      sideColor,
+      sideMix
+    );
 
-      // Светящиеся внутренние прожилки.
-      float streak =
-        smoothstep(0.72, 0.92, n3)
-        * body
-        * smoothstep(0.10, 0.35, y);
+    // Составляем итоговый цвет с корректной прозрачностью.
+    vec3 premultipliedColor =
+      flameColor * flameAlpha
+      + rimColor * glowAlpha * (1.0 - flameAlpha);
 
-      color = mix(
-        color,
-        vec3(1.0, 0.78, 0.16),
-        streak * 0.48
-      );
+    vec3 finalColor =
+      premultipliedColor / max(alpha, 0.001);
 
-      // Мягкое внешнее свечение.
-      float glow =
-        exp(-pow((y - 0.18) / 0.25, 2.0))
-        * (1.0 - smoothstep(0.35, 1.18, abs(x)))
-        * 0.22;
+    return vec4(finalColor, alpha);
+  }
 
-      color += vec3(1.0, 0.16, 0.015) * glow;
+  void main() {
 
-      // Плавное затухание по верхнему краю.
-      float topFade =
-        1.0 - smoothstep(0.80, 1.0, y);
+    // Преобразуем глобальные координаты Canvas
+    // в координаты локальной области эффекта.
+    vec2 localUV =
+      (v_uv - u_effectRect.xy) / u_effectRect.zw;
 
-      alpha *= mix(1.0, topFade, 0.42);
+    gl_FragColor = renderFire(localUV, u_time);
+  }
+`;
 
-      alpha = clamp(alpha, 0.0, 1.0);
-
-      return vec4(color, alpha);
-    }
-
-    void main() {
-
-      // Переводим координаты всего Canvas
-      // в локальные координаты конкретного пламени.
-      vec2 localUV =
-        (v_uv - u_fireRect.xy) / u_fireRect.zw;
-
-      gl_FragColor = renderFire(localUV, u_time);
-    }
-  `;
 
   // =========================================
   // COMPILATION
@@ -383,16 +563,35 @@ export function createFireVfx({ table, seatsRoot }) {
     0
   );
 
-  const timeLocation = gl.getUniformLocation(
-    program,
-    'u_time'
-  );
+const timeLocation = gl.getUniformLocation(
+  program,
+  'u_time'
+);
 
-  const fireRectLocation = gl.getUniformLocation(
-    program,
-    'u_fireRect'
-  );
+const effectRectLocation = gl.getUniformLocation(
+  program,
+  'u_effectRect'
+);
 
+const cardRectLocation = gl.getUniformLocation(
+  program,
+  'u_cardRect'
+);
+
+const effectSizeLocation = gl.getUniformLocation(
+  program,
+  'u_effectSize'
+);
+
+const flameHeightLocation = gl.getUniformLocation(
+  program,
+  'u_flameHeight'
+);
+
+const cardRadiusLocation = gl.getUniformLocation(
+  program,
+  'u_cardRadius'
+);
   // =========================================
   // ANIMATION STATE
   // =========================================
@@ -457,158 +656,234 @@ export function createFireVfx({ table, seatsRoot }) {
   // DRAW
   // =========================================
 
-  function draw(now) {
-    raf = 0;
+ 
+function draw(now) {
+  raf = 0;
 
-    if (destroyed || document.hidden) return;
+  if (destroyed || document.hidden) return;
 
-    const activeSeats = Array.from(
-      seatsRoot.querySelectorAll(
-        '.seat.allin-flame-active'
+  const activeSeats = Array.from(
+    seatsRoot.querySelectorAll(
+      '.seat.allin-flame-active'
+    )
+  );
+
+  if (!activeSeats.length) {
+    clearCanvas();
+    return;
+  }
+
+  const tableWidth = table.clientWidth;
+  const tableHeight = table.clientHeight;
+
+  if (!tableWidth || !tableHeight) return;
+
+  const dpr = resizeCanvas();
+
+  const tableRect = table.getBoundingClientRect();
+
+  const innerLeft =
+    tableRect.left + table.clientLeft;
+
+  const innerTop =
+    tableRect.top + table.clientTop;
+
+  gl.useProgram(program);
+
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.uniform1f(
+    timeLocation,
+    (now - startTime) / 1000
+  );
+
+  gl.enable(gl.SCISSOR_TEST);
+
+  activeSeats.forEach(seat => {
+    const seatRect = seat.getBoundingClientRect();
+
+    if (!seatRect.width || !seatRect.height) return;
+
+    // =========================================
+    // GEOMETRY
+    // =========================================
+
+    // Высота основного огня над карточкой.
+    // Рассчитывается от её фактической ширины.
+    const flameHeight = Math.max(
+      52,
+      Math.min(92, seatRect.width * 0.31)
+    );
+
+    // Выход огня за боковые границы.
+    const sidePadding = 20;
+
+    // Небольшое пространство под нижним краем.
+    const bottomPadding = 12;
+
+    // Вся область, которую будет обрабатывать шейдер.
+    const effectWidth =
+      seatRect.width + sidePadding * 2;
+
+    const effectHeight =
+      flameHeight
+      + seatRect.height
+      + bottomPadding;
+
+    // Координаты области относительно стола.
+    const effectLeft =
+      seatRect.left - innerLeft - sidePadding;
+
+    const effectTop =
+      seatRect.top - innerTop - flameHeight;
+
+    const effectBottom =
+      effectTop + effectHeight;
+
+    // =========================================
+    // CARD GEOMETRY
+    // =========================================
+
+    // Положение самой карточки внутри области эффекта.
+    const cardX =
+      sidePadding / effectWidth;
+
+    const cardY =
+      bottomPadding / effectHeight;
+
+    const cardW =
+      seatRect.width / effectWidth;
+
+    const cardH =
+      seatRect.height / effectHeight;
+
+    // Берём реальный радиус скругления .seat.
+    const computedStyle = getComputedStyle(seat);
+
+    const radiusValue = parseFloat(
+      computedStyle.borderTopLeftRadius
+    ) || 12;
+
+    const cardRadius = Math.min(
+      radiusValue,
+      seatRect.width * 0.5,
+      seatRect.height * 0.5
+    );
+
+    // =========================================
+    // NORMALIZED EFFECT RECT
+    // =========================================
+
+    const rectX =
+      effectLeft / tableWidth;
+
+    const rectY =
+      1 - effectBottom / tableHeight;
+
+    const rectW =
+      effectWidth / tableWidth;
+
+    const rectH =
+      effectHeight / tableHeight;
+
+    // =========================================
+    // SCISSOR
+    // Ограничиваем обработку областью карточки.
+    // =========================================
+
+    const sx = Math.max(
+      0,
+      Math.floor(effectLeft * dpr)
+    );
+
+    const sy = Math.max(
+      0,
+      Math.floor(
+        (tableHeight - effectBottom) * dpr
       )
     );
 
-    if (!activeSeats.length) {
-      clearCanvas();
-      return;
-    }
-
-    const tableWidth = table.clientWidth;
-    const tableHeight = table.clientHeight;
-
-    if (!tableWidth || !tableHeight) return;
-
-    const dpr = resizeCanvas();
-
-    const tableRect = table.getBoundingClientRect();
-
-    const innerLeft =
-      tableRect.left + table.clientLeft;
-
-    const innerTop =
-      tableRect.top + table.clientTop;
-
-    gl.useProgram(program);
-
-    gl.disable(gl.SCISSOR_TEST);
-
-    gl.clearColor(0, 0, 0, 0);
-
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.uniform1f(
-      timeLocation,
-      (now - startTime) / 1000
+    const ex = Math.min(
+      canvas.width,
+      Math.ceil(
+        (effectLeft + effectWidth) * dpr
+      )
     );
 
-    gl.enable(gl.SCISSOR_TEST);
+    const ey = Math.min(
+      canvas.height,
+      Math.ceil(
+        (tableHeight - effectTop) * dpr
+      )
+    );
 
-    activeSeats.forEach(seat => {
-      const seatRect = seat.getBoundingClientRect();
+    const scissorWidth = ex - sx;
+    const scissorHeight = ey - sy;
 
-      // Ширина рассчитывается по фактической
-      // ширине карточки игрока.
-      const flameWidth = Math.min(
-        seatRect.width + 18,
-        tableWidth - 8
-      );
+    if (
+      scissorWidth <= 0 ||
+      scissorHeight <= 0
+    ) return;
 
-      if (flameWidth <= 0) return;
+    // =========================================
+    // SEND GEOMETRY TO SHADER
+    // =========================================
 
-      // Сохраняем пропорции прототипа 2.84:1.
-      const flameHeight = flameWidth / 2.84;
+    gl.uniform4f(
+      effectRectLocation,
+      rectX,
+      rectY,
+      rectW,
+      rectH
+    );
 
-      const left =
-        seatRect.left -
-        innerLeft +
-        (seatRect.width - flameWidth) / 2;
+    gl.uniform4f(
+      cardRectLocation,
+      cardX,
+      cardY,
+      cardW,
+      cardH
+    );
 
-      const seatTop =
-        seatRect.top - innerTop;
+    gl.uniform2f(
+      effectSizeLocation,
+      effectWidth,
+      effectHeight
+    );
 
-      // В шейдере основание расположено
-      // на уровне 11.5% от нижнего края.
-      // Совмещаем его с верхней границей карточки.
-      const flameTop =
-        seatTop - flameHeight * 0.885 - 2;
+    gl.uniform1f(
+      flameHeightLocation,
+      flameHeight
+    );
 
-      const flameBottom =
-        flameTop + flameHeight;
+    gl.uniform1f(
+      cardRadiusLocation,
+      cardRadius
+    );
 
-      // Нормализованные координаты для GLSL.
-      const rectX =
-        left / tableWidth;
+    // =========================================
+    // DRAW FIRE
+    // =========================================
 
-      const rectY =
-        1 - flameBottom / tableHeight;
+    gl.scissor(
+      sx,
+      sy,
+      scissorWidth,
+      scissorHeight
+    );
 
-      const rectW =
-        flameWidth / tableWidth;
+    gl.drawArrays(
+      gl.TRIANGLE_STRIP,
+      0,
+      4
+    );
+  });
 
-      const rectH =
-        flameHeight / tableHeight;
+  gl.disable(gl.SCISSOR_TEST);
 
-      // Область отрисовки в физических пикселях.
-      // Так шейдер обрабатывает только область огня,
-      // а не весь игровой стол.
-      const sx = Math.max(
-        0,
-        Math.floor(left * dpr)
-      );
-
-      const sy = Math.max(
-        0,
-        Math.floor(
-          (tableHeight - flameBottom) * dpr
-        )
-      );
-
-      const ex = Math.min(
-        canvas.width,
-        Math.ceil((left + flameWidth) * dpr)
-      );
-
-      const ey = Math.min(
-        canvas.height,
-        Math.ceil(
-          (tableHeight - flameTop) * dpr
-        )
-      );
-
-      const scissorWidth = ex - sx;
-      const scissorHeight = ey - sy;
-
-      if (
-        scissorWidth <= 0 ||
-        scissorHeight <= 0
-      ) return;
-
-      gl.uniform4f(
-        fireRectLocation,
-        rectX,
-        rectY,
-        rectW,
-        rectH
-      );
-
-      gl.scissor(
-        sx,
-        sy,
-        scissorWidth,
-        scissorHeight
-      );
-
-      gl.drawArrays(
-        gl.TRIANGLE_STRIP,
-        0,
-        4
-      );
-    });
-
-    gl.disable(gl.SCISSOR_TEST);
-
-    raf = requestAnimationFrame(draw);
-  }
+  raf = requestAnimationFrame(draw);
+}
 
   // =========================================
   // UPDATE
