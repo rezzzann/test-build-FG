@@ -1,4 +1,4 @@
-
+import { createFireVfx } from './fire-vfx.js';
 export function createRenderer({
   $,
   getState,
@@ -18,6 +18,11 @@ export function createRenderer({
   let previousLabelActions = [];
   let labelAnimationUntil = [];
   let allinInfoAppearUntil = [];
+  // Единый WebGL-эффект ALL-IN для всех игроков.
+const fireVfx = createFireVfx({
+  table: $('table'),
+  seatsRoot: $('seats')
+});
   function actionClass(action) {
     const classes = {
       'РЕЙЗ': 'raise-label',
@@ -461,6 +466,8 @@ const winnerCardsMarkup = showAISeatCards
     $('nextHand').classList.toggle('visible', over);
     $('exitButton').classList.toggle('visible', gameStarted);
     $('exitButton').disabled = dealInProgress || initialDealInProgress;
+    // Обновляем положение огня после отрисовки карточек игроков.
+fireVfx.update();
   }
 
   return { render, renderHandBets, renderCommunity };
