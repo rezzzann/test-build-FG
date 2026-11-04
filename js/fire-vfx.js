@@ -1402,7 +1402,7 @@ function getAnimatedFireHeight(now, baseHeight) {
 
   // ФАЗА 1: слабое пламя — 5 → 15.
   if (fireHeightPhase === 'warmup') {
-    const progress = Math.min(elapsed / 2000, 1);
+    const progress = Math.min(elapsed / 1000, 1);
 
     fireSecondaryIntensity = 0;
 
