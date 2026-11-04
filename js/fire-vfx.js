@@ -4,6 +4,8 @@ export function createFireVfx({ table, seatsRoot }) {
    return {
   update() {},
   ignite() {},
+     startWarmup() {},
+flare() {},
   extinguish(callback) {
     callback?.();
   },
@@ -34,6 +36,8 @@ export function createFireVfx({ table, seatsRoot }) {
    return {
   update() {},
   ignite() {},
+     startWarmup() {},
+flare() {},
   extinguish(callback) {
     callback?.();
   },
@@ -69,6 +73,7 @@ const fragmentSource = `
 
   uniform float u_time;
 uniform float u_fireIntensity;
+uniform float u_fireSecondary;
   uniform vec4 u_effectRect;
   uniform vec4 u_cardRect;
   uniform vec2 u_effectSize;
@@ -1020,7 +1025,7 @@ vec3 glowColor = mix(
     float resultAlpha = topAlpha;
 
     // Боковые языки поверх основного огня.
-    float sa = clamp(sideAlpha, 0.0, 0.90);
+    float sa = clamp(sideAlpha * u_fireSecondary, 0.0, 0.90);
 
     resultColor =
       sideColor * sa
@@ -1030,7 +1035,7 @@ vec3 glowColor = mix(
       sa + resultAlpha * (1.0 - sa);
 
     // Нижний огонь.
-    float ba = clamp(bottomAlpha, 0.0, 0.75);
+    float ba = clamp(bottomAlpha * u_fireSecondary, 0.0, 0.75);
 
     resultColor =
       bottomColor * ba
@@ -1040,7 +1045,7 @@ vec3 glowColor = mix(
       ba + resultAlpha * (1.0 - ba);
 
     // Внутреннее и внешнее свечение поверх пламени.
-    float ga = glowAlpha;
+    float ga = glowAlpha * u_fireSecondary;
 
     resultColor =
       glowColor * ga
@@ -1118,6 +1123,8 @@ vec3 glowColor = mix(
    return {
   update() {},
   ignite() {},
+     startWarmup() {},
+flare() {},
   extinguish(callback) {
     callback?.();
   },
@@ -1206,6 +1213,10 @@ const cardRadiusLocation = gl.getUniformLocation(
   program,
   'u_fireIntensity'
 );
+  const fireSecondaryLocation = gl.getUniformLocation(
+  program,
+  'u_fireSecondary'
+);
   // =========================================
   // ANIMATION STATE
   // =========================================
@@ -1225,6 +1236,9 @@ const cardRadiusLocation = gl.getUniformLocation(
   let firePhaseFrom = 0;
   let fireIntensity = 0;
   let extinguishCallback = null;
+  let fireHeightPhase = 'off';
+let fireHeightPhaseStart = 0;
+let fireSecondaryIntensity = 0;
 
   function requestFireFrame() {
     if (
@@ -1235,7 +1249,34 @@ const cardRadiusLocation = gl.getUniformLocation(
       raf = requestAnimationFrame(draw);
     }
   }
+function startWarmup() {
+  if (destroyed) return;
 
+  extinguishCallback = null;
+
+  firePhase = 'warmup';
+  fireIntensity = 0.32;
+
+  fireHeightPhase = 'warmup';
+  fireHeightPhaseStart = performance.now();
+  fireSecondaryIntensity = 0;
+
+  requestFireFrame();
+}
+
+function flare() {
+  if (destroyed) return;
+
+  firePhaseFrom = fireIntensity;
+  firePhaseStart = performance.now();
+  firePhase = 'igniting';
+
+  fireHeightPhase = 'flare';
+  fireHeightPhaseStart = performance.now();
+  fireSecondaryIntensity = 0;
+
+  requestFireFrame();
+}
   function ignite() {
     if (
       destroyed ||
@@ -1266,7 +1307,8 @@ const cardRadiusLocation = gl.getUniformLocation(
     ) {
       firePhase = 'off';
       fireIntensity = 0;
-
+fireHeightPhase = 'off';
+fireSecondaryIntensity = 0;
       const callback = extinguishCallback;
       extinguishCallback = null;
 
@@ -1287,7 +1329,7 @@ const cardRadiusLocation = gl.getUniformLocation(
       now - firePhaseStart
     );
 
-    if (firePhase === 'igniting') {
+    if (firePhase === 'warmup') {   fireIntensity = 0.32;  } else if (firePhase === 'igniting') {
       const progress = Math.min(
         elapsed / 900,
         1
@@ -1334,7 +1376,8 @@ const cardRadiusLocation = gl.getUniformLocation(
       if (progress >= 1) {
         fireIntensity = 0;
         firePhase = 'off';
-
+fireHeightPhase = 'off';
+fireSecondaryIntensity = 0;
         const callback = extinguishCallback;
         extinguishCallback = null;
 
@@ -1347,7 +1390,68 @@ const cardRadiusLocation = gl.getUniformLocation(
       Math.min(1.2, fireIntensity)
     );
   }
+  // Анимация высоты пламени
+function getAnimatedFireHeight(now, baseHeight) {
+  const elapsed = Math.max(
+    0,
+    now - fireHeightPhaseStart
+  );
 
+  const ease = progress =>
+    progress * progress * (3 - 2 * progress);
+
+  // ФАЗА 1: слабое пламя — 5 → 15.
+  if (fireHeightPhase === 'warmup') {
+    const progress = Math.min(elapsed / 2000, 1);
+
+    fireSecondaryIntensity = 0;
+
+    return 5 + 10 * ease(progress);
+  }
+
+  // ФАЗА 2: вспышка — 15 → 60.
+  if (fireHeightPhase === 'flare') {
+
+    // Плавный подъём за 450 мс.
+    if (elapsed < 450) {
+      const progress = elapsed / 450;
+      const eased = ease(progress);
+
+      fireSecondaryIntensity = eased;
+
+      return 15 + 45 * eased;
+    }
+
+    // Удержание максимальной высоты — 500 мс.
+    if (elapsed < 950) {
+      fireSecondaryIntensity = 1;
+
+      return 60;
+    }
+
+    // Плавное снижение — 60 → обычная высота.
+    if (elapsed < 1650) {
+      const progress = (elapsed - 950) / 700;
+      const eased = ease(progress);
+
+      fireSecondaryIntensity = 1;
+
+      return 60 + (baseHeight - 60) * eased;
+    }
+
+    fireHeightPhase = 'burning';
+  }
+
+  if (fireHeightPhase === 'burning') {
+    fireSecondaryIntensity = 1;
+
+    return baseHeight;
+  }
+
+  fireSecondaryIntensity = 0;
+
+  return baseHeight;
+}
   // =========================================
   // CANVAS RESIZE
   // =========================================
@@ -1423,6 +1527,7 @@ function draw(now) {
 
     // Затухание должно завершиться даже без карточек.
     if (
+      firePhase === 'warmup' ||
       firePhase === 'igniting' ||
       firePhase === 'extinguishing'
     ) {
@@ -1430,6 +1535,8 @@ function draw(now) {
     } else {
       firePhase = 'off';
       fireIntensity = 0;
+      fireHeightPhase = 'off';
+fireSecondaryIntensity = 0;
     }
 
     return;
@@ -1478,9 +1585,14 @@ gl.uniform1f(
 // Высота огня пропорциональна высоте карточки.
 // У пользователя сохраняем привычную высоту,
 // у ИИ уменьшаем её пропорционально размеру карточки.
-const flameHeight = Math.max(
+const baseFlameHeight = Math.max(
   17,
   Math.min(30, seatRect.height * 0.38)
+);
+
+const flameHeight = getAnimatedFireHeight(
+  now,
+  baseFlameHeight
 );
     // Выход огня за боковые границы.
     const sidePadding = 32;
@@ -1633,7 +1745,10 @@ const cardRadius = Math.min(
       flameHeightLocation,
       flameHeight
     );
-
+gl.uniform1f(
+  fireSecondaryLocation,
+  fireSecondaryIntensity
+);
     gl.uniform1f(
       cardRadiusLocation,
       cardRadius
@@ -1744,6 +1859,8 @@ if (hasActiveFire && firePhase === 'off') {
 return {
   update,
   ignite,
+  startWarmup,
+  flare,
   extinguish,
   destroy
 };
