@@ -1408,6 +1408,10 @@ function draw(now) {
 
   if (destroyed || document.hidden) return;
 
+  // Обновляем фазу даже тогда, когда карточки
+  // временно отсутствуют в DOM.
+  const intensity = updateFireIntensity(now);
+
   const activeSeats = Array.from(
     seatsRoot.querySelectorAll(
       '.seat.allin-flame-active'
@@ -1416,6 +1420,18 @@ function draw(now) {
 
   if (!activeSeats.length) {
     clearCanvas();
+
+    // Затухание должно завершиться даже без карточек.
+    if (
+      firePhase === 'igniting' ||
+      firePhase === 'extinguishing'
+    ) {
+      raf = requestAnimationFrame(draw);
+    } else {
+      firePhase = 'off';
+      fireIntensity = 0;
+    }
+
     return;
   }
 
@@ -1445,7 +1461,7 @@ function draw(now) {
   );
 gl.uniform1f(
   fireIntensityLocation,
-  updateFireIntensity(now)
+  intensity
 );
   
   gl.enable(gl.SCISSOR_TEST);
