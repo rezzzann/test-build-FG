@@ -47,9 +47,10 @@ const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/re
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3;
 let allInAnimationUntil = 0;
-      let firstAllInSeat = -1;
+  let firstAllInSeat = -1;
 let allInLightTimer = null;
-
+let allInLightCleanupTimer = null;
+let allInLightEndHandler = null;
 function startAllInTableLight(playerIndex) {
   if (firstAllInSeat !== -1) return;
 
@@ -60,9 +61,15 @@ function startAllInTableLight(playerIndex) {
 
   if (allInLightTimer !== null) {
     clearTimeout(allInLightTimer);
+    allInLightTimer = null;
   }
 
-    const seat = document.querySelector(
+  if (allInLightCleanupTimer !== null) {
+    clearTimeout(allInLightCleanupTimer);
+    allInLightCleanupTimer = null;
+  }
+
+  const seat = document.querySelector(
     `#seats .${seatClass[playerIndex]} .avatar`
   );
 
@@ -91,19 +98,74 @@ function startAllInTableLight(playerIndex) {
 
   table.querySelector('.allin-light-trail')?.remove();
 
-   trail.style.setProperty(
+  table.classList.remove(
+    'allin-light-extinguishing',
+    'allin-light-finished'
+  );
+
+  trail.style.setProperty(
     '--allin-start-angle',
     `${startAngle}deg`
   );
-  table.appendChild(trail);
-  table.classList.remove('allin-light-finished');
-  table.classList.add('allin-light-active');
 
-  allInLightTimer = setTimeout(() => {
+  table.appendChild(trail);
+
+  function finishLight() {
+    if (!table.classList.contains('allin-light-active')) {
+      return;
+    }
+
     table.classList.remove('allin-light-active');
     table.classList.add('allin-light-finished');
-    allInLightTimer = null;
-  }, 3000);
+
+    if (allInLightTimer !== null) {
+      clearTimeout(allInLightTimer);
+      allInLightTimer = null;
+    }
+
+    trail.removeEventListener(
+      'animationend',
+      handleLightAnimationEnd
+    );
+
+    allInLightEndHandler = null;
+
+    // Включаем огонь только после завершения луча.
+    let hasAllInPlayers = false;
+
+    players.forEach(player => {
+      if (player.allin) {
+        player.allinFlame = true;
+        hasAllInPlayers = true;
+      }
+    });
+
+    if (hasAllInPlayers) {
+      render();
+      igniteFire();
+    }
+  }
+
+  function handleLightAnimationEnd(event) {
+    if (event.animationName !== 'allinLightRun') return;
+
+    finishLight();
+  }
+
+  allInLightEndHandler = handleLightAnimationEnd;
+
+  trail.addEventListener(
+    'animationend',
+    handleLightAnimationEnd
+  );
+
+  table.classList.add('allin-light-active');
+
+  // Резервный запуск, если браузер не отправит animationend.
+  allInLightTimer = setTimeout(
+    finishLight,
+    3400
+  );
 }
 
 function resetAllInTableLight() {
@@ -112,21 +174,72 @@ function resetAllInTableLight() {
     allInLightTimer = null;
   }
 
-  firstAllInSeat = -1;
-  players.forEach(player => {
-  player.allinFlame = false;
-});
   const table = $('table');
-  if (!table) return;
+  const trail = table?.querySelector('.allin-light-trail');
 
-  table.classList.remove(
-    'allin-light-active',
-    'allin-light-finished'
+  // Отменяем ожидающий запуск огня,
+  // если новая раздача началась до завершения луча.
+  if (trail && allInLightEndHandler) {
+    trail.removeEventListener(
+      'animationend',
+      allInLightEndHandler
+    );
+  }
+
+  allInLightEndHandler = null;
+  firstAllInSeat = -1;
+
+  if (table) {
+    table.classList.remove(
+      'allin-light-active',
+      'allin-light-finished'
+    );
+
+    if (trail) {
+      table.classList.add('allin-light-extinguishing');
+
+      if (allInLightCleanupTimer !== null) {
+        clearTimeout(allInLightCleanupTimer);
+      }
+
+      allInLightCleanupTimer = setTimeout(() => {
+        trail.remove();
+
+        table.classList.remove(
+          'allin-light-extinguishing'
+        );
+
+        allInLightCleanupTimer = null;
+      }, 900);
+
+    } else {
+      table.classList.remove(
+        'allin-light-extinguishing'
+      );
+    }
+  }
+
+  const hasActiveFlame = players.some(
+    player => player.allinFlame
   );
 
-  table.querySelector('.allin-light-trail')?.remove();
+  if (hasActiveFlame) {
+    // Сначала затухает пламя.
+    // Флаги убираются только после завершения анимации.
+    extinguishFire(() => {
+      players.forEach(player => {
+        player.allinFlame = false;
+      });
+
+      render();
+    });
+
+  } else {
+    players.forEach(player => {
+      player.allinFlame = false;
+    });
+  }
 }
-let allInAdvanceTimer = null;
 function cancelAllInAdvanceTimer() {
   if (allInAdvanceTimer !== null) {
     clearTimeout(allInAdvanceTimer);
@@ -273,7 +386,7 @@ function logit(s) {
   $('message').textContent = s;
 }
 
-const { render, renderHandBets, renderCommunity } = createRenderer({
+const {   render,   renderHandBets,   renderCommunity,   igniteFire,   extinguishFire } = createRenderer({
   $,
   getState: () => ({
     players,
@@ -1032,13 +1145,19 @@ function applyAction(i,a,myTick){
   if(amount>0){p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;const label=p.allin?'ALL-IN':(oldBet>0?'РЕЙЗ':'СТАВКА');showAction(i,label,amount);logit(p.name+': '+label+' '+fmt(amount)+' PP')}
   else if(call>0){const amountToCall=Math.min(call,p.stack);p.stack-=amountToCall;p.bet+=amountToCall;p.total+=amountToCall;chipAmount=amountToCall;if(p.stack===0)p.allin=true;showAction(i,p.allin?'ALL-IN':'КОЛЛ');logit(p.name+': '+(p.allin?'ALL-IN':'КОЛЛ'))}else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
  else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
-  // ALL-IN: включаем пламя над карточкой конкретного игрока.
-if (p.allin) {
-  p.allinFlame = true;
-
-  // Световой контур стола запускается только один раз.
+// ALL-IN: сначала запускаем луч по столу.
+// Пламя активируется только после завершения луча.
+if (p.allin && !p.allinFlame) {
   if (firstAllInSeat === -1) {
     startAllInTableLight(i);
+
+  } else if (
+    $('table').classList.contains('allin-light-finished')
+  ) {
+    // Если луч уже завершился,
+    // новый ALL-IN подключается к горящему эффекту.
+    p.allinFlame = true;
+    render();
   }
 }
  p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(i, chipAmount);       resolve();     });   }); }
@@ -1170,6 +1289,7 @@ if (!over && !dealInProgress) {
 }
 function resetStacksAndRestart(){
  cancelAllInAdvanceTimer();
+    resetAllInTableLight();
  gamePaused=false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;clearDealSequence();busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiShowdownRevealBack=false;userHoleRevealBack=false;aiWinnerId=-1;aiWinningCards=[];
  tournamentClock.stop(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
