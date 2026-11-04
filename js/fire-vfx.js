@@ -9,6 +9,9 @@ flare() {},
   extinguish(callback) {
     callback?.();
   },
+     extinguishPlayers(playerIndexes, callback) {
+  callback?.();
+},
   destroy() {}
 };
   }
@@ -41,6 +44,9 @@ flare() {},
   extinguish(callback) {
     callback?.();
   },
+     extinguishPlayers(playerIndexes, callback) {
+  callback?.();
+},
   destroy() {}
 };
   }
@@ -74,6 +80,7 @@ const fragmentSource = `
   uniform float u_time;
 uniform float u_fireIntensity;
 uniform float u_fireSecondary;
+uniform float u_fireSideOpacity;
   uniform vec4 u_effectRect;
   uniform vec4 u_cardRect;
   uniform vec2 u_effectSize;
@@ -1025,7 +1032,7 @@ vec3 glowColor = mix(
     float resultAlpha = topAlpha;
 
     // Боковые языки поверх основного огня.
-    float sa = clamp(sideAlpha * u_fireSecondary, 0.0, 0.90);
+    float sa = clamp(   sideAlpha * u_fireSecondary * u_fireSideOpacity,   0.0,   0.90 );
 
     resultColor =
       sideColor * sa
@@ -1128,6 +1135,9 @@ flare() {},
   extinguish(callback) {
     callback?.();
   },
+     extinguishPlayers(playerIndexes, callback) {
+  callback?.();
+},
   destroy() {}
 };
   }
@@ -1217,28 +1227,30 @@ const cardRadiusLocation = gl.getUniformLocation(
   program,
   'u_fireSecondary'
 );
+  const fireSideOpacityLocation = gl.getUniformLocation(
+  program,
+  'u_fireSideOpacity'
+);
   // =========================================
+   // =========================================
   // ANIMATION STATE
+  // Независимые состояния для каждого игрока.
   // =========================================
 
   let raf = 0;
-
   let destroyed = false;
 
   const startTime = performance.now();
 
-    // =========================================
-  // ALL-IN FIRE PHASES
-  // =========================================
+  const playerFireStates = new Map();
 
-  let firePhase = 'off';
-  let firePhaseStart = 0;
-  let firePhaseFrom = 0;
-  let fireIntensity = 0;
   let extinguishCallback = null;
-  let fireHeightPhase = 'off';
-let fireHeightPhaseStart = 0;
-let fireSecondaryIntensity = 0;
+  let extinguishingPlayers = new Set();
+
+  const ease = progress => {
+    const p = Math.max(0, Math.min(1, progress));
+    return p * p * (3 - 2 * p);
+  };
 
   function requestFireFrame() {
     if (
@@ -1249,209 +1261,365 @@ let fireSecondaryIntensity = 0;
       raf = requestAnimationFrame(draw);
     }
   }
-function startWarmup() {
-  if (destroyed) return;
 
-  extinguishCallback = null;
+  // =========================================
+  // START WARMUP
+  // =========================================
 
-  firePhase = 'warmup';
-  fireIntensity = 0.90;
+  function startWarmup(playerIndex, options = {}) {
+    if (destroyed || !Number.isInteger(playerIndex)) return;
 
-  fireHeightPhase = 'warmup';
-  fireHeightPhaseStart = performance.now();
-  fireSecondaryIntensity = 0;
+    const mode = options.mode === 'regular'
+      ? 'regular'
+      : 'first';
 
-  requestFireFrame();
-}
+    const startHeight = Number.isFinite(options.startHeight)
+      ? options.startHeight
+      : 0;
 
-function flare() {
-  if (destroyed) return;
+    const endHeight = Number.isFinite(options.endHeight)
+      ? options.endHeight
+      : 30;
 
-  firePhaseFrom = fireIntensity;
-  firePhaseStart = performance.now();
-  firePhase = 'igniting';
+    const initialSideOpacity = Number.isFinite(options.sideOpacity)
+      ? options.sideOpacity
+      : (mode === 'regular' ? 0 : 1);
 
-  fireHeightPhase = 'flare';
-  fireHeightPhaseStart = performance.now();
-  fireSecondaryIntensity = 0;
+    const initialSecondary = Number.isFinite(options.secondary)
+      ? options.secondary
+      : (mode === 'regular' ? 1 : 0);
 
-  requestFireFrame();
-}
-  function ignite() {
-    if (
-      destroyed ||
-      firePhase === 'burning' ||
-      firePhase === 'igniting'
-    ) {
-      return;
-    }
+    const intensity = mode === 'regular' ? 1 : 0.90;
 
+    extinguishingPlayers.delete(playerIndex);
     extinguishCallback = null;
 
-    firePhaseFrom = fireIntensity;
-    firePhaseStart = performance.now();
-    firePhase = 'igniting';
+    playerFireStates.set(playerIndex, {
+      phase: 'warmup',
+      mode,
+      startedAt: performance.now(),
+
+      startHeight,
+      endHeight,
+
+      currentHeight: startHeight,
+      currentIntensity: intensity,
+      currentSecondary: initialSecondary,
+      currentSideOpacity: initialSideOpacity
+    });
 
     requestFireFrame();
   }
 
-  function extinguish(onComplete) {
+  // =========================================
+  // FLARE
+  // Только первый игрок.
+  // =========================================
+
+  function flare(playerIndex) {
+    if (destroyed) return;
+
+    const state = playerFireStates.get(playerIndex);
+
+    if (!state || state.phase === 'extinguishing') return;
+
+    state.phase = 'flare';
+    state.startedAt = performance.now();
+
+    state.flareStartHeight = state.currentHeight;
+    state.flareStartIntensity = state.currentIntensity;
+
+    requestFireFrame();
+  }
+
+  // =========================================
+  // IGNITE
+  // =========================================
+
+  function ignite(playerIndex) {
+    if (destroyed || !Number.isInteger(playerIndex)) return;
+
+    const state = playerFireStates.get(playerIndex);
+
+    if (!state) {
+      startWarmup(playerIndex, {
+        mode: 'regular',
+        startHeight: 0,
+        endHeight: 30,
+        sideOpacity: 0,
+        secondary: 1
+      });
+
+      return;
+    }
+
+    if (state.phase === 'extinguishing') return;
+
+    state.phase = 'burning';
+    state.mode = 'regular';
+    state.currentHeight = 30;
+    state.currentIntensity = 1;
+    state.currentSecondary = 1;
+    state.currentSideOpacity = 1;
+
+    requestFireFrame();
+  }
+
+  // =========================================
+  // COMPLETE PLAYER EXTINGUISH
+  // =========================================
+
+  function finishExtinguishedPlayer(playerIndex) {
+    playerFireStates.delete(playerIndex);
+    extinguishingPlayers.delete(playerIndex);
+
+    if (
+      extinguishingPlayers.size === 0 &&
+      extinguishCallback
+    ) {
+      const callback = extinguishCallback;
+      extinguishCallback = null;
+      callback();
+    }
+  }
+
+  // =========================================
+  // EXTINGUISH SELECTED PLAYERS
+  // =========================================
+
+  function extinguishPlayers(playerIndexes, onComplete) {
+    const targets = [...new Set(playerIndexes)]
+      .filter(index => playerFireStates.has(index));
+
+    if (targets.length === 0) {
+      onComplete?.();
+      return;
+    }
+
     extinguishCallback =
       typeof onComplete === 'function'
         ? onComplete
         : null;
 
-    if (
-      firePhase === 'off' ||
-      fireIntensity <= 0.001
-    ) {
-      firePhase = 'off';
-      fireIntensity = 0;
-fireHeightPhase = 'off';
-fireSecondaryIntensity = 0;
-      const callback = extinguishCallback;
-      extinguishCallback = null;
+    extinguishingPlayers = new Set(targets);
 
-      callback?.();
-      return;
-    }
+    const now = performance.now();
 
-    firePhaseFrom = fireIntensity;
-    firePhaseStart = performance.now();
-    firePhase = 'extinguishing';
+    targets.forEach(playerIndex => {
+      const state = playerFireStates.get(playerIndex);
+
+      state.fadeFromHeight =
+        state.currentHeight ?? state.endHeight ?? 30;
+
+      state.fadeFromIntensity =
+        state.currentIntensity ?? 1;
+
+      state.fadeFromSecondary =
+        state.currentSecondary ?? 1;
+
+      state.fadeFromSideOpacity =
+        state.currentSideOpacity ?? 1;
+
+      state.phase = 'extinguishing';
+      state.startedAt = now;
+    });
 
     requestFireFrame();
   }
 
-  function updateFireIntensity(now) {
+  // =========================================
+  // EXTINGUISH ALL PLAYERS
+  // =========================================
+
+  function extinguish(onComplete) {
+    extinguishPlayers(
+      [...playerFireStates.keys()],
+      onComplete
+    );
+  }
+
+  // =========================================
+  // UPDATE INDIVIDUAL PLAYER FIRE
+  // =========================================
+
+  function updatePlayerFireState(
+    state,
+    now,
+    baseHeight,
+    playerIndex
+  ) {
     const elapsed = Math.max(
       0,
-      now - firePhaseStart
+      now - state.startedAt
     );
 
-    if (firePhase === 'warmup') {   fireIntensity = 0.90;  } else if (firePhase === 'igniting') {
-      const progress = Math.min(
+    let height = baseHeight;
+    let intensity = 1;
+    let secondary = 1;
+    let sideOpacity = 1;
+
+    // -----------------------------------------
+    // WARMUP
+    // -----------------------------------------
+
+    if (state.phase === 'warmup') {
+      const progress = Math.min(elapsed / 1000, 1);
+      const eased = ease(progress);
+
+      if (state.mode === 'regular') {
+        // Последующие игроки:
+        // верхнее пламя 0 → 30 px.
+        height = 30 * eased;
+
+        // Боковое пламя 0 → 100%.
+        sideOpacity = eased;
+
+        intensity = 1;
+        secondary = 1;
+
+        if (progress >= 1) {
+          state.phase = 'burning';
+        }
+
+      } else {
+        // Первый игрок:
+        // сохраняем действующую анимацию 0 → 30 px.
+        height =
+          state.startHeight
+          + (state.endHeight - state.startHeight) * eased;
+
+        intensity = 0.90;
+        secondary = 0;
+        sideOpacity = 1;
+
+        if (progress >= 1) {
+          state.phase = 'ready';
+          height = state.endHeight;
+        }
+      }
+    }
+
+    // -----------------------------------------
+    // READY
+    // Первый игрок ждёт завершения кругового света.
+    // -----------------------------------------
+
+    else if (state.phase === 'ready') {
+      height = state.endHeight;
+      intensity = 0.90;
+      secondary = 0;
+      sideOpacity = 1;
+    }
+
+    // -----------------------------------------
+    // FLARE
+    // Только первый игрок.
+    // -----------------------------------------
+
+    else if (state.phase === 'flare') {
+      const intensityProgress = Math.min(
         elapsed / 900,
         1
       );
 
-      if (progress < 0.22) {
-        const p = progress / 0.22;
-        const eased = p * p * (3.0 - 2.0 * p);
+      if (intensityProgress < 0.22) {
+        const p = intensityProgress / 0.22;
+        const eased = ease(p);
 
-        // Короткая яркая вспышка.
-        fireIntensity =
-          firePhaseFrom
-          + (1.16 - firePhaseFrom) * eased;
+        intensity =
+          state.flareStartIntensity
+          + (1.16 - state.flareStartIntensity) * eased;
 
       } else {
-        const p = (progress - 0.22) / 0.78;
-        const eased = p * p * (3.0 - 2.0 * p);
+        const p = (intensityProgress - 0.22) / 0.78;
+        const eased = ease(p);
 
-        // Плавный переход к обычному горению.
-        fireIntensity =
-          1.16 + (1.0 - 1.16) * eased;
+        intensity = 1.16 + (1.0 - 1.16) * eased;
       }
 
-      if (progress >= 1) {
-        fireIntensity = 1.0;
-        firePhase = 'burning';
+      if (elapsed < 450) {
+        const progress = elapsed / 450;
+        const eased = ease(progress);
+
+        height =
+          state.flareStartHeight
+          + (60 - state.flareStartHeight) * eased;
+
+        secondary = eased;
+
+      } else if (elapsed < 550) {
+        height = 60;
+        secondary = 1;
+
+      } else if (elapsed < 850) {
+        const progress = (elapsed - 550) / 300;
+        const eased = ease(progress);
+
+        height =
+          60 + (baseHeight - 60) * eased;
+
+        secondary = 1;
+
+      } else {
+        height = baseHeight;
+        secondary = 1;
+        state.phase = 'burning';
       }
 
-    } else if (firePhase === 'burning') {
-      fireIntensity = 1.0;
-
-    } else if (firePhase === 'extinguishing') {
-      const progress = Math.min(
-        elapsed / 850,
-        1
-      );
-
-      const eased =
-        progress * progress * (3.0 - 2.0 * progress);
-
-      fireIntensity =
-        firePhaseFrom * (1.0 - eased);
-
-      if (progress >= 1) {
-        fireIntensity = 0;
-        firePhase = 'off';
-fireHeightPhase = 'off';
-fireSecondaryIntensity = 0;
-        const callback = extinguishCallback;
-        extinguishCallback = null;
-
-        callback?.();
-      }
+      sideOpacity = 1;
     }
 
-    return Math.max(
-      0,
-      Math.min(1.2, fireIntensity)
-    );
-  }
-  // Анимация высоты пламени
-function getAnimatedFireHeight(now, baseHeight) {
-  const elapsed = Math.max(
-    0,
-    now - fireHeightPhaseStart
-  );
+    // -----------------------------------------
+    // NORMAL BURNING
+    // -----------------------------------------
 
-  const ease = progress =>
-    progress * progress * (3 - 2 * progress);
+    else if (state.phase === 'burning') {
+      height = state.mode === 'regular'
+        ? 30
+        : baseHeight;
 
-  // ФАЗА 1: слабое пламя — 5 → 15.
-  if (fireHeightPhase === 'warmup') {
-    const progress = Math.min(elapsed / 1000, 1);
+      intensity = 1;
+      secondary = 1;
+      sideOpacity = 1;
+    }
 
-    fireSecondaryIntensity = 0;
+    // -----------------------------------------
+    // EXTINGUISHING
+    // -----------------------------------------
 
-    return 0 + 30 * ease(progress);
-  }
-
-  // ФАЗА 2: вспышка — 30 → 60.
-  if (fireHeightPhase === 'flare') {
-
-    // Плавный подъём за 450 мс.
-    if (elapsed < 450) {
-      const progress = elapsed / 450;
+    else if (state.phase === 'extinguishing') {
+      const progress = Math.min(elapsed / 850, 1);
       const eased = ease(progress);
 
-      fireSecondaryIntensity = eased;
+      height = state.fadeFromHeight;
 
-      return 30 + 30 * eased;
+      intensity =
+        state.fadeFromIntensity * (1 - eased);
+
+      secondary =
+        state.fadeFromSecondary * (1 - eased);
+
+      sideOpacity =
+        state.fadeFromSideOpacity * (1 - eased);
+
+      if (progress >= 1) {
+        finishExtinguishedPlayer(playerIndex);
+        return null;
+      }
     }
 
-    // Удержание максимальной высоты — 500 мс.
-    if (elapsed < 550) {
-      fireSecondaryIntensity = 1;
+    state.currentHeight = height;
+    state.currentIntensity = intensity;
+    state.currentSecondary = secondary;
+    state.currentSideOpacity = sideOpacity;
 
-      return 60;
-    }
-
-    // Плавное снижение — 60 → обычная высота.
-    if (elapsed < 850) {
-      const progress = (elapsed - 550) / 300;
-      const eased = ease(progress);
-
-      fireSecondaryIntensity = 1;
-
-      return 60 + (baseHeight - 60) * eased;
-    }
-
-    fireHeightPhase = 'burning';
+    return {
+      height,
+      intensity,
+      secondary,
+      sideOpacity
+    };
   }
-
-  if (fireHeightPhase === 'burning') {
-    fireSecondaryIntensity = 1;
-
-    return baseHeight;
-  }
-
-  fireSecondaryIntensity = 0;
-
-  return baseHeight;
-}
   // =========================================
   // CANVAS RESIZE
   // =========================================
@@ -1512,43 +1680,42 @@ function draw(now) {
 
   if (destroyed || document.hidden) return;
 
-  // Обновляем фазу даже тогда, когда карточки
-  // временно отсутствуют в DOM.
-  const intensity = updateFireIntensity(now);
-
   const activeSeats = Array.from(
     seatsRoot.querySelectorAll(
       '.seat.allin-flame-active'
     )
   );
 
+  // Если карточки временно отсутствуют,
+  // всё равно завершаем запущенное затухание.
   if (!activeSeats.length) {
+    [...playerFireStates.entries()].forEach(
+      ([playerIndex, state]) => {
+        if (state.phase === 'extinguishing') {
+          updatePlayerFireState(
+            state,
+            now,
+            30,
+            playerIndex
+          );
+        }
+      }
+    );
+
     clearCanvas();
-
-    // Затухание должно завершиться даже без карточек.
-    if (
-      firePhase === 'warmup' ||
-      firePhase === 'igniting' ||
-      firePhase === 'extinguishing'
-    ) {
-      raf = requestAnimationFrame(draw);
-    } else {
-      firePhase = 'off';
-      fireIntensity = 0;
-      fireHeightPhase = 'off';
-fireSecondaryIntensity = 0;
-    }
-
+    requestFireFrame();
     return;
   }
 
   const tableWidth = table.clientWidth;
   const tableHeight = table.clientHeight;
 
-  if (!tableWidth || !tableHeight) return;
+  if (!tableWidth || !tableHeight) {
+    requestFireFrame();
+    return;
+  }
 
   const dpr = resizeCanvas();
-
   const tableRect = table.getBoundingClientRect();
 
   const innerLeft =
@@ -1566,59 +1733,65 @@ fireSecondaryIntensity = 0;
     timeLocation,
     (now - startTime) / 1000
   );
-gl.uniform1f(
-  fireIntensityLocation,
-  intensity
-);
-  
+
   gl.enable(gl.SCISSOR_TEST);
 
   activeSeats.forEach(seat => {
+    const playerIndex = Number(seat.dataset.playerIndex);
+
+    const state = playerFireStates.get(playerIndex);
+
+    if (!state) return;
+
     const seatRect = seat.getBoundingClientRect();
 
     if (!seatRect.width || !seatRect.height) return;
 
     // =========================================
+    // ИНДИВИДУАЛЬНОЕ СОСТОЯНИЕ ОГНЯ
+    // =========================================
+
+    const baseFlameHeight = Math.max(
+      17,
+      Math.min(30, seatRect.height * 0.38)
+    );
+
+    const fireState = updatePlayerFireState(
+      state,
+      now,
+      baseFlameHeight,
+      playerIndex
+    );
+
+    if (!fireState) return;
+
+    const flameHeight = Math.max(
+      0.001,
+      fireState.height
+    );
+
+    // =========================================
     // GEOMETRY
     // =========================================
 
-// Высота огня пропорциональна высоте карточки.
-// У пользователя сохраняем привычную высоту,
-// у ИИ уменьшаем её пропорционально размеру карточки.
-const baseFlameHeight = Math.max(
-  17,
-  Math.min(30, seatRect.height * 0.38)
-);
-
-const flameHeight = getAnimatedFireHeight(
-  now,
-  baseFlameHeight
-);
-    // Выход огня за боковые границы.
     const sidePadding = 32;
-
-    // Небольшое пространство под нижним краем.
     const bottomPadding = 32;
 
-    // Вся область, которую будет обрабатывать шейдер.
     const effectWidth =
       seatRect.width + sidePadding * 2;
 
-   // Полная высота области верхнего пламени,
-// включая максимальную точку анимации 1.08.
-const topFlameExtent = flameHeight * 1.08;
+    const topFlameExtent = flameHeight * 1.08;
 
-const effectHeight =
-  topFlameExtent
-  + seatRect.height
-  + bottomPadding;
+    const effectHeight =
+      topFlameExtent
+      + seatRect.height
+      + bottomPadding;
 
-    // Координаты области относительно стола.
     const effectLeft =
       seatRect.left - innerLeft - sidePadding;
 
-   const effectTop =
-  seatRect.top - innerTop - topFlameExtent;
+    const effectTop =
+      seatRect.top - innerTop - topFlameExtent;
 
     const effectBottom =
       effectTop + effectHeight;
@@ -1627,7 +1800,6 @@ const effectHeight =
     // CARD GEOMETRY
     // =========================================
 
-    // Положение самой карточки внутри области эффекта.
     const cardX =
       sidePadding / effectWidth;
 
@@ -1640,26 +1812,23 @@ const effectHeight =
     const cardH =
       seatRect.height / effectHeight;
 
-    // Берём реальный радиус скругления .seat.
-const computedStyle = getComputedStyle(seat);
+    const computedStyle = getComputedStyle(seat);
 
-// Считываем именно нижние углы карточки.
-const bottomLeftRadius =
-  parseFloat(computedStyle.borderBottomLeftRadius) || 12;
+    const bottomLeftRadius =
+      parseFloat(computedStyle.borderBottomLeftRadius) || 12;
 
-const bottomRightRadius =
-  parseFloat(computedStyle.borderBottomRightRadius) || 12;
+    const bottomRightRadius =
+      parseFloat(computedStyle.borderBottomRightRadius) || 12;
 
-// В текущем дизайне оба нижних угла одинаковые.
-// Используем их фактический радиус.
-const radiusValue =
-  (bottomLeftRadius + bottomRightRadius) * 0.5;
+    const radiusValue =
+      (bottomLeftRadius + bottomRightRadius) * 0.5;
 
-const cardRadius = Math.min(
-  radiusValue,
-  seatRect.width * 0.5,
-  seatRect.height * 0.5
-);
+    const cardRadius = Math.min(
+      radiusValue,
+      seatRect.width * 0.5,
+      seatRect.height * 0.5
+    );
+
     // =========================================
     // NORMALIZED EFFECT RECT
     // =========================================
@@ -1678,7 +1847,6 @@ const cardRadius = Math.min(
 
     // =========================================
     // SCISSOR
-    // Ограничиваем обработку областью карточки.
     // =========================================
 
     const sx = Math.max(
@@ -1745,10 +1913,22 @@ const cardRadius = Math.min(
       flameHeightLocation,
       flameHeight
     );
-gl.uniform1f(
-  fireSecondaryLocation,
-  fireSecondaryIntensity
-);
+
+    gl.uniform1f(
+      fireIntensityLocation,
+      fireState.intensity
+    );
+
+    gl.uniform1f(
+      fireSecondaryLocation,
+      fireState.secondary
+    );
+
+    gl.uniform1f(
+      fireSideOpacityLocation,
+      fireState.sideOpacity
+    );
+
     gl.uniform1f(
       cardRadiusLocation,
       cardRadius
@@ -1774,44 +1954,34 @@ gl.uniform1f(
 
   gl.disable(gl.SCISSOR_TEST);
 
-  raf = requestAnimationFrame(draw);
+  requestFireFrame();
 }
-
   // =========================================
   // UPDATE
   // =========================================
 
-  function update() {
-    if (destroyed) return;
+function update() {
+  if (destroyed) return;
 
-    const hasActiveFire = seatsRoot.querySelector(
-      '.seat.allin-flame-active'
-    );
-// Повторно запускаем огонь, если карточка активна,
-// но фаза пламени уже сброшена.
-if (hasActiveFire && firePhase === 'off') {
-  ignite();
-}
-    const shouldAnimate =
-      !!hasActiveFire ||
-      firePhase !== 'off';
+  const activeSeats = seatsRoot.querySelectorAll(
+    '.seat.allin-flame-active'
+  );
 
-    if (
-      shouldAnimate &&
-      !document.hidden &&
-      raf === 0
-    ) {
-      raf = requestAnimationFrame(draw);
-    }
+  const shouldAnimate =
+    activeSeats.length > 0 ||
+    playerFireStates.size > 0;
 
-    if (!shouldAnimate && raf !== 0) {
+  if (shouldAnimate) {
+    requestFireFrame();
+  } else {
+    if (raf !== 0) {
       cancelAnimationFrame(raf);
-
       raf = 0;
-
-      clearCanvas();
     }
+
+    clearCanvas();
   }
+}
 
   // =========================================
   // PAGE VISIBILITY
@@ -1855,13 +2025,13 @@ if (hasActiveFire && firePhase === 'off') {
     gl.getExtension('WEBGL_lose_context')
       ?.loseContext();
   }
-
 return {
   update,
   ignite,
   startWarmup,
   flare,
   extinguish,
+  extinguishPlayers,
   destroy
 };
 }
