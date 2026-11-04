@@ -975,5 +975,7 @@ transform: translate(-50%, -50%);
 
   pointer-events: none;
 
-  z-index: 3;
+  /* Canvas находится над карточкой игрока.
+     Сам шейдер оставляет центр прозрачным. */
+  z-index: 6;
 }
