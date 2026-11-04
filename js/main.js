@@ -1011,6 +1011,7 @@ aiShowdownRevealBack = false;
     p.hole = p.folded ? [] : [deck.pop(), deck.pop()];
     p.dealtCount = 0;
     p.allin = false;
+    p.allinFlame = false;
     p.bet = 0;
     p.total = 0;
     p.action = '';
