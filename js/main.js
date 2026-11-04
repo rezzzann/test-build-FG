@@ -1219,8 +1219,15 @@ if (playersWithChips === 2) {
 }
 
 function advanceQueue(){
- if (over || gamePaused || dealInProgress) return;
-   if (allInAnimationUntil > Date.now()) {
+  if (over || gamePaused || dealInProgress) return;
+
+  // Если остался один игрок — сразу объявляем его победителем.
+  if (live().length <= 1) {
+    finish();
+    return;
+  }
+
+  if (allInAnimationUntil > Date.now()) {
    if (allInAdvanceTimer !== null) {
      clearTimeout(allInAdvanceTimer);
    }
