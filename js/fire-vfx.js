@@ -451,8 +451,11 @@ float roundedSideX(
 // =========================================
 
     // =========================================
+   
+    // =========================================
     // LAYER 2 — SIDE FIRE
-    // Прямые вертикальные потоки огня.
+    // Полное огибание нижних углов.
+    // После угла — строго вертикальный подъём.
     // =========================================
 
     float sideIndex = step(
@@ -466,8 +469,22 @@ float roundedSideX(
       sideIndex
     );
 
-    // Боковая граница с нижним скруглением,
-    // но без верхнего огибания.
+    float lowerCornerRadius = max(radius, 0.001);
+
+    // Центр нижнего скругления выбранной стороны.
+    float cornerCenterX = mix(
+      cardMin.x + lowerCornerRadius,
+      cardMax.x - lowerCornerRadius,
+      sideIndex
+    );
+
+    float cornerCenterY =
+      cardMin.y + lowerCornerRadius;
+
+    // =========================================
+    // ГЕОМЕТРИЯ НИЖНЕГО УГЛА
+    // =========================================
+
     float sideBoundaryX = roundedSideX(
       pixel.y,
       cardMin,
@@ -476,13 +493,56 @@ float roundedSideX(
       sideIndex
     );
 
-    float sideOffset =
-      (pixel.x - sideBoundaryX) * sideDirection;
+    float sidePathS = 0.0;
+    float sideOffset = 0.0;
 
+    float cornerArcLength =
+      lowerCornerRadius * 1.5707963;
+
+    if (pixel.y < cornerCenterY) {
+
+      // Нижнее скругление:
+      // движение начинается от самой нижней точки
+      // и проходит всю четверть окружности.
+
+      float normalizedCornerY = clamp(
+        (pixel.y - cornerCenterY) / lowerCornerRadius,
+        -1.0,
+        0.0
+      );
+
+      float cornerAngle =
+        asin(normalizedCornerY) + 1.5707963;
+
+      sidePathS =
+        lowerCornerRadius * cornerAngle;
+
+      // Расстояние до круглой границы скругления.
+      vec2 cornerCenter = vec2(
+        cornerCenterX,
+        cornerCenterY
+      );
+
+      sideOffset =
+        length(pixel - cornerCenter) - lowerCornerRadius;
+
+    } else {
+
+      // После окончания нижнего скругления
+      // боковая линия идёт строго вертикально.
+      sidePathS =
+        cornerArcLength
+        + (pixel.y - cornerCenterY);
+
+      sideOffset =
+        (pixel.x - sideBoundaryX) * sideDirection;
+    }
+
+    // Ширина области пламени вокруг боковой границы.
     float sideWeight =
       1.0 - smoothstep(
-        12.0,
-        26.0,
+        13.0,
+        27.0,
         abs(sideOffset)
       );
 
@@ -490,30 +550,49 @@ float roundedSideX(
     float sideHeat = 0.0;
 
     // =========================================
-    // ЕДИНАЯ ВЫСОТА ДЛЯ ОБЕИХ БОКОВИН
+    // ВЫСОТА БОКОВОГО ПЛАМЕНИ
     // =========================================
 
-    // Верхний шейдер допускает пламя до 1.08
-    // высоты u_flameHeight.
+    // Максимальная высота верхней короны.
     float crownMaximumY =
       cardMax.y + u_flameHeight * 1.08;
 
-    // Боковые языки заканчиваются ровно на 5 px ниже
-    // максимальной высоты верхней короны.
-    float sideTargetY = crownMaximumY - 5.0;
+    // В текущем коде прежнее значение было -5 px.
+    // Опускаем его ещё на 20 px: итого -25 px
+    // относительно максимума верхней короны.
+    float sideTargetY =
+      crownMaximumY - 25.0;
+
+    // Полная длина траектории:
+    // нижнее скругление + вертикальная боковина.
+    float targetPathS =
+      cornerArcLength
+      + max(sideTargetY - cornerCenterY, 0.0);
+
+    // Мягкое завершение бокового огня
+    // на едином горизонтальном уровне.
+    float sideEndFade =
+      1.0 - smoothstep(
+        sideTargetY - 2.0,
+        sideTargetY + 1.0,
+        pixel.y
+      );
 
     // =========================================
-    // ВЕРТИКАЛЬНЫЕ ЯЗЫКИ
+    // ОГНЕННЫЕ ЯЗЫКИ
     // =========================================
 
-    if (sideWeight > 0.01 && abs(sideOffset) < 26.0) {
+    if (
+      sideWeight > 0.01
+      && abs(sideOffset) < 27.0
+      && sideEndFade > 0.001
+    ) {
 
       for (int i = 0; i < 8; i++) {
 
         float fi = float(i);
 
-        // Основания распределяются по всей высоте боковины,
-        // начиная практически от нижнего угла.
+        // Индивидуальная форма и положение основания.
         float rootNoise = noise(
           vec2(
             fi * 2.31 + sideIndex * 9.7,
@@ -521,39 +600,52 @@ float roundedSideX(
           )
         );
 
-        float root =
-          (
-            fi + 0.5
-            + (rootNoise - 0.5) * 0.25
-          ) / 8.0;
+        // Первый язык начинается точно от нижней точки.
+        float rootFraction = fi / 7.0;
 
-        float rootY = mix(
-          cardMin.y + radius,
-          cardMax.y - radius,
-          root
+        float rootS =
+          rootFraction * targetPathS * 0.78;
+
+        // Небольшая вариативность остальных оснований.
+        if (i > 0) {
+          rootS +=
+            (rootNoise - 0.5) * 5.0;
+        }
+
+        rootS = clamp(
+          rootS,
+          0.0,
+          targetPathS * 0.82
         );
 
-        // Все языки ориентируются на один уровень окончания.
+        // Все верхушки стремятся к одной горизонтали.
         float tongueLength = max(
-          sideTargetY - rootY,
+          targetPathS - rootS,
           8.0
         );
 
-        // Главная ось движения — вверх по экрану.
+        // Прогресс вдоль траектории:
+        // сначала нижний угол, затем вертикальная сторона.
         float progress =
-          (pixel.y - rootY) / tongueLength;
+          (sidePathS - rootS) / tongueLength;
 
-        // Плавное появление у основания
-        // и затухание непосредственно перед верхушкой.
         float riseMask =
-          smoothstep(0.015, 0.09, progress)
+          smoothstep(
+            0.015,
+            0.09,
+            progress
+          )
           * (
-            1.0 - smoothstep(0.88, 1.0, progress)
+            1.0 - smoothstep(
+              0.88,
+              1.0,
+              progress
+            )
           );
 
-        // =========================================
-        // ДИНАМИКА
-        // =========================================
+        // =====================================
+        // ДИНАМИКА ПЛАМЕНИ
+        // =====================================
 
         float turbulence = fbm(
           vec2(
@@ -561,21 +653,22 @@ float roundedSideX(
               + sideIndex * 10.0
               + progress * 3.0,
 
-            localY * 8.0 - t * 2.3
+            sidePathS * 0.10 - t * 2.3
           )
         );
 
-        // Небольшое колебание в стороны.
-        // Не меняет вертикального направления огня.
+        // Лёгкое колебание поперёк контура.
+        // Основное направление остаётся вдоль траектории.
         float sway =
-          sin(
+          1.8
+          + sin(
             progress * 5.0
             - t * 2.1
             + fi * 2.3
           ) * 1.25
           + (turbulence - 0.5) * 1.3;
 
-        // Основание широкое, верхушка узкая.
+        // Широкое основание, узкая верхушка.
         float tongueWidth =
           2.2
           + 8.0
@@ -595,14 +688,15 @@ float roundedSideX(
             crossDistance
           );
 
-        // =========================================
+        // =====================================
         // ФОРМИРОВАНИЕ ПЛАМЕНИ
-        // =========================================
+        // =====================================
 
         float lick =
           riseMask
           * tongueShape
           * sideWeight
+          * sideEndFade
           * (0.72 + 0.28 * turbulence);
 
         sideAlpha = max(
@@ -623,7 +717,7 @@ float roundedSideX(
 
     float sideFlowNoise = fbm(
       vec2(
-        localY * 12.0 - t * 2.0 + sideIndex * 3.0,
+        sidePathS * 0.10 - t * 2.0 + sideIndex * 3.0,
         t * 0.55
       )
     );
@@ -634,6 +728,7 @@ float roundedSideX(
     float sideBed =
       sideFlow
       * sideWeight
+      * sideEndFade
       * (0.20 + 0.14 * sideFlowNoise);
 
     sideAlpha = max(
@@ -646,7 +741,6 @@ float roundedSideX(
       sideBed * 1.4
     );
 
-    // Та же палитра, что у верхнего пламени.
     vec3 sideColor = firePalette(
       clamp(sideHeat, 0.0, 1.0),
       clamp(sideHeat * 0.58, 0.0, 0.72)
