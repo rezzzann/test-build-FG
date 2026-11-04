@@ -46,7 +46,7 @@ let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3;
-let allInAnimationUntil = 0;
+let allInAnimationUntil = 0; let allInAdvanceTimer = null;
   let firstAllInSeat = -1;
 let allInLightTimer = null;
 let allInLightCleanupTimer = null;
