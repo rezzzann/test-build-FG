@@ -203,6 +203,9 @@ const fragmentSource = `
 // Фактическая боковая граница со скруглениями.
 // =========================================
 
+// Боковая граница:
+// нижнее скругление сохраняется,
+// верхняя сторона продолжается строго вертикально.
 float roundedSideX(
   float y,
   vec2 mn,
@@ -212,31 +215,25 @@ float roundedSideX(
 ) {
   float inset = 0.0;
 
-  // Верхний скруглённый угол.
-  if (y > mx.y - r) {
-    float dy = min(y - (mx.y - r), r);
+  // Только нижний угол слегка огибается.
+  if (y < mn.y + r) {
+    float dy = min(
+      (mn.y + r) - y,
+      r
+    );
 
     inset = r - sqrt(
       max(r * r - dy * dy, 0.0)
     );
   }
 
-  // Нижний скруглённый угол.
-  else if (y < mn.y + r) {
-    float dy = min((mn.y + r) - y, r);
-
-    inset = r - sqrt(
-      max(r * r - dy * dy, 0.0)
-    );
-  }
-
+  // Выше нижнего угла боковина идёт строго вертикально.
   return mix(
     mn.x + inset,
     mx.x - inset,
     sideIndex
   );
 }
-
   // =========================================
   // ОБЩАЯ ЦВЕТОВАЯ МОДЕЛЬ ОГНЯ
   // Одинаковая палитра для всех слоёв.
@@ -452,213 +449,209 @@ float roundedSideX(
    // =========================================
 // =========================================
 // =========================================
-// LAYER 2 — SIDE FIRE
-// Боковое пламя продолжается выше карточки
-// и соединяется с верхним пламенем.
-// =========================================
-
-float sideIndex = step(
-  cardCenter.x,
-  pixel.x
-);
-
-float sideDirection = mix(
-  -1.0,
-  1.0,
-  sideIndex
-);
-
-// Реальная боковая граница с учётом углов.
-float sideBoundaryX = roundedSideX(
-  pixel.y,
-  cardMin,
-  cardMax,
-  radius,
-  sideIndex
-);
-
-float sideOffset =
-  (pixel.x - sideBoundaryX) * sideDirection;
-
-float sideWeight =
-  1.0 - smoothstep(
-    12.0,
-    26.0,
-    abs(sideOffset)
-  );
-
-float sideAlpha = 0.0;
-float sideHeat = 0.0;
-
-// Единый уровень верхушек бокового огня.
-// Обе стороны стремятся к одной высоте.
-float sideTargetY =
-  cardMax.y + u_flameHeight * 0.92;
-
-// =========================================
-// ВЕРТИКАЛЬНЫЕ ЯЗЫКИ
-// =========================================
-
-if (sideWeight > 0.01 && abs(sideOffset) < 26.0) {
-
-  for (int i = 0; i < 8; i++) {
-
-    float fi = float(i);
-
-    // Положение основания вдоль карточки.
-    float rootNoise = noise(
-      vec2(
-        fi * 2.31 + sideIndex * 9.7,
-        sideIndex * 3.1
-      )
-    );
-
-    float root =
-      (
-        fi + 0.5
-        + (rootNoise - 0.5) * 0.35
-      ) / 8.0;
-
-    float rootY = mix(
-      cardMin.y + radius,
-      cardMax.y - radius,
-      root
-    );
-
-    // Различия длины сохраняются,
-    // но верхушки стремятся к единому уровню.
-    float lengthNoise = fbm(
-      vec2(
-        fi * 4.13 + sideIndex * 5.7,
-        t * 0.16
-      )
-    );
-
-    float targetVariation =
-      0.96 + 0.04 * lengthNoise;
-
-    float targetY =
-      cardMax.y
-      + u_flameHeight * targetVariation * 0.92;
-
-    // Расчёт длины от конкретного основания
-    // до общей верхней зоны над карточкой.
-    float tongueLength = max(
-      (targetY - rootY) / 0.88,
-      8.0
-    );
-
-    // Основное движение строго вверх по экрану.
-    float progress =
-      (pixel.y - rootY) / tongueLength;
-
-    float riseMask =
-      smoothstep(0.015, 0.09, progress)
-      * (
-        1.0 - smoothstep(0.87, 1.0, progress)
-      );
 
     // =========================================
-    // ЖИВАЯ ДИНАМИКА ПЛАМЕНИ
+    // LAYER 2 — SIDE FIRE
+    // Прямые вертикальные потоки огня.
     // =========================================
 
-    float turbulence = fbm(
-      vec2(
-        fi * 3.7
-          + sideIndex * 10.0
-          + progress * 3.0,
-
-        localY * 8.0 - t * 2.3
-      )
+    float sideIndex = step(
+      cardCenter.x,
+      pixel.x
     );
 
-    // Небольшое боковое колебание.
-    // Основное движение остаётся направленным вверх.
-    float sway =
-      1.8
-      + sin(
-        progress * 5.0
-        - t * 2.1
-        + fi * 2.3
-      ) * 1.25
-      + (turbulence - 0.5) * 1.3;
+    float sideDirection = mix(
+      -1.0,
+      1.0,
+      sideIndex
+    );
 
-    // Широкое основание, узкая верхушка.
-    float tongueWidth =
-      2.2
-      + 8.0
-      * pow(
-        max(1.0 - progress, 0.0),
-        0.76
-      )
-      * (0.72 + 0.28 * turbulence);
+    // Боковая граница с нижним скруглением,
+    // но без верхнего огибания.
+    float sideBoundaryX = roundedSideX(
+      pixel.y,
+      cardMin,
+      cardMax,
+      radius,
+      sideIndex
+    );
 
-    float crossDistance =
-      abs(sideOffset - sway);
+    float sideOffset =
+      (pixel.x - sideBoundaryX) * sideDirection;
 
-    float tongueShape =
+    float sideWeight =
       1.0 - smoothstep(
-        tongueWidth * 0.25,
-        tongueWidth * 1.45,
-        crossDistance
+        12.0,
+        26.0,
+        abs(sideOffset)
       );
 
+    float sideAlpha = 0.0;
+    float sideHeat = 0.0;
+
     // =========================================
-    // СОБИРАЕМ ЯЗЫК
+    // ЕДИНАЯ ВЫСОТА ДЛЯ ОБЕИХ БОКОВИН
     // =========================================
 
-    float lick =
-      riseMask
-      * tongueShape
+    // Верхний шейдер допускает пламя до 1.08
+    // высоты u_flameHeight.
+    float crownMaximumY =
+      cardMax.y + u_flameHeight * 1.08;
+
+    // Боковые языки заканчиваются ровно на 5 px ниже
+    // максимальной высоты верхней короны.
+    float sideTargetY = crownMaximumY - 5.0;
+
+    // =========================================
+    // ВЕРТИКАЛЬНЫЕ ЯЗЫКИ
+    // =========================================
+
+    if (sideWeight > 0.01 && abs(sideOffset) < 26.0) {
+
+      for (int i = 0; i < 8; i++) {
+
+        float fi = float(i);
+
+        // Основания распределяются по всей высоте боковины,
+        // начиная практически от нижнего угла.
+        float rootNoise = noise(
+          vec2(
+            fi * 2.31 + sideIndex * 9.7,
+            sideIndex * 3.1
+          )
+        );
+
+        float root =
+          (
+            fi + 0.5
+            + (rootNoise - 0.5) * 0.25
+          ) / 8.0;
+
+        float rootY = mix(
+          cardMin.y + radius,
+          cardMax.y - radius,
+          root
+        );
+
+        // Все языки ориентируются на один уровень окончания.
+        float tongueLength = max(
+          sideTargetY - rootY,
+          8.0
+        );
+
+        // Главная ось движения — вверх по экрану.
+        float progress =
+          (pixel.y - rootY) / tongueLength;
+
+        // Плавное появление у основания
+        // и затухание непосредственно перед верхушкой.
+        float riseMask =
+          smoothstep(0.015, 0.09, progress)
+          * (
+            1.0 - smoothstep(0.88, 1.0, progress)
+          );
+
+        // =========================================
+        // ДИНАМИКА
+        // =========================================
+
+        float turbulence = fbm(
+          vec2(
+            fi * 3.7
+              + sideIndex * 10.0
+              + progress * 3.0,
+
+            localY * 8.0 - t * 2.3
+          )
+        );
+
+        // Небольшое колебание в стороны.
+        // Не меняет вертикального направления огня.
+        float sway =
+          sin(
+            progress * 5.0
+            - t * 2.1
+            + fi * 2.3
+          ) * 1.25
+          + (turbulence - 0.5) * 1.3;
+
+        // Основание широкое, верхушка узкая.
+        float tongueWidth =
+          2.2
+          + 8.0
+          * pow(
+            max(1.0 - progress, 0.0),
+            0.76
+          )
+          * (0.72 + 0.28 * turbulence);
+
+        float crossDistance =
+          abs(sideOffset - sway);
+
+        float tongueShape =
+          1.0 - smoothstep(
+            tongueWidth * 0.25,
+            tongueWidth * 1.45,
+            crossDistance
+          );
+
+        // =========================================
+        // ФОРМИРОВАНИЕ ПЛАМЕНИ
+        // =========================================
+
+        float lick =
+          riseMask
+          * tongueShape
+          * sideWeight
+          * (0.72 + 0.28 * turbulence);
+
+        sideAlpha = max(
+          sideAlpha,
+          lick * 0.92
+        );
+
+        sideHeat = max(
+          sideHeat,
+          (1.0 - progress * 0.55) * lick
+        );
+      }
+    }
+
+    // =========================================
+    // НЕПРЕРЫВНОЕ ОСНОВАНИЕ БОКОВОГО ОГНЯ
+    // =========================================
+
+    float sideFlowNoise = fbm(
+      vec2(
+        localY * 12.0 - t * 2.0 + sideIndex * 3.0,
+        t * 0.55
+      )
+    );
+
+    float sideFlow =
+      exp(-pow(sideOffset / 5.0, 2.0));
+
+    float sideBed =
+      sideFlow
       * sideWeight
-      * (0.72 + 0.28 * turbulence);
+      * (0.20 + 0.14 * sideFlowNoise);
 
     sideAlpha = max(
       sideAlpha,
-      lick * 0.92
+      sideBed
     );
 
     sideHeat = max(
       sideHeat,
-      (1.0 - progress * 0.55) * lick
+      sideBed * 1.4
     );
-  }
-}
 
-// =========================================
-// НЕПРЕРЫВНОЕ ОСНОВАНИЕ БОКОВОГО ОГНЯ
-// =========================================
+    // Та же палитра, что у верхнего пламени.
+    vec3 sideColor = firePalette(
+      clamp(sideHeat, 0.0, 1.0),
+      clamp(sideHeat * 0.58, 0.0, 0.72)
+    );
 
-float sideFlowNoise = fbm(
-  vec2(
-    localY * 12.0 - t * 2.0 + sideIndex * 3.0,
-    t * 0.55
-  )
-);
-
-float sideFlow =
-  exp(-pow(sideOffset / 5.0, 2.0));
-
-float sideBed =
-  sideFlow
-  * sideWeight
-  * (0.20 + 0.14 * sideFlowNoise);
-
-sideAlpha = max(
-  sideAlpha,
-  sideBed
-);
-
-sideHeat = max(
-  sideHeat,
-  sideBed * 1.4
-);
-
-// Общая цветовая модель с верхним пламенем.
-vec3 sideColor = firePalette(
-  clamp(sideHeat, 0.0, 1.0),
-  clamp(sideHeat * 0.58, 0.0, 0.72)
-);
     // =========================================
     // LAYER 3 — BOTTOM FIRE
     // Небольшие языки от нижней границы вверх.
@@ -1170,17 +1163,21 @@ function draw(now) {
     const effectWidth =
       seatRect.width + sidePadding * 2;
 
-    const effectHeight =
-      flameHeight
-      + seatRect.height
-      + bottomPadding;
+   // Полная высота области верхнего пламени,
+// включая максимальную точку анимации 1.08.
+const topFlameExtent = flameHeight * 1.08;
+
+const effectHeight =
+  topFlameExtent
+  + seatRect.height
+  + bottomPadding;
 
     // Координаты области относительно стола.
     const effectLeft =
       seatRect.left - innerLeft - sidePadding;
 
-    const effectTop =
-      seatRect.top - innerTop - flameHeight;
+   const effectTop =
+  seatRect.top - innerTop - topFlameExtent;
 
     const effectBottom =
       effectTop + effectHeight;
