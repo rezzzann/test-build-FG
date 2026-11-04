@@ -446,11 +446,10 @@ float roundedSideX(
       topHeat,
       topCore
     );
-
     // =========================================
     // LAYER 2 — SIDE FIRE
-    // Пламя только по дугам четырёх углов.
-    // Без подъёма по прямым боковым сторонам.
+    // Нижний угол → вся боковая сторона → верхний угол.
+    // Выше верхней кромки пламя не выходит.
     // =========================================
 
     float sideIndex = step(
@@ -458,50 +457,61 @@ float roundedSideX(
       pixel.x
     );
 
+    float sideDirection = mix(
+      -1.0,
+      1.0,
+      sideIndex
+    );
+
     float cornerRadius = max(radius, 0.001);
 
-    // Центр левого или правого скругления.
     float cornerCenterX = mix(
       cardMin.x + cornerRadius,
       cardMax.x - cornerRadius,
       sideIndex
     );
 
-    // Выбираем верхний или нижний угол.
-    float isUpperCorner = step(
-      cardCenter.y,
-      pixel.y
-    );
+    float lowerCornerY =
+      cardMin.y + cornerRadius;
 
-    float cornerCenterY = mix(
-      cardMin.y + cornerRadius,
-      cardMax.y - cornerRadius,
-      isUpperCorner
-    );
-
-    vec2 cornerCenter = vec2(
-      cornerCenterX,
-      cornerCenterY
-    );
-
-    vec2 cornerDelta = pixel - cornerCenter;
-
-    float cornerAngle = atan(
-      cornerDelta.y,
-      cornerDelta.x
-    );
+    float upperCornerY =
+      cardMax.y - cornerRadius;
 
     float cornerArcLength =
       cornerRadius * 1.5707963;
 
-    float arcProgress = 0.0;
-    float arcGate = 0.0;
+    float straightSideLength =
+      max(upperCornerY - lowerCornerY, 0.0);
+
+    // Полная длина бокового контура.
+    float sidePathLength =
+      cornerArcLength * 2.0
+      + straightSideLength;
+
+    float sidePathS = 0.0;
+    float sideOffset = 0.0;
+    float sidePathGate = 1.0;
 
     // =========================================
-    // НИЖНИЕ УГЛЫ
+    // НИЖНЕЕ ЗАКРУГЛЕНИЕ
     // =========================================
 
-    if (isUpperCorner < 0.5) {
+    if (pixel.y < lowerCornerY) {
+
+      vec2 cornerCenter = vec2(
+        cornerCenterX,
+        lowerCornerY
+      );
+
+      vec2 cornerDelta =
+        pixel - cornerCenter;
+
+      float cornerAngle = atan(
+        cornerDelta.y,
+        cornerDelta.x
+      );
+
+      float arcProgress = 0.0;
 
       if (sideIndex < 0.5) {
 
@@ -509,20 +519,8 @@ float roundedSideX(
         arcProgress =
           (-1.5707963 - cornerAngle) / 1.5707963;
 
-        arcGate =
-          smoothstep(
-            -3.1415926,
-            -3.0615926,
-            cornerAngle
-          )
-          *
-          (
-            1.0 - smoothstep(
-              -1.6507963,
-              -1.5707963,
-              cornerAngle
-            )
-          );
+        sidePathGate =
+          step(cornerDelta.x, 0.0);
 
       } else {
 
@@ -530,91 +528,114 @@ float roundedSideX(
         arcProgress =
           (cornerAngle + 1.5707963) / 1.5707963;
 
-        arcGate =
-          smoothstep(
-            -1.6507963,
-            -1.5707963,
-            cornerAngle
-          )
-          *
-          (
-            1.0 - smoothstep(
-              -0.08,
-              0.0,
-              cornerAngle
-            )
-          );
+        sidePathGate =
+          step(0.0, cornerDelta.x);
       }
 
-    } else {
+      arcProgress = clamp(
+        arcProgress,
+        0.0,
+        1.0
+      );
 
-      // =======================================
-      // ВЕРХНИЕ УГЛЫ
-      // =======================================
+      sidePathS =
+        cornerArcLength * arcProgress;
+
+      sideOffset =
+        length(cornerDelta) - cornerRadius;
+    }
+
+    // =========================================
+    // ПРЯМАЯ БОКОВАЯ СТОРОНА
+    // =========================================
+
+    else if (pixel.y <= upperCornerY) {
+
+      float sideBoundaryX = mix(
+        cardMin.x,
+        cardMax.x,
+        sideIndex
+      );
+
+      sidePathS =
+        cornerArcLength
+        + (pixel.y - lowerCornerY);
+
+      sideOffset =
+        (pixel.x - sideBoundaryX) * sideDirection;
+    }
+
+    // =========================================
+    // ВЕРХНЕЕ ЗАКРУГЛЕНИЕ
+    // =========================================
+
+    else {
+
+      vec2 cornerCenter = vec2(
+        cornerCenterX,
+        upperCornerY
+      );
+
+      vec2 cornerDelta =
+        pixel - cornerCenter;
+
+      float cornerAngle = atan(
+        cornerDelta.y,
+        cornerDelta.x
+      );
+
+      float arcProgress = 0.0;
 
       if (sideIndex < 0.5) {
 
         // Верхний левый угол.
         arcProgress =
-          (cornerAngle - 1.5707963) / 1.5707963;
+          (3.1415926 - cornerAngle) / 1.5707963;
 
-        arcGate =
-          smoothstep(
-            1.5707963,
-            1.6507963,
-            cornerAngle
-          )
-          *
-          (
-            1.0 - smoothstep(
-              3.0615926,
-              3.1415926,
-              cornerAngle
-            )
-          );
+        sidePathGate =
+          step(cornerDelta.x, 0.0);
 
       } else {
 
         // Верхний правый угол.
         arcProgress =
-          (1.5707963 - cornerAngle) / 1.5707963;
+          cornerAngle / 1.5707963;
 
-        arcGate =
-          smoothstep(
-            0.0,
-            0.08,
-            cornerAngle
-          )
-          *
-          (
-            1.0 - smoothstep(
-              1.4907963,
-              1.5707963,
-              cornerAngle
-            )
-          );
+        sidePathGate =
+          step(0.0, cornerDelta.x);
       }
+
+      arcProgress = clamp(
+        arcProgress,
+        0.0,
+        1.0
+      );
+
+      sidePathS =
+        cornerArcLength
+        + straightSideLength
+        + cornerArcLength * arcProgress;
+
+      sideOffset =
+        length(cornerDelta) - cornerRadius;
+
+      // Не выпускаем боковое пламя выше
+      // верхней горизонтальной кромки карточки.
+      sidePathGate *=
+        1.0 - smoothstep(
+          cardMax.y - 2.0,
+          cardMax.y,
+          pixel.y
+        );
     }
 
-    arcProgress = clamp(
-      arcProgress,
-      0.0,
-      1.0
-    );
+    // =========================================
+    // ОБЛАСТЬ БОКОВОГО ПЛАМЕНИ
+    // =========================================
 
-    // Положение вдоль дуги.
-    float sidePathS =
-      cornerArcLength * arcProgress;
-
-    // Расстояние от настоящего контура скругления.
-    float sideOffset =
-      length(cornerDelta) - cornerRadius;
-
-    // Ограничиваем пламя только областью дуги.
     float sideWeight =
-      arcGate
-      *
-      (
+      sidePathGate
+      * (
         1.0 - smoothstep(
           10.0,
           28.0,
@@ -622,14 +643,24 @@ float roundedSideX(
         )
       );
 
+    float sideEndFade =
+      1.0 - smoothstep(
+        sidePathLength - 2.0,
+        sidePathLength,
+        sidePathS
+      );
+
     float sideAlpha = 0.0;
     float sideHeat = 0.0;
 
     // =========================================
-    // ЯЗЫКИ ПЛАМЕНИ ВДОЛЬ ДУГИ
+    // ЯЗЫКИ ПЛАМЕНИ
     // =========================================
 
-    if (sideWeight > 0.01) {
+    if (
+      sideWeight > 0.01
+      && sideEndFade > 0.001
+    ) {
 
       for (int i = 0; i < 8; i++) {
 
@@ -638,29 +669,29 @@ float roundedSideX(
         float rootNoise = noise(
           vec2(
             fi * 2.31 + sideIndex * 9.7,
-            isUpperCorner * 3.1
+            sideIndex * 3.1
           )
         );
 
-        // Основания распределяются по закруглению.
+        // Основания распределены по всей боковой стороне.
         float rootS =
-          cornerArcLength
+          sidePathLength
           * (fi / 7.0)
           * 0.78;
 
         if (i > 0) {
-          rootS += (rootNoise - 0.5) * 2.0;
+          rootS += (rootNoise - 0.5) * 4.0;
         }
 
         rootS = clamp(
           rootS,
           0.0,
-          cornerArcLength * 0.82
+          sidePathLength * 0.82
         );
 
         float tongueLength = max(
-          cornerArcLength - rootS,
-          6.0
+          sidePathLength - rootS,
+          8.0
         );
 
         float progress =
@@ -672,8 +703,7 @@ float roundedSideX(
             0.09,
             progress
           )
-          *
-          (
+          * (
             1.0 - smoothstep(
               0.88,
               1.0,
@@ -682,14 +712,13 @@ float roundedSideX(
           );
 
         // =====================================
-        // ДИНАМИКА ПЛАМЕНИ
+        // ДИНАМИКА
         // =====================================
 
         float turbulence = fbm(
           vec2(
             fi * 3.7
               + sideIndex * 10.0
-              + isUpperCorner * 5.0
               + progress * 3.0,
 
             sidePathS * 0.10 - t * 2.3
@@ -731,6 +760,7 @@ float roundedSideX(
           riseMask
           * tongueShape
           * sideWeight
+          * sideEndFade
           * (0.72 + 0.28 * turbulence);
 
         sideAlpha = max(
@@ -746,13 +776,13 @@ float roundedSideX(
       }
     }
 
-    // Непрерывное основание вдоль закругления.
+    // =========================================
+    // НЕПРЕРЫВНОЕ ОСНОВАНИЕ
+    // =========================================
+
     float sideFlowNoise = fbm(
       vec2(
-        sidePathS * 0.10
-          - t * 2.0
-          + sideIndex * 3.0
-          + isUpperCorner * 5.0,
+        sidePathS * 0.10 - t * 2.0 + sideIndex * 3.0,
         t * 0.55
       )
     );
@@ -763,6 +793,7 @@ float roundedSideX(
     float sideBed =
       sideFlow
       * sideWeight
+      * sideEndFade
       * (0.20 + 0.14 * sideFlowNoise);
 
     sideAlpha = max(
