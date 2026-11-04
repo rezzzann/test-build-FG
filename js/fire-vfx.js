@@ -1423,15 +1423,15 @@ function getAnimatedFireHeight(now, baseHeight) {
     }
 
     // Удержание максимальной высоты — 500 мс.
-    if (elapsed < 450) {
+    if (elapsed < 550) {
       fireSecondaryIntensity = 1;
 
       return 60;
     }
 
     // Плавное снижение — 60 → обычная высота.
-    if (elapsed < 750) {
-      const progress = (elapsed - 450) / 300;
+    if (elapsed < 850) {
+      const progress = (elapsed - 550) / 300;
       const eased = ease(progress);
 
       fireSecondaryIntensity = 1;
