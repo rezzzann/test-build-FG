@@ -1672,7 +1672,11 @@ const cardRadius = Math.min(
     const hasActiveFire = seatsRoot.querySelector(
       '.seat.allin-flame-active'
     );
-
+// Повторно запускаем огонь, если карточка активна,
+// но фаза пламени уже сброшена.
+if (hasActiveFire && firePhase === 'off') {
+  ignite();
+}
     const shouldAnimate =
       !!hasActiveFire ||
       firePhase !== 'off';
