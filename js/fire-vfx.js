@@ -1406,7 +1406,7 @@ function getAnimatedFireHeight(now, baseHeight) {
 
     fireSecondaryIntensity = 0;
 
-    return 5 + 10 * ease(progress);
+    return 15 + 15 * ease(progress);
   }
 
   // ФАЗА 2: вспышка — 15 → 60.
