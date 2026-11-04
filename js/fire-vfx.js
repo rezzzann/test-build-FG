@@ -1419,7 +1419,7 @@ function getAnimatedFireHeight(now, baseHeight) {
 
       fireSecondaryIntensity = eased;
 
-      return 15 + 45 * eased;
+      return 30 + 30 * eased;
     }
 
     // Удержание максимальной высоты — 500 мс.
