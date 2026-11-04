@@ -51,6 +51,80 @@ let allInAnimationUntil = 0; let allInAdvanceTimer = null;
 let allInLightTimer = null;
 let allInLightCleanupTimer = null;
 let allInLightEndHandler = null;
+      function registerPlayerAllIn(playerIndex) {
+  const player = players[playerIndex];
+
+  if (
+    !player ||
+    !player.allin ||
+    player.allinFlame
+  ) return;
+
+  player.allinFlame = true;
+
+  // Первый ALL-IN запускает круговой свет.
+  if (firstAllInSeat === -1) {
+    startAllInTableLight(playerIndex);
+    return;
+  }
+
+  // Все последующие ALL-IN:
+  // только плавное появление верхнего и бокового пламени.
+  startFireWarmup(playerIndex, {
+    mode: 'regular',
+    startHeight: 0,
+    endHeight: 30,
+    sideOpacity: 0,
+    secondary: 1
+  });
+
+  render();
+}
+
+// После вскрытия сохраняем огонь только победителям.
+function settleAllInFire(winnerIndexes) {
+  // Обычная раздача без ALL-IN — ничего не меняем.
+  if (firstAllInSeat === -1) return;
+
+  const winnerSet = new Set(winnerIndexes);
+
+  // Победитель тоже получает огонь,
+  // даже если сам не выставлялся ALL-IN.
+  winnerSet.forEach(playerIndex => {
+    const winner = players[playerIndex];
+
+    if (!winner || winner.allinFlame) return;
+
+    winner.allinFlame = true;
+
+    startFireWarmup(playerIndex, {
+      mode: 'regular',
+      startHeight: 0,
+      endHeight: 30,
+      sideOpacity: 0,
+      secondary: 1
+    });
+  });
+
+  // Проигравшие игроки, у которых сейчас горит огонь.
+  const loserIndexes = players
+    .map((player, index) => index)
+    .filter(index =>
+      !winnerSet.has(index) &&
+      players[index].allinFlame
+    );
+
+  if (loserIndexes.length === 0) return;
+
+  // Затухают только проигравшие.
+  extinguishFire(loserIndexes, () => {
+    loserIndexes.forEach(index => {
+      players[index].allinFlame = false;
+    });
+
+    render();
+  });
+}
 function startAllInTableLight(playerIndex) {
   if (firstAllInSeat !== -1) return;
 
@@ -130,20 +204,15 @@ function startAllInTableLight(playerIndex) {
 
     allInLightEndHandler = null;
 
-    // Включаем огонь только после завершения луча.
-    let hasAllInPlayers = false;
-
-    players.forEach(player => {
-      if (player.allin) {
-        player.allinFlame = true;
-        hasAllInPlayers = true;
-      }
-    });
-
-    if (hasAllInPlayers) {
-      render();
-flareFire();
-    }
+   // Вспышку получает только первый ALL-IN.
+// Если он проиграл, его огонь уже затухает.
+if (
+  firstAllInSeat !== -1 &&
+  (!over || winnerIds.includes(firstAllInSeat))
+) {
+  flareFire(firstAllInSeat);
+  render();
+}
   }
 
   function handleLightAnimationEnd(event) {
@@ -165,7 +234,15 @@ const firstPlayer = players[playerIndex];
 
 if (firstPlayer) {
   firstPlayer.allinFlame = true;
-  startFireWarmup();
+
+  startFireWarmup(playerIndex, {
+    mode: 'first',
+    startHeight: 0,
+    endHeight: 30,
+    sideOpacity: 1,
+    secondary: 0
+  });
+
   render();
 }
 
@@ -924,6 +1001,8 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
   // Только после раздачи карт начинаем выставление блайндов.
   const sbAmount = post(smallBlindSeat, sb);
   const bbAmount = post(bigBlindSeat, bb);
+  registerPlayerAllIn(smallBlindSeat);
+registerPlayerAllIn(bigBlindSeat);
 
   currentBet = Math.max(...players.map(p => p.bet));
 
@@ -1011,7 +1090,6 @@ aiShowdownRevealBack = false;
     p.hole = p.folded ? [] : [deck.pop(), deck.pop()];
     p.dealtCount = 0;
     p.allin = false;
-    p.allinFlame = false;
     p.bet = 0;
     p.total = 0;
     p.action = '';
@@ -1172,18 +1250,8 @@ function applyAction(i,a,myTick){
  else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
 // ALL-IN: сначала запускаем луч по столу.
 // Пламя активируется только после завершения луча.
-if (p.allin && !p.allinFlame) {
-  if (firstAllInSeat === -1) {
-    startAllInTableLight(i);
-
-  } else if (
-    $('table').classList.contains('allin-light-finished')
-  ) {
-    // Если луч уже завершился,
-    // новый ALL-IN подключается к горящему эффекту.
-    p.allinFlame = true;
-    render();
-  }
+if (p.allin) {
+  registerPlayerAllIn(i);
 }
  p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(i, chipAmount);       resolve();     });   }); }
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
@@ -1255,6 +1323,7 @@ function finish(){
  if(survivors.length===1)winners=survivors;else{street=4;const ranked=survivors.map(p=>({p,s:score([...p.hole,...board])})).sort((a,b)=>cmp(b.s,a.s));winnerScore=ranked[0].s;winners=ranked.filter(x=>cmp(x.s,winnerScore)===0).map(x=>x.p)}
  const each=Math.floor(pot/winners.length),rem=pot%winners.length;winnerIds=[];winnerPayouts={};
  winners.forEach((p,i)=>{const payout=each+(i===0?rem:0);p.stack+=payout;const idx=players.indexOf(p);winnerIds.push(idx);winnerPayouts[idx]=payout});
+  settleAllInFire(winnerIds);
  winnerCombo=survivors.length>1&&winnerScore?handNames[winnerScore[0]]:'БЕЗ ВСКРЫТИЯ';const userWon=winners.includes(players[user]);
  if(userWon){humanWinnerReveal=true;if(survivors.length>1&&board.length===5)winningCards=bestFive([...players[user].hole,...board]).cards}
  else{const aiWinners=winners.filter(p=>players.indexOf(p)!==user);if(aiWinners.length>0){aiWinnerReveal=survivors.length>1;aiWinnerId=players.indexOf(aiWinners[0]);humanFoldedCards=true;if(survivors.length>1&&board.length===5)aiWinningCards=bestFive([...aiWinners[0].hole,...board]).cards}}
