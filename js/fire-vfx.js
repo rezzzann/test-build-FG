@@ -410,121 +410,182 @@ const fragmentSource = `
       topCore
     );
 
-    // =========================================
-    // LAYER 2 — SIDE FIRE
-    // Вертикальные языки, направленные ВВЕРХ.
-    // Огибают скруглённую геометрию карточки.
-    // =========================================
+   // =========================================
+// LAYER 2 — SIDE FIRE
+// Вертикальное пламя, поднимающееся вверх
+// =========================================
 
-    float sideWeight = smoothstep(
-      0.18,
-      0.88,
-      abs(normal.x)
+float sideWeight = smoothstep(
+  0.28,
+  0.92,
+  abs(normal.x)
+);
+
+float sideID = step(0.0, normal.x);
+
+float sideAlpha = 0.0;
+float sideHeat = 0.0;
+
+// Работаем только возле боковой границы.
+if (sideWeight > 0.01 && abs(sd) < 28.0) {
+
+  for (int i = 0; i < 8; i++) {
+
+    float fi = float(i);
+
+    // -----------------------------------------
+    // 1. ОСНОВАНИЕ ЯЗЫКА
+    // -----------------------------------------
+
+    float rootNoise = noise(
+      vec2(
+        fi * 2.31 + sideID * 9.7,
+        sideID * 3.1
+      )
     );
 
-    float sideAlpha = 0.0;
-    float sideHeat = 0.0;
+    // Основания расположены преимущественно
+    // в нижней и средней части боковой стороны.
+    float root =
+      0.055
+      + fi * 0.052
+      + (rootNoise - 0.5) * 0.018;
 
-    // Боковые языки рисуем только около границы.
-    if (sideWeight > 0.01 && abs(sd) < 26.0) {
+    // -----------------------------------------
+    // 2. ВЫСОТА ЯЗЫКА
+    // -----------------------------------------
 
-      for (int i = 0; i < 9; i++) {
-
-        float fi = float(i);
-
-        // Разные точки основания вдоль боковой стороны.
-        float rootNoise = noise(
-          vec2(
-            fi * 2.31 + sideID * 9.7,
-            sideID * 3.1
-          )
-        );
-
-        float root = (
-          fi + 0.45 + (rootNoise - 0.5) * 0.42
-        ) / 9.0;
-
-        // Длина каждого языка.
-        float lengthNoise = noise(
-          vec2(
-            fi * 4.13 + sideID * 7.1,
-            t * 0.15
-          )
-        );
-
-        float tongueLength =
-          0.16 + 0.17 * lengthNoise;
-
-        // ВАЖНО:
-        // localY растёт снизу вверх.
-        // Значит прогресс языков направлен вверх.
-        float progress =
-          (localY - root) / tongueLength;
-
-        float riseMask =
-          smoothstep(0.0, 0.10, progress)
-          * (
-            1.0 - smoothstep(0.78, 1.0, progress)
-          );
-
-        float turbulence = noise(
-          vec2(
-            fi * 3.7 + sideID * 10.0 + progress * 4.0,
-            localY * 7.0 - t * 1.8
-          )
-        );
-
-        // Лёгкое колебание вдоль нормали,
-        // но основное движение языков — вверх.
-        float sway =
-          2.5
-          + sin(
-            progress * 5.0
-            + t * 2.1
-            + fi * 2.3
-          ) * 1.6
-          + (turbulence - 0.5) * 2.2;
-
-        // Широкое основание, узкая верхушка.
-        float tongueWidth =
-          2.8
-          + 8.2
-          * pow(max(1.0 - progress, 0.0), 0.72)
-          * (0.7 + 0.3 * turbulence);
-
-        // Поперечное положение относительно края.
-        float crossDistance = abs(sd - sway);
-
-        float tongueShape =
-          1.0 - smoothstep(
-            tongueWidth * 0.35,
-            tongueWidth,
-            crossDistance
-          );
-
-        float lick =
-          riseMask
-          * tongueShape
-          * sideWeight
-          * (0.65 + 0.35 * turbulence);
-
-        sideAlpha = max(
-          sideAlpha,
-          lick * 0.82
-        );
-
-        sideHeat = max(
-          sideHeat,
-          (1.0 - progress) * lick
-        );
-      }
-    }
-
-    vec3 sideColor = firePalette(
-      clamp(sideHeat, 0.0, 1.0),
-      clamp(sideHeat * 0.50, 0.0, 0.65)
+    float lengthNoise = fbm(
+      vec2(
+        fi * 4.13 + sideID * 5.7,
+        t * 0.16
+      )
     );
 
+    // Длина измеряется вдоль высоты карточки.
+    float tongueLength =
+      0.42 + 0.23 * lengthNoise;
+
+    // localY растёт снизу вверх по экрану.
+    // Именно эта координата определяет подъём.
+    float progress =
+      (localY - root) / tongueLength;
+
+    // Начало у основания, сужение к верхушке.
+    float riseMask =
+      smoothstep(0.0, 0.075, progress)
+      * (
+        1.0 - smoothstep(0.83, 1.0, progress)
+      );
+
+    // -----------------------------------------
+    // 3. ДИНАМИКА ИЗГИБА
+    // -----------------------------------------
+
+    float turbulence = fbm(
+      vec2(
+        fi * 3.7
+          + sideID * 10.0
+          + progress * 3.0,
+
+        localY * 8.0 - t * 2.3
+      )
+    );
+
+    // Небольшое боковое колебание.
+    // Оно не меняет основного направления пламени.
+    float sway =
+      1.2
+      + sin(
+        progress * 5.0
+        - t * 2.1
+        + fi * 2.3
+      ) * 1.15
+      + (turbulence - 0.5) * 1.2;
+
+    // -----------------------------------------
+    // 4. ФОРМА ЯЗЫКА
+    // -----------------------------------------
+
+    // Широкое основание и острая верхушка.
+    float tongueWidth =
+      2.0
+      + 4.2
+      * pow(
+        max(1.0 - progress, 0.0),
+        0.78
+      )
+      * (0.75 + 0.25 * turbulence);
+
+    // Поперечное сечение относительно границы.
+    float crossDistance =
+      abs(sd - sway);
+
+    float tongueShape =
+      1.0 - smoothstep(
+        tongueWidth * 0.25,
+        tongueWidth * 1.45,
+        crossDistance
+      );
+
+    // -----------------------------------------
+    // 5. СОБИРАЕМ ПЛАМЯ
+    // -----------------------------------------
+
+    float lick =
+      riseMask
+      * tongueShape
+      * sideWeight
+      * (0.72 + 0.28 * turbulence);
+
+    sideAlpha = max(
+      sideAlpha,
+      lick * 0.92
+    );
+
+    // Основание горячее, верхушка затухает.
+    sideHeat = max(
+      sideHeat,
+      (1.0 - progress * 0.65) * lick
+    );
+  }
+}
+
+// Дополнительный живой огненный слой вдоль края.
+// Он связывает отдельные языки в непрерывное пламя.
+float sideFlowNoise = fbm(
+  vec2(
+    localY * 12.0 - t * 2.0 + sideID * 3.0,
+    t * 0.55
+  )
+);
+
+float sideFlow = exp(
+  -pow((sd - 1.0) / 4.5, 2.0)
+);
+
+float sideBed =
+  sideFlow
+  * sideWeight
+  * smoothstep(0.035, 0.12, localY)
+  * (0.16 + 0.12 * sideFlowNoise);
+
+sideAlpha = max(
+  sideAlpha,
+  sideBed
+);
+
+sideHeat = max(
+  sideHeat,
+  sideBed * 1.4
+);
+
+// Используем ту же цветовую модель,
+// что у основного верхнего пламени.
+vec3 sideColor = firePalette(
+  clamp(sideHeat, 0.0, 1.0),
+  clamp(sideHeat * 0.58, 0.0, 0.72)
+);
     // =========================================
     // LAYER 3 — BOTTOM FIRE
     // Небольшие языки от нижней границы вверх.
