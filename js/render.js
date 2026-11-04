@@ -470,5 +470,5 @@ const winnerCardsMarkup = showAISeatCards
 fireVfx.update();
   }
 
-  return { render, renderHandBets, renderCommunity };
+  return {   render,   renderHandBets,   renderCommunity,    igniteFire() {     fireVfx.ignite();   },    extinguishFire(callback) {     fireVfx.extinguish(callback);   } };
 }
