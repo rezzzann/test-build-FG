@@ -219,23 +219,6 @@ float roundedSideX(
   float inset = 0.0;
 
   if (y < mn.y + r) {
-    float dy = (mn.y + r) - y;
-
-    inset = r - sqrt(
-      max(r * r - dy * dy, 0.0)
-    );
-  }
-
-  return mix(
-    mn.x + inset,
-    mx.x - inset,
-    sideIndex
-  );
-} {
-  float inset = 0.0;
-
-  // Только нижний угол слегка огибается.
-  if (y < mn.y + r) {
     float dy = min(
       (mn.y + r) - y,
       r
@@ -246,7 +229,6 @@ float roundedSideX(
     );
   }
 
-  // Выше нижнего угла боковина идёт строго вертикально.
   return mix(
     mn.x + inset,
     mx.x - inset,
