@@ -432,11 +432,58 @@ function showThinking(i){
  p.actionId=(p.actionId||0)+1;const id=p.actionId;p.labelAction='ДУМАЕТ';p.labelAmount=0;
  p.actionTimer=setTimeout(()=>{if(p.actionId!==id)return;p.actionTimer=null;if(p.labelAction==='ДУМАЕТ'){p.labelAction='';p.labelAmount=0;if(!gamePaused)render()}},2000);
 }
-function runBlindSequence(sbi,sbAmount,bbi,bbAmount,handTick){
- render();const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;showAction(sbi,'М. БЛАЙНД',sbAmount,1000);render();requestAnimationFrame(()=>effects.animateBetChip(sbi,sbAmount));
- blindSequenceTimer=setTimeout(()=>{blindSequenceTimer=null;if(over||handTick!==tick||gamePaused)return;showAction(bbi,'Б. БЛАЙНД',bbAmount,1000);render();requestAnimationFrame(()=>effects.animateBetChip(bbi,bbAmount));
-  blindSequenceTimer=setTimeout(()=>{blindSequenceTimer=null;if(!over&&handTick===tick&&!gamePaused)advanceQueue()},reduceMotion?200:1100);
- },reduceMotion?200:1100);
+function runBlindSequence(sbi, sbAmount, bbi, bbAmount, handTick) {
+  render();
+
+  const reduceMotion = matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  // Сначала показываем малый блайнд.
+  showAction(sbi, 'М. БЛАЙНД', sbAmount, 1000);
+  render();
+
+  if (sbAmount > 0) {
+    requestAnimationFrame(() => {
+      effects.animateBetChip(sbi, sbAmount);
+    });
+  }
+
+  // Затем переходим к большому блайнду.
+  blindSequenceTimer = setTimeout(() => {
+    blindSequenceTimer = null;
+
+    if (over || handTick !== tick || gamePaused) return;
+
+    // Теперь разрешаем отображение ставки большого блайнда.
+    if (players[bbi]) {
+      players[bbi].blindBetPending = false;
+    }
+
+    // ALL-IN большого блайнда регистрируем именно сейчас.
+    if (bbAmount > 0 && players[bbi]?.allin) {
+      registerPlayerAllIn(bbi);
+    }
+
+    showAction(bbi, 'Б. БЛАЙНД', bbAmount, 1000);
+    render();
+
+    if (bbAmount > 0) {
+      requestAnimationFrame(() => {
+        effects.animateBetChip(bbi, bbAmount);
+      });
+    }
+
+    // После завершения анимации разрешаем первый ход.
+    blindSequenceTimer = setTimeout(() => {
+      blindSequenceTimer = null;
+
+      if (!over && handTick === tick && !gamePaused) {
+        advanceQueue();
+      }
+    }, reduceMotion ? 200 : 1100);
+
+  }, reduceMotion ? 200 : 1100);
 }
 function shuffle() {   deck = createShuffledDeck(ranks, suits); }
 
@@ -1010,13 +1057,14 @@ async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
   // Только после раздачи карт начинаем выставление блайндов.
   // Только после раздачи карт начинаем выставление блайндов.
   const sbAmount = post(smallBlindSeat, sb);
-  const bbAmount = post(bigBlindSeat, bb);
- if (sbAmount > 0 && players[smallBlindSeat].allin) {
-  registerPlayerAllIn(smallBlindSeat);
-}
+const bbAmount = post(bigBlindSeat, bb);
 
-if (bbAmount > 0 && players[bigBlindSeat].allin) {
-  registerPlayerAllIn(bigBlindSeat);
+// Скрываем большой блайнд до его очереди анимации.
+players[bigBlindSeat].blindBetPending = bbAmount > 0;
+
+// Малый блайнд регистрируем сразу.
+if (sbAmount > 0 && players[smallBlindSeat].allin) {
+  registerPlayerAllIn(smallBlindSeat);
 }
 
   currentBet = Math.max(...players.map(p => p.bet));
@@ -1105,7 +1153,8 @@ aiShowdownRevealBack = false;
     p.hole = p.folded ? [] : [deck.pop(), deck.pop()];
     p.dealtCount = 0;
     p.allin = false;
-    p.bet = 0;
+p.blindBetPending = false;
+p.bet = 0;
     p.total = 0;
     p.action = '';
     p.actionAmount = 0;
@@ -1404,7 +1453,7 @@ function captureGameState(){
  };
 }
 function pauseGameForMenu(){
- if(!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;
+ if(!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;  if (blindSequenceTimer !== null) {   logit('Дождись завершения выставления блайндов');   return; }
  savedGameState=captureGameState();cancelAllInAdvanceTimer();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
