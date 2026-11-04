@@ -1255,7 +1255,7 @@ function startWarmup() {
   extinguishCallback = null;
 
   firePhase = 'warmup';
-  fireIntensity = 0.32;
+  fireIntensity = 0.62;
 
   fireHeightPhase = 'warmup';
   fireHeightPhaseStart = performance.now();
