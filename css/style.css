@@ -41,6 +41,9 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
+  transition:
+  opacity .9s ease,
+  box-shadow .9s ease;
 }
 
 .table.allin-light-active .allin-light-trail {
@@ -66,6 +69,16 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
     0 0 12px #ffd34d,
     0 0 28px #ffad16,
     0 10px 30px #0009;
+}
+
+/* Плавное затухание золотого контура стола */
+.table {
+  transition: box-shadow .9s ease;
+}
+
+.table.allin-light-extinguishing .allin-light-trail {
+  opacity: 0 !important;
+  animation: none !important;
 }
 
 @property --allin-light-angle {
