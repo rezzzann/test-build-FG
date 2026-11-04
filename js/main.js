@@ -164,7 +164,7 @@ function startAllInTableLight(playerIndex) {
   // Резервный запуск, если браузер не отправит animationend.
   allInLightTimer = setTimeout(
     finishLight,
-    3400
+    2400
   );
 }
 
