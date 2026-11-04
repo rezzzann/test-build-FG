@@ -421,8 +421,6 @@ float sideWeight = smoothstep(
   abs(normal.x)
 );
 
-float sideID = step(0.0, normal.x);
-
 float sideAlpha = 0.0;
 float sideHeat = 0.0;
 
