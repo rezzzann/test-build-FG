@@ -48,7 +48,7 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 
 .table.allin-light-active .allin-light-trail {
   opacity: 1;
-  animation: allinLightRun 2s linear forwards;
+  animation: allinLightRun 1s linear forwards;
 }
 
 .table.allin-light-finished .allin-light-trail {
@@ -903,7 +903,7 @@ transform: translate(-50%, -50%);
 }
 /* ALL-IN: сама плашка не масштабируется и не перемещается */
 .action-label.allin-label.action-label-animate {
-  animation: allin-fade-out 2.5s linear forwards !important;
+  animation: allin-fade-out 2.0s linear forwards !important;
   animation-delay: calc(-1 * var(--allin-elapsed, 0s)) !important;
   opacity: 1;
 }
