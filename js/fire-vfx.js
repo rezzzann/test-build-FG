@@ -1479,8 +1479,8 @@ gl.uniform1f(
 // У пользователя сохраняем привычную высоту,
 // у ИИ уменьшаем её пропорционально размеру карточки.
 const flameHeight = Math.max(
-  34,
-  Math.min(60, seatRect.height * 0.76)
+  17,
+  Math.min(30, seatRect.height * 0.38)
 );
     // Выход огня за боковые границы.
     const sidePadding = 32;
