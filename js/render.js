@@ -414,7 +414,7 @@ const winnerCardsMarkup = showAISeatCards
     }).join('')}</div>`
   : '';
 
-      return `<div class="seat ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
+      return `<div data-player-index="${i}" class="seat ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
@@ -470,5 +470,31 @@ const winnerCardsMarkup = showAISeatCards
 fireVfx.update();
   }
 
-  return {   render,   renderHandBets,   renderCommunity,    igniteFire() {     fireVfx.ignite();   },    startFireWarmup() {     fireVfx.startWarmup();   },    flareFire() {     fireVfx.flare();   },    extinguishFire(callback) {     fireVfx.extinguish(callback);   } };
-}
+  return {
+  render,
+  renderHandBets,
+  renderCommunity,
+
+  igniteFire(playerIndex) {
+    fireVfx.ignite(playerIndex);
+  },
+
+  startFireWarmup(playerIndex, options) {
+    fireVfx.startWarmup(playerIndex, options);
+  },
+
+  flareFire(playerIndex) {
+    fireVfx.flare(playerIndex);
+  },
+
+  extinguishFire(playerIndexes, callback) {
+    if (Array.isArray(playerIndexes)) {
+      fireVfx.extinguishPlayers(
+        playerIndexes,
+        callback
+      );
+    } else {
+      fireVfx.extinguish(playerIndexes);
+    }
+  }
+};
