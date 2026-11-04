@@ -498,3 +498,4 @@ fireVfx.update();
     }
   }
 };
+}
