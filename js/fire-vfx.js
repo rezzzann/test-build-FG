@@ -1458,6 +1458,7 @@ const cardRadiusLocation = gl.getUniformLocation(
     let secondary = 1;
     let sideOpacity = 1;
 const regularFireHeight = playerIndex === 0 ? 30 : 15;
+    const flareMaxHeight = playerIndex === 0 ? 60 : 30;
     // -----------------------------------------
     // WARMUP
     // -----------------------------------------
@@ -1543,12 +1544,12 @@ const regularFireHeight = playerIndex === 0 ? 30 : 15;
 
         height =
           state.flareStartHeight
-          + (60 - state.flareStartHeight) * eased;
+          + (flareMaxHeight - state.flareStartHeight) * eased;
 
         secondary = eased;
 
       } else if (elapsed < 550) {
-        height = 60;
+        height = flareMaxHeight;
         secondary = 1;
 
       } else if (elapsed < 850) {
@@ -1556,7 +1557,7 @@ const regularFireHeight = playerIndex === 0 ? 30 : 15;
         const eased = ease(progress);
 
         height =
-          60 + (baseHeight - 60) * eased;
+          flareMaxHeight + (baseHeight - flareMaxHeight) * eased;
 
         secondary = 1;
 
