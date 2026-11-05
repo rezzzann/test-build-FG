@@ -14,7 +14,8 @@ export function createWinnerChipVfx() {
   let running = false;
   let landed = false;
   let targetElement = null;
-  let width = 1;
+let lastTargetPoint = null;
+let width = 1;
   let height = 1;
   let dpr = 1;
   let fadeTimer = null;
@@ -623,14 +624,32 @@ export function createWinnerChipVfx() {
     );
   }
 
-  function targetPoint() {
+function targetPoint() {
+  // После render() карточка пользователя может быть создана заново.
+  // Поэтому каждый кадр ищем актуальный DOM-элемент.
+  const currentTarget = document.querySelector(
+    '#seats .seat.user-seat > div:last-child'
+  );
+
+  if (currentTarget) {
+    targetElement = currentTarget;
+  }
+
+  if (targetElement?.isConnected) {
     const rect = targetElement.getBoundingClientRect();
 
-    return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2
-    };
+    if (rect.width > 0 && rect.height > 0) {
+      lastTargetPoint = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
   }
+
+  // При кратковременном отсутствии элемента сохраняем
+  // последние корректные координаты, а не прыгаем в (0, 0).
+  return lastTargetPoint;
+}
 
   function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
@@ -837,9 +856,19 @@ export function createWinnerChipVfx() {
     clearFlash();
 
     targetElement = target;
+lastTargetPoint = null;
 
-    drawCoinTexture(amount);
-    resize();
+const initialRect = target.getBoundingClientRect();
+
+if (initialRect.width > 0 && initialRect.height > 0) {
+  lastTargetPoint = {
+    x: initialRect.left + initialRect.width / 2,
+    y: initialRect.top + initialRect.height / 2
+  };
+}
+
+drawCoinTexture(amount);
+resize();
 
     canvas.style.display = 'block';
     canvas.style.opacity = '1';
@@ -902,18 +931,20 @@ export function createWinnerChipVfx() {
 
     resize();
 
-    if (landed && targetElement) {
-      const target = targetPoint();
+  if (landed && targetElement) {
+  const target = targetPoint();
 
-      drawCoin(
-        target.x,
-        target.y,
-        30,
-        .12,
-        .16,
-        -1
-      );
-    }
+  if (target) {
+    drawCoin(
+      target.x,
+      target.y,
+      30,
+      .12,
+      .16,
+      -1
+    );
+  }
+}
   });
 
   return {
