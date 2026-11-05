@@ -244,6 +244,7 @@ height: clamp(61px, 8.7vw, 96px);
 .action-label{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);z-index:7;color:#ffe3a0;font-size:clamp(20px,3vw,29px);font-weight:1000;line-height:1.1;white-space:nowrap;text-shadow:0 2px 4px #000,0 0 8px #000;pointer-events:none;letter-spacing:.04em}
 .action-label:empty{display:none}
 .action-label.thinking{color:#fff;font-size:clamp(13px,1.8vw,17px);font-weight:800;letter-spacing:0;animation:thinkingPulse 1.5s ease-in-out infinite;animation-delay:var(--thinking-animation-delay, 0s);}
+.action-label.thinking .thinking-dots{display:inline-flex;gap:1px;margin-left:2px}.action-label.thinking .thinking-dots i{font-style:normal;opacity:.25;animation:thinkingDotPulse 1.2s ease-in-out infinite;animation-delay:calc(var(--thinking-animation-delay, 0s) + var(--dot-delay, 0s))}.action-label.thinking .thinking-dots i:nth-child(1){--dot-delay:0s}.action-label.thinking .thinking-dots i:nth-child(2){--dot-delay:.2s}.action-label.thinking .thinking-dots i:nth-child(3){--dot-delay:.4s}@keyframes thinkingDotPulse{0%,20%,100%{opacity:.25;transform:translateY(0)}40%,60%{opacity:1;transform:translateY(-2px)}}
 .action-label.raise-label,.action-label.bet-label{color:#ffe3a0;text-shadow:0 0 5px #b98a3a,0 0 10px #8c5c16,0 2px 4px #000}
 .action-label.fold-label{color:#ff3038;text-shadow:0 0 5px #b50012,0 2px 4px #000}
 .action-label.call-label,.action-label.check-label{color:#39ff78;text-shadow:0 0 4px #00b84d,0 0 9px #007d38,0 2px 4px #000}
