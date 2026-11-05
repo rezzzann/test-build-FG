@@ -614,11 +614,11 @@ function setWinnerChipControlsLocked(locked) {
 function playWinnerChipForWinner(winnerIndexes) {
   // Фишка предназначена исключительно пользователю.
   // Пользователь должен сам пойти ALL-IN и выиграть раздачу.
-  if (
-    !winnerIndexes.includes(user) ||
-    !players[user]?.wentAllInThisHand
-  ) return;
-
+ if (
+  !winnerIndexes.includes(user) ||
+  !players[user]?.wentAllInThisHand ||
+  live().length <= 1
+) return;
   // Цель — центральная часть карточки пользователя,
   // где отображаются имя, стек и статус.
   const target = document.querySelector(
