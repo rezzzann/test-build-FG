@@ -371,18 +371,20 @@ const allinElapsed = action === 'ALL-IN'
   ? Math.max(0, 3.5 - Math.max(0, labelAnimationUntil[i] - Date.now()) / 1000)
   : 0;
 
+const thinking = action === 'ДУМАЕТ';
+
+const thinkingElapsed = thinking &&
+  Number.isFinite(p.thinkingStartedAt)
+    ? Math.max(0, (performance.now() - p.thinkingStartedAt) / 1000)
+    : 0;
+
 const animationStyle = action === 'ALL-IN' && animateAction
   ? `style="--allin-elapsed:${allinElapsed}s"`
   : thinking
     ? `style="--thinking-animation-delay:-${thinkingElapsed.toFixed(3)}s"`
     : '';
 
-const thinking = action === 'ДУМАЕТ';
-      const thinkingElapsed = thinking &&
-  Number.isFinite(p.thinkingStartedAt)
-    ? Math.max(0, (performance.now() - p.thinkingStartedAt) / 1000)
-    : 0;
-      const labelClass = actionClass(action);
+const labelClass = actionClass(action);
       const userClass = i === 0 ? 'user-seat' : '';
       const isWinner = winnerIds.includes(i);
 
