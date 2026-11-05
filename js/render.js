@@ -358,22 +358,30 @@ const animateInfoReturn =
 
 if (previousLabelActions[i] !== action) {
   previousLabelActions[i] = action;
-  labelAnimationUntil[i] = action
-  ? Date.now() + (action === 'ALL-IN' ? 3500 : 350)
-  : 0;
+  labelAnimationUntil[i] = action && action !== 'ДУМАЕТ'
+    ? Date.now() + (action === 'ALL-IN' ? 3500 : 350)
+    : 0;
 }
 
 const animateAction =
-  !!action && Date.now() < (labelAnimationUntil[i] || 0);
+  !!action &&
+  action !== 'ДУМАЕТ' &&
+  Date.now() < (labelAnimationUntil[i] || 0);
 const allinElapsed = action === 'ALL-IN'
   ? Math.max(0, 3.5 - Math.max(0, labelAnimationUntil[i] - Date.now()) / 1000)
   : 0;
 
 const animationStyle = action === 'ALL-IN' && animateAction
   ? `style="--allin-elapsed:${allinElapsed}s"`
-  : '';
+  : thinking
+    ? `style="--thinking-animation-delay:-${thinkingElapsed.toFixed(3)}s"`
+    : '';
 
 const thinking = action === 'ДУМАЕТ';
+      const thinkingElapsed = thinking &&
+  Number.isFinite(p.thinkingStartedAt)
+    ? Math.max(0, (performance.now() - p.thinkingStartedAt) / 1000)
+    : 0;
       const labelClass = actionClass(action);
       const userClass = i === 0 ? 'user-seat' : '';
       const isWinner = winnerIds.includes(i);
