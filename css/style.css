@@ -561,7 +561,7 @@ height: clamp(61px, 8.7vw, 96px);
 .deck-stack {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
 .deck-stack.deck-visible {
