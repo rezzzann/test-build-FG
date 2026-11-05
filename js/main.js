@@ -1391,7 +1391,7 @@ function scheduleAI(i){
  busy=true;pendingAISeat=i;const myTick=tick;
  turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
   showThinking(i);render();turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
-   const call=Math.max(0,currentBet-players[i].bet),actionTEST_FIRST_HAND_AI_ALL_IN && handNo === 1?{ t:'allin'}:=decide(players[i],call,board,currentBet,bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
+   const call=Math.max(0,currentBet-players[i].bet),action=TEST_FIRST_HAND_AI_ALL_IN && handNo === 1?{ t:'allin'}:decide(players[i],call,board,currentBet,bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
   },Math.floor(Math.random()*2501)+1000);
  },1200);
 }
