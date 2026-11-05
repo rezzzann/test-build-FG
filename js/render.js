@@ -262,6 +262,7 @@ function renderCommunity() {
       currentBet,
       gameStarted,
       dealInProgress,
+      collectingBets,
       initialDealInProgress,
       currentHandAnalysis,
       aiWinnerAnalysis,
@@ -280,7 +281,7 @@ if (animateWinnerEntrance) {
 }
     const showComboCore = shouldShowComboCore(s);
     const showUserCombo =
-  !dealInProgress && !userHoleRevealBack;
+  (!dealInProgress || collectingBets) && !userHoleRevealBack;
     $('pot').textContent = fmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
 
