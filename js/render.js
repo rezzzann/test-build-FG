@@ -41,7 +41,7 @@ const fireVfx = createFireVfx({
     if (['М. БЛАЙНД', 'Б. БЛАЙНД', 'СТАВКА', 'РЕЙЗ'].includes(action)) {
       return `<span class="bet-action-name">${action}</span>`;
     }
-    return action === 'ДУМАЕТ' ? 'ДУМАЕТ…' : action;
+    return action === 'ДУМАЕТ'   ? 'ДУМАЕТ<span class="thinking-dots"><i>.</i><i>.</i><i>.</i></span>'   : action;
   }
 
   function stateMarkup(p, i, actor, over) {
