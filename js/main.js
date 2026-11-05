@@ -607,16 +607,17 @@ function setWinnerChipControlsLocked(locked) {
 }
 
 function playWinnerChipForWinner(winnerIndexes) {
-  // Фишка полагается только победителю,
-  // который сам пошёл ALL-IN в этой раздаче.
-  const winnerIndex = winnerIndexes.find(index =>
-    players[index]?.wentAllInThisHand
-  );
+  // Фишка предназначена исключительно пользователю.
+  // Пользователь должен сам пойти ALL-IN и выиграть раздачу.
+  if (
+    !winnerIndexes.includes(user) ||
+    !players[user]?.wentAllInThisHand
+  ) return;
 
-  if (winnerIndex === undefined) return;
-
+  // Цель — центральная часть карточки пользователя,
+  // где отображаются имя, стек и статус.
   const target = document.querySelector(
-    `#seats .seat[data-player-index="${winnerIndex}"]`
+    '#seats .seat.user-seat > div:last-child'
   );
 
   if (!target) return;
@@ -628,7 +629,7 @@ function playWinnerChipForWinner(winnerIndexes) {
   try {
     animation = winnerChipVfx.play(
       target,
-      winnerPayouts[winnerIndex] || 0
+      winnerPayouts[user] || 0
     );
   } catch (error) {
     console.error('Winner chip animation error:', error);
