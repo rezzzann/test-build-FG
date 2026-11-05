@@ -105,7 +105,7 @@ function settleAllInFire(winnerIndexes) {
     startFireWarmup(playerIndex, {
       mode: 'regular',
       startHeight: 0,
-      endHeight: 30,
+      endHeight: playerIndex === 0 ? 30 : 15,
       sideOpacity: 0,
       secondary: 1
     });
@@ -243,7 +243,7 @@ if (firstPlayer) {
   startFireWarmup(playerIndex, {
     mode: 'first',
     startHeight: 0,
-    endHeight: 30,
+    endHeight: playerIndex === 0 ? 30 : 15,
     sideOpacity: 1,
     secondary: 0
   });
