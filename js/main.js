@@ -38,6 +38,8 @@ const $=id=>document.getElementById(id),user=0;
 const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
 const GAME_VERSION='v0.5.10 alpha';
+      // ВРЕМЕННЫЙ ТЕСТ: все ИИ идут ALL-IN в первой раздаче.
+const TEST_FIRST_HAND_AI_ALL_IN = true;
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
@@ -1389,7 +1391,7 @@ function scheduleAI(i){
  busy=true;pendingAISeat=i;const myTick=tick;
  turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
   showThinking(i);render();turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
-   const call=Math.max(0,currentBet-players[i].bet),action=decide(players[i],call,board,currentBet,bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
+   const call=Math.max(0,currentBet-players[i].bet),actionTEST_FIRST_HAND_AI_ALL_IN && handNo === 1?{ t:'allin'}:=decide(players[i],call,board,currentBet,bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
   },Math.floor(Math.random()*2501)+1000);
  },1200);
 }
