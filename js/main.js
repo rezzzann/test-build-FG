@@ -940,7 +940,7 @@ function flyCommunityCard(cardIndex, handTick, reduceMotion) {
   });
 }
 
-async function dealCommunityCards(cardIndices, handTick) {
+async function dealCommunityCards(cardIndices, handTick, isRunout = false) {
   const reduceMotion =
     matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -953,7 +953,9 @@ async function dealCommunityCards(cardIndices, handTick) {
 
   for (const cardIndex of cardIndices) {
     if (handTick !== tick || gamePaused) return;
-
+    if (isRunout) {
+      street = cardIndex === 3 ? 2 : 3;
+    }
     const completed = await flyCommunityCard(
       cardIndex,
       handTick,
@@ -1040,25 +1042,37 @@ if (communityCard && !reduceMotion) {
     }
   }
 
+   // Если игроков, способных продолжать ставки, осталось не больше одного,
+  // не скрываем колоду и автоматически раздаём оставшиеся карты.
+  if (!isRunout && activeCount() <= 1) {
+    await runOutBoard(handTick);
+    return;
+  }
+
   $('deckStack').classList.remove('deck-visible');
 
   if (!(await waitForDeal(reduceMotion ? 0 : 300, handTick))) {
     return;
   }
 
+  if (isRunout) {
+    street = 4;
+  }
+
   dealInProgress = false;
   busy = false;
   render();
 
-  if (activeCount() <= 1) {
-    runOutBoard();
+  // После автоматической раздачи всех оставшихся карт — шоудаун.
+  if (isRunout) {
+    finish();
     return;
   }
 
+  // Обычный режим: начинаем следующий круг ставок.
   rebuildQueueFromStart(nextSeatWithChips(dealerSeat));
   advanceQueue();
 }
-
 async function dealInitialCards(smallBlindSeat, bigBlindSeat, handTick) {
   initialDealInProgress = true;
   const reduceMotion =
@@ -1418,7 +1432,44 @@ if (p.allin) {
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
 }
-async function runOutBoard() {   if (over || gamePaused || dealInProgress) return;    tick++;   const handTick = tick;    busy = true;   dealInProgress = true;   clearTurnTimer();   render();    const collected = await collectBetsVisually(handTick);    if (!collected) return;    while (board.length < 5) {     board.push(deck.pop());   }    street = 4;   dealInProgress = false;   busy = false;    render();   finish(); }
+async function runOutBoard(handTick) {
+  if (over || gamePaused || handTick !== tick) return;
+
+  const remainingIndices = [];
+
+  // Подготавливаем только те карты, которых ещё нет на столе.
+  while (board.length < 5) {
+    remainingIndices.push(board.length);
+    board.push(deck.pop());
+  }
+
+  // Если карты остались — анимируем их, не скрывая колоду.
+  if (remainingIndices.length > 0) {
+    await dealCommunityCards(
+      remainingIndices,
+      handTick,
+      true
+    );
+    return;
+  }
+
+  // Все пять общих карт уже открыты.
+  const reduceMotion = matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  $('deckStack').classList.remove('deck-visible');
+
+  if (!(await waitForDeal(reduceMotion ? 0 : 300, handTick))) {
+    return;
+  }
+
+  street = 4;
+  dealInProgress = false;
+  busy = false;
+  render();
+  finish();
+}
 
 const feedbackReminder = initFeedbackReminder({
   $,
