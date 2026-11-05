@@ -844,7 +844,7 @@ flyingCard.className = isUser
       { transform: 'perspective(700px) rotateY(90deg)' }
     ],
     {
-      duration: 180,
+      duration: 240,
       easing: 'ease-in',
       fill: 'forwards'
     }
@@ -870,7 +870,7 @@ const faces = [...$('hole').querySelectorAll('.card')];
       }
     ],
     {
-      duration: 220,
+      duration: 240,
       easing: 'ease-out',
       fill: 'both'
     }
@@ -1524,7 +1524,7 @@ const feedbackReminder = initFeedbackReminder({
       { transform: 'perspective(700px) rotateY(90deg)' }
     ],
     {
-      duration: 180,
+      duration: 240,
       easing: 'ease-in',
       fill: 'forwards'
     }
@@ -1551,7 +1551,7 @@ const feedbackReminder = initFeedbackReminder({
       }
     ],
     {
-      duration: 220,
+      duration: 240,
       easing: 'ease-out',
       fill: 'both'
     }
