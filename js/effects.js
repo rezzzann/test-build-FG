@@ -156,25 +156,6 @@ const EFFECTS_CSS = String.raw`
   animation: thinkingPulse 1.05s ease-in-out infinite;
 }
 
-.action-label.thinking:after {
-  animation: thinkingDots 1.2s steps(4,end) infinite;
-}
-
-@keyframes thinkingDots {
-  0% {
-    content: "";
-  }
-  25% {
-    content: ".";
-  }
-  50% {
-    content: "..";
-  }
-  75%,
-  100% {
-    content: "...";
-  }
-}
 
 @keyframes thinkingPulse {
   0%,
