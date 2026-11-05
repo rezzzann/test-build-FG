@@ -351,6 +351,7 @@ let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
 let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
+      let collectingBets = false;
 let lastBetFlight = Promise.resolve();      
 const effects = createEffects({
   getBetChipConfig,
@@ -598,6 +599,7 @@ flareFire,   extinguishFire } = createRenderer({
     currentBet,
         gameStarted,
     dealInProgress,
+    collectingBets,
     initialDealInProgress,
     userHoleRevealBack,
 aiShowdownRevealBack,
@@ -682,6 +684,7 @@ function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('
 
 function clearDealSequence() {
   dealInProgress = false;
+  collectingBets = false;
 initialDealInProgress = false;
 communityDealingIndices.clear();
 
@@ -1380,14 +1383,17 @@ async function advanceStreet() {
   await lastBetFlight;
 
   if (handTick !== tick || gamePaused) return;
-  busy = true;
-  dealInProgress = true;
-  clearTurnTimer();
-  render();
+busy = true;
+dealInProgress = true;
+collectingBets = true;
+clearTurnTimer();
+render();
 
-  const collected = await collectBetsVisually(handTick);
+const collected = await collectBetsVisually(handTick);
 
-  if (!collected) return;
+collectingBets = false;
+
+if (!collected) return;
 
   if (live().length <= 1) {
     dealInProgress = false;
