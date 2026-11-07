@@ -86,11 +86,8 @@ export function createBetControl({ table, getState, format }) {
     const bigBlind = Math.max(1, Number(state.bb) || 1);
     const currentBet = Math.max(0, Number(state.currentBet) || 0);
 
-    // Если на улице ещё нет ставки — минимум равен большому блайнду.
-    // Если ставка уже есть (включая BB), минимальный новый размер — currentBet + BB.
-    const requiredMin = currentBet > 0
-      ? currentBet + bigBlind
-      : bigBlind;
+  // Минимальная сумма — не меньше ББ и не меньше самой высокой ставки.
+const requiredMin = Math.max(bigBlind, currentBet);
 
     // Короткий стек может быть меньше минимального рейза: тогда MAX
     // позволяет выставить весь доступный остаток (короткий ALL-IN).
