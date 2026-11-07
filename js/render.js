@@ -48,8 +48,20 @@ function stateMarkup(p, i, actor, over) {
   if (p.stack <= 0 && p.folded) return 'ВЫБЫЛ';
   if (p.folded) return 'ФОЛД';
   if (p.allin) return 'ALL-IN';
+
+  // Блайнды
+  if (p.action === 'М. БЛАЙНД') return 'М. БЛАЙНД';
+  if (p.action === 'Б. БЛАЙНД') return 'Б. БЛАЙНД';
+
+  // Ставки без суммы PP
+  if (p.action === 'СТАВКА') return 'СТАВКА';
+  if (p.action === 'РЕЙЗ') return 'РЕЙЗ';
+
   if (i === actor && !over) return 'ХОД';
+
+  // Остальные действия: КОЛЛ, ЧЕК и т. д.
   if (p.action) return p.action;
+
   return 'В ИГРЕ';
 }
 
