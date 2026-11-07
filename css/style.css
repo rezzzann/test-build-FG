@@ -1058,3 +1058,10 @@ transform: translate(-50%, -50%);
 @media(orientation:portrait){
   .bet-control{--bet-control-scale:.62;right:0}
 }
+.raise.bet-confirming {
+  font-size: clamp(8px, 1.05vw, 12px);
+  letter-spacing: -.04em;
+  white-space: nowrap;
+  padding-left: 4px;
+  padding-right: 4px;
+}
