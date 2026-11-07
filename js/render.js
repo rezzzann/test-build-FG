@@ -44,18 +44,14 @@ const fireVfx = createFireVfx({
     return action === 'ДУМАЕТ'   ? 'ДУМАЕТ<span class="thinking-dots"><i>.</i><i>.</i><i>.</i></span>'   : action;
   }
 
-  function stateMarkup(p, i, actor, over) {
-    if (p.folded) return 'ФОЛД';
-    if (p.allin) return 'ALL-IN';
-    if (i === actor && !over) return 'ХОД';
-    if (p.action === 'М. БЛАЙНД') return 'М. БЛАЙНД';
-    if (p.action === 'Б. БЛАЙНД') return 'Б. БЛАЙНД';
-    if (p.action === 'СТАВКА' || p.action === 'РЕЙЗ') {
-      return `${p.action} ${fmt(p.actionAmount || 0)} PP`;
-    }
-    if (p.action) return p.action;
-    return 'В ИГРЕ';
-  }
+function stateMarkup(p, i, actor, over) {
+  if (p.stack <= 0 && p.folded) return 'ВЫБЫЛ';
+  if (p.folded) return 'ФОЛД';
+  if (p.allin) return 'ALL-IN';
+  if (i === actor && !over) return 'ХОД';
+  if (p.action) return p.action;
+  return 'В ИГРЕ';
+}
 
   function renderHandBets() {
     const { players } = getState();
