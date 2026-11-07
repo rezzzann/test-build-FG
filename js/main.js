@@ -1606,10 +1606,33 @@ if (aiShowdownRevealBack) {
 }
  feedbackReminder.showAfterThirdHand();
 }
-function userAct(t, selectedAmount){
- if(over||busy||dealInProgress||gamePaused||actor!==user||!eligible(user)||queueHead()!==user||hasActedThisStreet(user))return;
- const call=Math.max(0,currentBet-players[user].bet);let a;if(t==='fold')a={t:'fold'};else if(t==='call')a=call?{t:'call'}:{t:'check'};else if(t==='raise'){   const amount=Number(selectedAmount ?? betControl.getValue());   a={t:call?'raise':'bet',amt:amount}; }else if(t==='allin')a={t:'allin'};else return;
- if(applyAction(user,a))advanceQueue();
+function userAct(t, selectedAmount) {
+  if (
+    over ||
+    busy ||
+    dealInProgress ||
+    gamePaused ||
+    actor !== user ||
+    !eligible(user) ||
+    queueHead() !== user ||
+    hasActedThisStreet(user)
+  ) return;
+
+  const call = Math.max(0, currentBet - players[user].bet);
+  let a;
+
+  if (t === 'fold') {
+    a = { t: 'fold' };
+  } else if (t === 'call') {
+    a = call ? { t: 'call' } : { t: 'check' };
+  } else if (t === 'raise') {
+    const amount = Number(selectedAmount ?? betControl.getValue());
+    a = { t: call ? 'raise' : 'bet', amt: amount };
+  } else {
+    return;
+  }
+
+  if (applyAction(user, a)) advanceQueue();
 }
 function start(){
  players=[{name:'Вы',icon:'♠',style:'user',stack:getStartingStack(tournamentMode)},{name:'Тайтовый',icon:'♞',style:'tight',stack:getStartingStack(tournamentMode)},{name:'Стратег',icon:'♜',style:'balanced',stack:getStartingStack(tournamentMode)},{name:'Агрессор',icon:'♛',style:'aggressive',stack:getStartingStack(tournamentMode)}];
@@ -1661,10 +1684,6 @@ $('raise').onclick = () => {
   userAct('raise', selectedAmount);
 };
 
-$('allin').onclick = () => {
-  closeBetControl();
-  userAct('allin');
-};
 
 $('nextHand').onclick = () => {
   if (!gamePaused) newHand();
