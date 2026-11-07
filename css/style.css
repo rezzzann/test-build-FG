@@ -1009,8 +1009,8 @@ transform: translate(-50%, -50%);
 
 .bet-control{
 --bet-control-scale:1;
---bet-control-right:0.5%;
---bet-control-top:80%;
+--bet-control-right:-4%;
+--bet-control-top:65%;
 position:absolute;
 right:var(--bet-control-right);
 top:var(--bet-control-top);
