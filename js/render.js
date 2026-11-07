@@ -263,6 +263,7 @@ function renderCommunity() {
       gameStarted,
       dealInProgress,
       collectingBets,
+      betControlOpen,
       initialDealInProgress,
       currentHandAnalysis,
       aiWinnerAnalysis,
@@ -449,7 +450,7 @@ const winnerCardsMarkup = showAISeatCards
     }).join('');
 
     renderHandBets();
-    $('betValue').textContent = $('betRange').value;
+   
 
     const canAct =
       !over &&
@@ -471,8 +472,12 @@ const winnerCardsMarkup = showAISeatCards
         : 'ЧЕК';
 
     const isRaise = currentBet > players[0].bet;
-    $('raise').textContent = isRaise ? 'РЕЙЗ' : 'СТАВКА';
-    $('raise').classList.toggle('bet-mode', !isRaise);
+    $('raise').textContent = betControlOpen
+  ? 'ПОДТВЕРДИТЬ'
+  : isRaise ? 'РЕЙЗ' : 'СТАВКА';
+
+$('raise').classList.toggle('bet-mode', !isRaise);
+$('raise').classList.toggle('bet-confirming', betControlOpen);
 
     $('nextHand').classList.toggle('visible', over);
     $('exitButton').classList.toggle('visible', gameStarted);
