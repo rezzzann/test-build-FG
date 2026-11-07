@@ -1056,10 +1056,10 @@ box-shadow:none;
 
 /* Уменьшение панели на мобильных экранах */
 @media(max-height:420px) and (orientation:landscape){
-  .bet-control{--bet-control-scale:.68}
+  .bet-control{--bet-control-scale:.96}
 }
 @media(orientation:portrait){
-  .bet-control{--bet-control-scale:.62}
+  .bet-control{--bet-control-scale:.90}
 }
 .raise.bet-confirming {
   font-size: clamp(8px, 1.05vw, 12px);
