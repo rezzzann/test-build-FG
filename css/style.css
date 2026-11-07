@@ -368,7 +368,6 @@ height: clamp(61px, 8.7vw, 96px);
 .update-description strong{color:#f0d08a}
 .update-note{display:none}
 @media(max-height:420px) and (orientation:landscape){
-.bet-control{--bet-control-scale:.68}
 .update-type.major{border-color:#f0d08a99;color:#ffdc70}}
 .report-panel{width:min(430px,100%);text-align:left}
 .report-panel .info-title{text-align:center}
@@ -400,7 +399,6 @@ height: clamp(61px, 8.7vw, 96px);
 .feedback-dismiss{position:relative;width:100%;margin-top:19px;padding:12px 9px;border:1px solid #ffe6a0;border-radius:10px;background:linear-gradient(180deg,#ffe8a8,#bd8a32);color:#211809;font-size:11px;font-weight:1000;letter-spacing:.06em;box-shadow:inset 0 1px 0 #fff8d9,0 4px 12px #0005}
 .feedback-dismiss:active{transform:translateY(1px);filter:brightness(1.08)}
 @media(orientation:portrait){
-.bet-control{--bet-control-scale:.62}
 .app{padding:5px;gap:4px}.top{height:34px}.table{border-radius:34%/23%}.seat{min-width:91px;padding:5px;gap:5px}.avatar{width:34px;height:34px;font-size:19px}.name{font-size:9px}.stack{font-size:10px}.state{font-size:9px}
 .community{top:50%;gap:3px}.community .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}.community .rank{font-size:16px}.community .center{font-size:23px}
 .hole{top:calc(73% - clamp(35px,9.5vw,45px));gap:4px;width:calc(clamp(48px,13vw,62px)*2 + 4px)}.hole .card{width:clamp(48px,13vw,62px);height:clamp(70px,19vw,90px);padding:4px}.hole .rank{font-size:20px}.hole .center{font-size:29px}
@@ -1058,10 +1056,15 @@ top:var(--bet-control-top);
 
 /* Уменьшение панели на мобильных экранах */
 @media(max-height:420px) and (orientation:landscape){
-  .bet-control{--bet-control-scale:.68;right:1%}
+  .bet-control{--bet-control-scale:.68;
+    --bet-control-right:1%;
+  }
 }
 @media(orientation:portrait){
-  .bet-control{--bet-control-scale:.62;right:0}
+  .bet-control{
+    --bet-control-scale:.62;
+    --bet-control-right:0;
+  }
 }
 .raise.bet-confirming {
   font-size: clamp(8px, 1.05vw, 12px);
