@@ -1454,10 +1454,19 @@ function scheduleAI(i){
 function applyAction(i,a,myTick){
  if(over||gamePaused)return false;if(typeof myTick==='number'&&myTick!==tick)return false;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return false;
  const p=players[i],oldBet=currentBet,call=Math.max(0,currentBet-p.bet);let raised=false,chipAmount=0;
+  // Если выбранная сумма не превышает текущую ставку,
+// это уравнивание, а не повышение.
+if ((a.t === 'bet' || a.t === 'raise') && call > 0) {
+  const requested = Number(a.amt);
+
+  if (!Number.isFinite(requested) || requested <= currentBet) {
+    a = { t: 'call' };
+  }
+}
  if(a.t==='fold'){p.folded=true;if(i===user)humanFoldedCards=true;showAction(i,'ФОЛД');logit(p.name+': ФОЛД')}
  else if(a.t==='check'){if(call>0)a={t:'call'};else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
  if(a.t==='call'){const amount=Math.min(call,p.stack);if(amount===0){showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}else{p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;const label=p.allin?'ALL-IN':'КОЛЛ';showAction(i,label);logit(p.name+': '+label)}}
- else if(a.t==='bet'||a.t==='raise'){const requested=Number(a.amt)||bb*2,target=Math.max(currentBet===0?bb:currentBet+bb,requested),amount=Math.min(Math.max(0,target-p.bet),p.stack);
+ else if(a.t==='bet'||a.t==='raise'){   const requested=Number(a.amt)||bb;   const minimum=Math.max(bb,currentBet);   const target=Math.max(minimum,requested);   const amount=Math.min(Math.max(0,target-p.bet),p.stack);
   if(amount>0){p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;const label=p.allin?'ALL-IN':(oldBet>0?'РЕЙЗ':'СТАВКА');showAction(i,label,amount);logit(p.name+': '+label+' '+fmt(amount)+' PP')}
   else if(call>0){const amountToCall=Math.min(call,p.stack);p.stack-=amountToCall;p.bet+=amountToCall;p.total+=amountToCall;chipAmount=amountToCall;if(p.stack===0)p.allin=true;showAction(i,p.allin?'ALL-IN':'КОЛЛ');logit(p.name+': '+(p.allin?'ALL-IN':'КОЛЛ'))}else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
  else if(a.t==='allin'){const amount=p.stack;if(amount<=0)return false;p.stack=0;p.bet+=amount;p.total+=amount;chipAmount=amount;p.allin=true;currentBet=Math.max(currentBet,p.bet);raised=currentBet>oldBet;showAction(i,'ALL-IN');logit(p.name+': ALL-IN')}
@@ -1599,7 +1608,7 @@ if (aiShowdownRevealBack) {
 }
 function userAct(t, selectedAmount){
  if(over||busy||dealInProgress||gamePaused||actor!==user||!eligible(user)||queueHead()!==user||hasActedThisStreet(user))return;
- const call=Math.max(0,currentBet-players[user].bet);let a;if(t==='fold')a={t:'fold'};else if(t==='call')a=call?{t:'call'}:{t:'check'};else if(t==='raise'){const amount=Number(selectedAmount ?? betControl.getValue());a={t:call?'raise':'bet',amt:call?Math.max(currentBet+bb,amount):amount}}else if(t==='allin')a={t:'allin'};else return;
+ const call=Math.max(0,currentBet-players[user].bet);let a;if(t==='fold')a={t:'fold'};else if(t==='call')a=call?{t:'call'}:{t:'check'};else if(t==='raise'){   const amount=Number(selectedAmount ?? betControl.getValue());   a={t:call?'raise':'bet',amt:amount}; }else if(t==='allin')a={t:'allin'};else return;
  if(applyAction(user,a))advanceQueue();
 }
 function start(){
