@@ -28,6 +28,7 @@ import {
 } from './tournament.js';
 import { createRenderer } from './render.js';
 import { createEffects } from './effects.js';
+import { createBetControl } from './bet-control.js';
 import { createWinnerChipVfx } from './winner-chip-vfx.js';
 import { initUpdates } from './updates.js';
 import { initFeedbackReminder } from './feedback.js';
@@ -352,6 +353,7 @@ let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
 let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
       let collectingBets = false;
+      let betControlOpen = false;
 let lastBetFlight = Promise.resolve();      
 const effects = createEffects({
   getBetChipConfig,
@@ -361,13 +363,6 @@ const effects = createEffects({
 let pendingAISeat=-1;
 function applyTournamentMode(resetClock=true){
  const high=tournamentMode==='highroller';
- const slider=$('betRange');
- slider.min=high?'200':'20';
- slider.max=high?'10000':'1000';
- slider.step='10';
- const current=Number(slider.value)||Number(slider.min);
- slider.value=String(Math.min(Number(slider.max),Math.max(Number(slider.min),current)));
- $('betValue').textContent=slider.value;
  $('table').classList.toggle('high-roller',high);
  $('tableWatermark').textContent=high?'HIGH ROLLER':'POKEREZA';
  if(resetClock){blindLevel=0;blindRemaining=getTournamentSettings(tournamentMode).blindLevelDuration;}
@@ -600,6 +595,7 @@ flareFire,   extinguishFire } = createRenderer({
         gameStarted,
     dealInProgress,
     collectingBets,
+    betControlOpen,
     initialDealInProgress,
     userHoleRevealBack,
 aiShowdownRevealBack,
@@ -630,10 +626,20 @@ aiWinnerAnalysis: aiWinningCards.length &&
     renderedBoardCount = value;
   }
 });
+      const betControl = createBetControl({
+  table: $('table'),
+  getState: () => ({
+    players,
+    user,
+    currentBet,
+    bb
+  }),
+  format: fmt
+});
 function setWinnerChipControlsLocked(locked) {
   winnerChipAnimating = locked;
 
-  ['nextHand', 'newHand', 'reset', 'exitButton', 'betRange']
+  ['nextHand', 'newHand', 'reset', 'exitButton']
     .forEach(id => {
       const control = $(id);
       if (control) control.disabled = locked;
@@ -680,7 +686,7 @@ function playWinnerChipForWinner(winnerIndexes) {
     });
 }
 function post(i, n) {   const p = players[i];    if (!p || p.folded || p.stack <= 0) return 0;    const v = Math.min(n, p.stack);    if (v <= 0) return 0;    p.stack -= v;   p.bet += v;   p.total += v;    if (p.stack === 0) {     p.allin = true;   }    return v; }
-function resetBetSlider(){const slider=$('betRange');slider.value=slider.min;$('betValue').textContent=slider.value}
+function resetBetSlider() {   betControlOpen = false;   betControl.reset(); }
 
 function clearDealSequence() {
   dealInProgress = false;
@@ -1591,15 +1597,69 @@ if (aiShowdownRevealBack) {
 }
  feedbackReminder.showAfterThirdHand();
 }
-function userAct(t){
+function userAct(t, selectedAmount){
  if(over||busy||dealInProgress||gamePaused||actor!==user||!eligible(user)||queueHead()!==user||hasActedThisStreet(user))return;
- const call=Math.max(0,currentBet-players[user].bet);let a;if(t==='fold')a={t:'fold'};else if(t==='call')a=call?{t:'call'}:{t:'check'};else if(t==='raise'){const amount=Number($('betRange').value);a={t:call?'raise':'bet',amt:call?Math.max(currentBet+bb,amount):amount}}else if(t==='allin')a={t:'allin'};else return;
+ const call=Math.max(0,currentBet-players[user].bet);let a;if(t==='fold')a={t:'fold'};else if(t==='call')a=call?{t:'call'}:{t:'check'};else if(t==='raise'){const amount=Number(selectedAmount ?? betControl.getValue());a={t:call?'raise':'bet',amt:call?Math.max(currentBet+bb,amount):amount}}else if(t==='allin')a={t:'allin'};else return;
  if(applyAction(user,a))advanceQueue();
 }
 function start(){
  players=[{name:'Вы',icon:'♠',style:'user',stack:getStartingStack(tournamentMode)},{name:'Тайтовый',icon:'♞',style:'tight',stack:getStartingStack(tournamentMode)},{name:'Стратег',icon:'♜',style:'balanced',stack:getStartingStack(tournamentMode)},{name:'Агрессор',icon:'♛',style:'aggressive',stack:getStartingStack(tournamentMode)}];
- $('fold').onclick=()=>userAct('fold');$('checkCall').onclick=()=>userAct('call');$('raise').onclick=()=>userAct('raise');$('allin').onclick=()=>userAct('allin');$('nextHand').onclick=()=>{if(!gamePaused)newHand()};
- $('betRange').oninput=()=>$('betValue').textContent=$('betRange').value;
+function canUserAct() {
+  return !over &&
+    !busy &&
+    !dealInProgress &&
+    !gamePaused &&
+    actor === user &&
+    eligible(user) &&
+    queueHead() === user &&
+    !hasActedThisStreet(user);
+}
+
+function closeBetControl() {
+  if (!betControlOpen) return;
+
+  betControlOpen = false;
+  betControl.close();
+  render();
+}
+
+$('fold').onclick = () => {
+  closeBetControl();
+  userAct('fold');
+};
+
+$('checkCall').onclick = () => {
+  closeBetControl();
+  userAct('call');
+};
+
+$('raise').onclick = () => {
+  if (!canUserAct()) return;
+
+  if (!betControlOpen) {
+    betControlOpen = true;
+    betControl.open();
+    render();
+    return;
+  }
+
+  const selectedAmount = betControl.getValue();
+
+  betControlOpen = false;
+  betControl.close();
+  render();
+
+  userAct('raise', selectedAmount);
+};
+
+$('allin').onclick = () => {
+  closeBetControl();
+  userAct('allin');
+};
+
+$('nextHand').onclick = () => {
+  if (!gamePaused) newHand();
+};
  $('newHand').onclick=()=>{if(!gamePaused){if(over)newHand();else logit('Завершите текущую раздачу')}};
  $('reset').onclick=()=>{if(!gamePaused)resetStacksAndRestart()};resetBetSlider();
 }
@@ -1609,11 +1669,12 @@ function captureGameState(){
   deck:deck.map(c=>({...c})),board:board.map(c=>({...c})),pot,currentBet,street,actor,handNo,over,sb,bb,log:[...log],tick,
   actQueue:[...actQueue],firstToAct,dealerSeat,renderedBoardCount,winnerIds:[...winnerIds],winnerPayouts:{...winnerPayouts},winnerCombo,
   humanWinnerReveal,winningCards:winningCards.map(c=>({...c})),humanFoldedCards,aiWinnerReveal,aiWinnerId,aiWinningCards:aiWinningCards.map(c=>({...c})),
-  pendingAISeat,tournamentMode,blindLevel,blindRemaining,betRangeValue:$('betRange').value,blindSequencePending:blindSequenceTimer!==null
+  pendingAISeat,tournamentMode,blindLevel,blindRemaining,blindSequencePending:blindSequenceTimer!==null
  };
 }
 function pauseGameForMenu(){
  if(winnerChipAnimating||!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;  if (blindSequenceTimer !== null) {   logit('Дождись завершения выставления блайндов');   return; }
+  resetBetSlider();
  savedGameState=captureGameState();cancelAllInAdvanceTimer();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
@@ -1628,7 +1689,6 @@ function restoreSavedGame(){
  actQueue=[...s.actQueue]; firstToAct=s.firstToAct; dealerSeat=s.dealerSeat??dealerSeat; renderedBoardCount=s.renderedBoardCount;winnerIds=[...s.winnerIds];winnerPayouts={...s.winnerPayouts};winnerCombo=s.winnerCombo;
  humanWinnerReveal=s.humanWinnerReveal;winningCards=s.winningCards.map(c=>({...c}));humanFoldedCards=s.humanFoldedCards;aiWinnerReveal=s.aiWinnerReveal;aiWinnerId=s.aiWinnerId;aiWinningCards=s.aiWinningCards.map(c=>({...c}));
  pendingAISeat=s.pendingAISeat;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
- $('betRange').value=String(Math.min(Number($('betRange').max),Math.max(Number($('betRange').min),Number(s.betRangeValue)||Number($('betRange').min))));$('betValue').textContent=$('betRange').value;
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
  savedGameState=null;render();renderHandBets();tournamentClock.start();
