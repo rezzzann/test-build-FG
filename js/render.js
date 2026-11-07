@@ -464,7 +464,6 @@ const winnerCardsMarkup = showAISeatCards
     $('fold').disabled = !canAct;
     $('checkCall').disabled = !canAct;
     $('raise').disabled = !canAct;
-    $('allin').disabled = !canAct;
 
     $('checkCall').textContent =
       currentBet > players[0].bet
