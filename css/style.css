@@ -1009,8 +1009,8 @@ transform: translate(-50%, -50%);
 
 .bet-control{
 --bet-control-scale:1;
---bet-control-right:2.5%;
---bet-control-top:50%;
+--bet-control-right:0.5%;
+--bet-control-top:80%;
 position:absolute;
 right:var(--bet-control-right);
 top:var(--bet-control-top);
@@ -1056,15 +1056,10 @@ top:var(--bet-control-top);
 
 /* Уменьшение панели на мобильных экранах */
 @media(max-height:420px) and (orientation:landscape){
-  .bet-control{--bet-control-scale:.68;
-    --bet-control-right:1%;
-  }
+  .bet-control{--bet-control-scale:.68}
 }
 @media(orientation:portrait){
-  .bet-control{
-    --bet-control-scale:.62;
-    --bet-control-right:0;
-  }
+  .bet-control{--bet-control-scale:.62}
 }
 .raise.bet-confirming {
   font-size: clamp(8px, 1.05vw, 12px);
