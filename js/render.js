@@ -274,7 +274,6 @@ function renderCommunity() {
       winnerPayouts,
       winnerCombo,
       actor,
-      turnClock,
       over,
       busy,
       gamePaused,
@@ -400,15 +399,6 @@ const allinElapsed = action === 'ALL-IN'
   : 0;
 
 const thinking = action === 'ДУМАЕТ';
-      const turnClockActive =
-  turnClock?.seat === i && !over;
-
-const turnElapsed = turnClockActive
-  ? Math.max(
-      0,
-      (performance.now() - turnClock.startedAt) / 1000
-    )
-  : 0;
 
 const thinkingElapsed = thinking &&
   Number.isFinite(p.thinkingStartedAt)
@@ -424,12 +414,6 @@ if (action === 'ALL-IN' && animateAction) {
 if (thinking) {
   animationStyles.push(
     `--thinking-animation-delay:-${thinkingElapsed.toFixed(3)}s`
-  );
-}
-
-if (turnClockActive) {
-  animationStyles.push(
-    `--turn-elapsed:${turnElapsed.toFixed(3)}s`
   );
 }
 
@@ -496,7 +480,7 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
       <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
     </div>
   `;
-      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${turnClockActive ? 'turn-clock-active' : ''} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
+      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
