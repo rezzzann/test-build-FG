@@ -461,6 +461,7 @@ if (isInWinningHand) {
 
     $('opponentCards').innerHTML = players.map((p, i) => {
       if (i === 0) return '';
+      if (p.folded) return '';
 
       const pos = cardPos[i];
       if (!pos) return '';
