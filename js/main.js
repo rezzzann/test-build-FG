@@ -1508,7 +1508,7 @@ function animateAIFoldCards(playerIndex) {
           opacity: 1
         },
         {
-          transform: `rotate(${index === 0 ? 360 : -360}deg) scale(0.65)`,
+          transform: 'rotate(360deg) scale(0.65)',
           opacity: 0
         }
       ],
