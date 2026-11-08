@@ -1053,9 +1053,34 @@ box-shadow:none;
   transition:opacity .22s ease,visibility .22s ease;
 }
 .bet-control.is-open{opacity:1;visibility:visible;pointer-events:auto}
-.amount-line{text-align:center;margin:0 0 2px;line-height:1.15}
-.amount{font-size:27px;font-weight:1000;color:#ffe0a0;font-variant-numeric:tabular-nums}
-.unit{font-size:10px;color:#bda56e;font-weight:800}
+.amount-line {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 auto 2px;
+  padding: 4px 11px;
+  line-height: 1.15;
+  background: rgba(105, 110, 116, .88);
+  border: 1px solid rgba(220, 225, 230, .3);
+  border-radius: 9px;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, .12),
+    0 2px 7px rgba(0, 0, 0, .4);
+}
+
+.amount {
+  font-size: 27px;
+  font-weight: 1000;
+  color: #fff0c5;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  font-size: 10px;
+  color: #ffffff;
+  font-weight: 800;
+}
 .curve-stage{height:285px;width:310px;position:relative;display:flex;justify-content:flex-start;align-items:center;gap:4px;overflow:visible}
 .curve-svg{width:190px;height:275px;flex:none;overflow:visible;touch-action:none;user-select:none;outline:none;cursor:grab}
 .curve-svg:active{cursor:grabbing}
