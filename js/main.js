@@ -51,6 +51,57 @@ let blindLevel = 0;
 let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
+      // Таймер хода игрока и визуальный таймер ИИ.
+const ACTION_CLOCK_DURATION = 15000;
+let actionClockTimer = null;
+let activeTurnClock = null;
+
+function clearActionClock() {
+  if (actionClockTimer !== null) {
+    clearTimeout(actionClockTimer);
+    actionClockTimer = null;
+  }
+
+  activeTurnClock = null;
+}
+
+function startActionClock(seat) {
+  clearActionClock();
+
+  activeTurnClock = {
+    seat,
+    startedAt: performance.now()
+  };
+
+  // Для ИИ таймер только визуальный.
+  if (seat !== user) return;
+
+  const handTick = tick;
+
+  actionClockTimer = setTimeout(() => {
+    actionClockTimer = null;
+
+    if (
+      !activeTurnClock ||
+      activeTurnClock.seat !== user ||
+      tick !== handTick ||
+      actor !== user ||
+      over ||
+      gamePaused ||
+      busy ||
+      dealInProgress ||
+      queueHead() !== user ||
+      !eligible(user) ||
+      hasActedThisStreet(user)
+    ) {
+      clearActionClock();
+      return;
+    }
+
+    // Время истекло — автоматический фолд.
+    userAct('fold');
+  }, ACTION_CLOCK_DURATION);
+}
       let pendingPreAction = null;
       let playerStatsViewTimers = [];
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3; let dealerSeat=0;
@@ -581,6 +632,7 @@ flareFire,   extinguishFire } = createRenderer({
     winnerPayouts,
     winnerCombo,
     actor,
+    turnClock: activeTurnClock,
 pendingPreAction,
 over,
     busy,
@@ -1187,6 +1239,7 @@ if (sbAmount > 0 && players[smallBlindSeat].allin) {
 
 function newHand() {
   pendingPreAction = null;
+  clearActionClock();
   if (winnerChipAnimating) return;
   // Очищаем незавершённые события предыдущей раздачи.
   cancelAllInAdvanceTimer();
@@ -1348,8 +1401,50 @@ function advanceQueue(){
    return;
  }
  while(actQueue.length&&hasActedThisStreet(actQueue[0]))actQueue.shift();if(actQueue.length===0){advanceStreet();return}
- actor = actQueue[0];  const p = players[actor];  if (p) {   p.action = '';   p.actionAmount = 0; }  // Проверяем предварительное действие пользователя. 
-  if (actor === user && pendingPreAction) {   const action = pendingPreAction;   pendingPreAction = null;    const isUnconditional =     action.type === 'fold' ||     action.type === 'allCall';    const situationUnchanged =     currentBet === action.expectedCurrentBet &&     players[user].bet === action.expectedPlayerBet;    if (isUnconditional || situationUnchanged) {     const actionType =       action.type === 'fold'         ? 'fold'         : action.type === 'check'           ? 'check'           : 'call';      if (applyAction(user, { t: actionType })) {       advanceQueue();       return;     }   } }  render();  if (actor !== user) {   scheduleAI(actor); }
+ actor = actQueue[0];
+
+const p = players[actor];
+
+if (p) {
+  p.action = '';
+  p.actionAmount = 0;
+}
+
+// Проверяем предварительное действие пользователя.
+if (actor === user && pendingPreAction) {
+  const action = pendingPreAction;
+  pendingPreAction = null;
+
+  const isUnconditional =
+    action.type === 'fold' ||
+    action.type === 'allCall';
+
+  const situationUnchanged =
+    currentBet === action.expectedCurrentBet &&
+    players[user].bet === action.expectedPlayerBet;
+
+  if (isUnconditional || situationUnchanged) {
+    const actionType =
+      action.type === 'fold'
+        ? 'fold'
+        : action.type === 'check'
+          ? 'check'
+          : 'call';
+
+    if (applyAction(user, { t: actionType })) {
+      advanceQueue();
+      return;
+    }
+  }
+}
+
+// Запускаем визуальный таймер активного игрока.
+startActionClock(actor);
+
+render();
+
+if (actor !== user) {
+  scheduleAI(actor);
 }
 async function collectBetsVisually(handTick) {
   const soleWinner = live().length === 1 ? live()[0] : null;
@@ -1381,6 +1476,7 @@ if (soleWinner && soleWinner.bet > 0) {
 
 async function advanceStreet() {
   if (over || gamePaused || dealInProgress) return;
+  clearActionClock();
 
   tick++;
   const handTick = tick;
@@ -1540,6 +1636,7 @@ function animateAIFoldCards(playerIndex) {
 }
 function applyAction(i,a,myTick){
  if(over||gamePaused)return false;if(typeof myTick==='number'&&myTick!==tick)return false;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return false;
+  clearActionClock();
  const p=players[i],oldBet=currentBet,call=Math.max(0,currentBet-p.bet);let raised=false,chipAmount=0;
   // Если выбранная сумма не превышает текущую ставку,
 // это уравнивание, а не повышение.
@@ -1696,7 +1793,7 @@ if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
 }     
 function finish(){
   pendingPreAction = null;
- if(over)return; tick++; busy=false; pendingAISeat=-1; clearTurnTimer(); clearBlindSequence(); clearActionTimers(); over=true; actQueue=[];  const survivors = live(); if (survivors.length === 1 && survivors[0].bet > 0) {   survivors[0].stack += survivors[0].bet;   survivors[0].bet = 0; }  collectBetsIntoPot();
+ if(over)return; tick++; busy=false; pendingAISeat=-1; clearTurnTimer(); clearActionClock(); clearBlindSequence(); clearActionTimers(); over=true; actQueue=[];  const survivors = live(); if (survivors.length === 1 && survivors[0].bet > 0) {   survivors[0].stack += survivors[0].bet;   survivors[0].bet = 0; }  collectBetsIntoPot();
  let winners=[],winnerScore=null;humanWinnerReveal=false;winningCards=[];aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
  if(survivors.length===1)winners=survivors;else{street=4;const ranked=survivors.map(p=>({p,s:score([...p.hole,...board])})).sort((a,b)=>cmp(b.s,a.s));winnerScore=ranked[0].s;winners=ranked.filter(x=>cmp(x.s,winnerScore)===0).map(x=>x.p)}
  const each=Math.floor(pot/winners.length),rem=pot%winners.length;winnerIds=[];winnerPayouts={};
@@ -1913,7 +2010,7 @@ function captureGameState(){
 function pauseGameForMenu(){
  if(winnerChipAnimating||!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;  if (blindSequenceTimer !== null) {   logit('Дождись завершения выставления блайндов');   return; }
   resetBetSlider();
- savedGameState=captureGameState();cancelAllInAdvanceTimer();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearBlindSequence();clearActionTimers();busy=false;
+ savedGameState=captureGameState();cancelAllInAdvanceTimer();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearActionClock();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
  $('startScreen').querySelector('.start-version').textContent=DISPLAY_VERSION;
 $('gameVersionDisplay').textContent=DISPLAY_VERSION;
