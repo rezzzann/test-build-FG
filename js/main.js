@@ -1436,6 +1436,95 @@ function scheduleAI(i){
   },Math.floor(Math.random()*2501)+1000);
  },1200);
 }
+      // Анимация сброса карманных карт ИИ в центр стола.
+function animateAIFoldCards(playerIndex) {
+  if (playerIndex === user) return;
+
+  const position = cardPos[playerIndex];
+  if (!position) return;
+
+  const source = document.querySelector(
+    `.opponent-cards.${position}`
+  );
+
+  const table = $('table');
+
+  if (!source || !table) return;
+
+  const cards = [...source.querySelectorAll('.mini-card')];
+  if (!cards.length) return;
+
+  const rect = source.getBoundingClientRect();
+  const tableRect = table.getBoundingClientRect();
+
+  // Создаём независимую копию карт для анимации.
+  const clone = source.cloneNode(true);
+
+  clone.style.position = 'fixed';
+  clone.style.left = `${rect.left}px`;
+  clone.style.top = `${rect.top}px`;
+  clone.style.right = 'auto';
+  clone.style.width = `${rect.width}px`;
+  clone.style.height = `${rect.height}px`;
+  clone.style.margin = '0';
+  clone.style.transform = 'none';
+  clone.style.zIndex = '9999';
+  clone.style.opacity = '1';
+  clone.style.pointerEvents = 'none';
+
+  document.body.appendChild(clone);
+
+  const dx = tableRect.left + tableRect.width / 2 -
+    (rect.left + rect.width / 2);
+
+  const dy = tableRect.top + tableRect.height / 2 -
+    (rect.top + rect.height / 2);
+
+  // Обе карты одновременно летят к центру стола.
+  const movement = clone.animate(
+    [
+      {
+        transform: 'translate3d(0, 0, 0)',
+        opacity: 1
+      },
+      {
+        transform: `translate3d(${dx}px, ${dy}px, 0)`,
+        opacity: 0
+      }
+    ],
+    {
+      duration: 700,
+      easing: 'cubic-bezier(0.45, 0, 0.75, 0.4)',
+      fill: 'forwards'
+    }
+  );
+
+  // Каждая карта подкручивается во время полёта.
+  clone.querySelectorAll('.mini-card').forEach((card, index) => {
+    card.animate(
+      [
+        {
+          transform: 'rotate(0deg) scale(1)',
+          opacity: 1
+        },
+        {
+          transform: `rotate(${index === 0 ? 360 : -360}deg) scale(0.65)`,
+          opacity: 0
+        }
+      ],
+      {
+        duration: 700,
+        easing: 'ease-in',
+        fill: 'forwards'
+      }
+    );
+  });
+
+  movement.finished.then(
+    () => clone.remove(),
+    () => clone.remove()
+  );
+}
 function applyAction(i,a,myTick){
  if(over||gamePaused)return false;if(typeof myTick==='number'&&myTick!==tick)return false;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return false;
  const p=players[i],oldBet=currentBet,call=Math.max(0,currentBet-p.bet);let raised=false,chipAmount=0;
@@ -1448,7 +1537,7 @@ if ((a.t === 'bet' || a.t === 'raise') && call > 0) {
     a = { t: 'call' };
   }
 }
- if(a.t==='fold'){p.folded=true;if(i===user)humanFoldedCards=true;showAction(i,'ФОЛД');logit(p.name+': ФОЛД')}
+ if(a.t==='fold'){if(i !== user) {animateAIFoldCards(i);}{p.folded=true;if(i===user)humanFoldedCards=true;showAction(i,'ФОЛД');logit(p.name+': ФОЛД')}
  else if(a.t==='check'){if(call>0)a={t:'call'};else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
  if(a.t==='call'){const amount=Math.min(call,p.stack);if(amount===0){showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}else{p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;const label=p.allin?'ALL-IN':'КОЛЛ';showAction(i,label);logit(p.name+': '+label)}}
  else if(a.t==='bet'||a.t==='raise'){   const requested=Number(a.amt)||bb;   const minimum=Math.max(bb,currentBet);   const target=Math.max(minimum,requested);   const amount=Math.min(Math.max(0,target-p.bet),p.stack);
