@@ -409,6 +409,13 @@ function clearActionTimers(){
 
  effects.clearFlyingChips();
 }
+function clearPlayerStatsViewTimers() {
+  playerStatsViewTimers.forEach(timer => {
+    if (timer !== null) clearTimeout(timer);
+  });
+
+  playerStatsViewTimers = [];
+}
 function showAction(i,text,amount=0,duration=2000){
  const p=players[i];if(!p)return;if(p.actionTimer){clearTimeout(p.actionTimer);p.actionTimer=null}
  p.actionId=(p.actionId||0)+1;const id=p.actionId,label=String(text).toUpperCase();
@@ -1879,7 +1886,7 @@ clearPlayerStatsViewTimers();
 
   gamePaused = false;clearTurnTimer();clearBlindSequence();clearActionTimers();tick++;clearDealSequence();busy=false;pendingAISeat=-1;
  winnerIds=[];winnerPayouts={};winnerCombo='';humanWinnerReveal=false;winningLiftActive=false;winningCards=[];humanFoldedCards=false;aiWinnerReveal=false;aiShowdownRevealBack=false;userHoleRevealBack=false;aiWinnerId=-1;aiWinningCards=[];
- tournamentClock.stop(false);applyTournamentMode(true);initializeTournamentStats(players);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.wentAllInThisHand = false;p.allinFlame = false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
+ tournamentClock.stop(false);applyTournamentMode(true);players.forEach(p=>{p.stack=getStartingStack(tournamentMode);initializeTournamentStats(players);p.bet=0;p.total=0;p.folded=false;p.allin=false;p.wentAllInThisHand = false;p.allinFlame = false;p.action='';p.actionAmount=0;p.labelAction='';p.labelAmount=0;p.actedStreet=-1;p.hole=[]});
  deck=[];board=[];pot=0;currentBet=0;street=0;actor=-1;handNo=0;over=true;actQueue=[];firstToAct=3;dealerSeat=0;log=[];renderedBoardCount=0;savedGameState=null;gameStarted=true;
  $('community').innerHTML='';$('hole').innerHTML='';$('opponentCards').innerHTML='';$('handBets').innerHTML='';$('seats').innerHTML='';$('pot').textContent='0';$('message').textContent='Новая игра';resetBetSlider();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
