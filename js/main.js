@@ -89,30 +89,13 @@ let allInLightEndHandler = null;
 
 // После вскрытия сохраняем огонь только победителям.
 function settleAllInFire(winnerIndexes) {
-  // Обычная раздача без ALL-IN — ничего не меняем.
+  // Если в раздаче не было ALL-IN — ничего не делаем.
   if (firstAllInSeat === -1) return;
 
   const winnerSet = new Set(winnerIndexes);
 
-  // Победитель тоже получает огонь,
-  // даже если сам не выставлялся ALL-IN.
-  winnerSet.forEach(playerIndex => {
-    const winner = players[playerIndex];
-
-    if (!winner || winner.allinFlame) return;
-
-    winner.allinFlame = true;
-
-    startFireWarmup(playerIndex, {
-      mode: 'regular',
-      startHeight: 0,
-      endHeight: playerIndex === 0 ? 30 : 15,
-      sideOpacity: 0,
-      secondary: 1
-    });
-  });
-
-  // Проигравшие игроки, у которых сейчас горит огонь.
+  // Определяем игроков, которые действительно пошли ALL-IN,
+  // проиграли раздачу и у которых ещё горит пламя.
   const loserIndexes = players
     .map((player, index) => index)
     .filter(index =>
@@ -122,7 +105,7 @@ function settleAllInFire(winnerIndexes) {
 
   if (loserIndexes.length === 0) return;
 
-  // Затухают только проигравшие.
+  // Затухает только пламя проигравших ALL-IN игроков.
   extinguishFire(loserIndexes, () => {
     loserIndexes.forEach(index => {
       players[index].allinFlame = false;
