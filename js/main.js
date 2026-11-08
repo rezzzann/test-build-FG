@@ -41,7 +41,7 @@ const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
 const GAME_VERSION='v0.5.13 alpha';
       // ВРЕМЕННЫЙ ТЕСТ: все ИИ идут ALL-IN в первой раздаче.
-const TEST_FIRST_HAND_AI_ALL_IN = false;
+const TEST_FIRST_HAND_AI_ALL_IN = true;
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
