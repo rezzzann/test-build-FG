@@ -65,25 +65,33 @@ function stateMarkup(p, i, actor, over) {
   return 'В ИГРЕ';
 }
 
-  function renderHandBets() {
-    const { players } = getState();
+function renderHandBets() {
+  const container = $('handBets');
 
-    $('handBets').innerHTML = players.map((p, i) => {
-      if (p.folded || p.bet <= 0 || p.blindBetPending) return '';
-
-      const config = getBetChipConfig(p.bet);
-      const cls = config.color === 'blue' ? 'blue-chip' : 'gold-chip';
-      const chips = Array.from(
-        { length: config.count },
-        () => cls === 'blue-chip'
-          ? '<span class="blue-chip"></span>'
-          : '<span class="gold-chip"></span>'
-      ).join('');
-
-      return `<div class="hand-bet b${i} visible" data-player="${i}" aria-label="Ставка ${fmt(p.bet)} PP"><span class="bet-chips">${chips}</span><span class="bet-total">${fmt(p.bet)} PP</span></div>`;
-    }).join('');
+  // Во время сбора ставок сохраняем текущие элементы
+  // и не пересоздаём их до завершения анимации.
+  if (container.classList.contains('is-collecting')) {
+    return;
   }
 
+  const { players } = getState();
+
+  container.innerHTML = players.map((p, i) => {
+    if (p.folded || p.bet <= 0 || p.blindBetPending) return '';
+
+    const config = getBetChipConfig(p.bet);
+    const cls = config.color === 'blue' ? 'blue-chip' : 'gold-chip';
+
+    const chips = Array.from(
+      { length: config.count },
+      () => cls === 'blue-chip'
+        ? '<span class="blue-chip"></span>'
+        : '<span class="gold-chip"></span>'
+    ).join('');
+
+    return `<div class="hand-bet b${i} visible" data-player="${i}" aria-label="Ставка ${fmt(p.bet)} PP"><span class="bet-chips">${chips}</span><span class="bet-total">${fmt(p.bet)} PP</span></div>`;
+  }).join('');
+}
   function shouldShowComboCore(state) {
     const {
       currentHandAnalysis,
