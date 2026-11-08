@@ -1757,10 +1757,13 @@ function closeBetControl() {
 }
 
 $('fold').onclick = () => {
-  closeBetControl();
+  if (betControlOpen) {
+    closeBetControl();
+    return;
+  }
+
   userAct('fold');
 };
-
 $('checkCall').onclick = () => {
   closeBetControl();
   userAct('call');
