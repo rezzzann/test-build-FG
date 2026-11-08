@@ -1269,7 +1269,7 @@ body,
 
 /* Увеличенные надписи кнопок действий */
 .actions > .act:not(.next-hand) {
-  font-size: clamp(22px, 3vw, 32px);
+   font-size: clamp(16.5px, 2.25vw, 24px);
   position: relative;
 }
 
@@ -1297,4 +1297,17 @@ body,
 #raise .action-button-label {
   line-height: 1.05;
   white-space: normal;
+}
+#checkCall .action-button-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.05;
+}
+
+#checkCall .call-amount {
+  white-space: nowrap;
+  font-size: 0.75em;
 }
