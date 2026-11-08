@@ -51,6 +51,7 @@ let blindLevel = 0;
 let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
+      let pendingPreAction = null;
       let playerStatsViewTimers = [];
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3; let dealerSeat=0;
       let winnerChipAnimating = false;
@@ -580,6 +581,7 @@ flareFire,   extinguishFire } = createRenderer({
     winnerPayouts,
     winnerCombo,
     actor,
+    pendingPreAction,
     over,
     busy,
     gamePaused,
@@ -1184,6 +1186,7 @@ if (sbAmount > 0 && players[smallBlindSeat].allin) {
 
 
 function newHand() {
+  pendingPreAction = null;
   if (winnerChipAnimating) return;
   // Очищаем незавершённые события предыдущей раздачи.
   cancelAllInAdvanceTimer();
@@ -1345,7 +1348,7 @@ function advanceQueue(){
    return;
  }
  while(actQueue.length&&hasActedThisStreet(actQueue[0]))actQueue.shift();if(actQueue.length===0){advanceStreet();return}
- actor=actQueue[0];const p=players[actor];if(p){p.action='';p.actionAmount=0}render();if(actor!==user)scheduleAI(actor);
+ actor = actQueue[0];  const p = players[actor];  if (p) {   p.action = '';   p.actionAmount = 0; }  // Проверяем предварительное действие пользователя. if (actor === user && pendingPreAction) {   const action = pendingPreAction;   pendingPreAction = null;    const isUnconditional =     action.type === 'fold' ||     action.type === 'allCall';    const situationUnchanged =     currentBet === action.expectedCurrentBet &&     players[user].bet === action.expectedPlayerBet;    if (isUnconditional || situationUnchanged) {     const actionType =       action.type === 'fold'         ? 'fold'         : action.type === 'check'           ? 'check'           : 'call';      if (applyAction(user, { t: actionType })) {       advanceQueue();       return;     }   } }  render();  if (actor !== user) {   scheduleAI(actor); }
 }
 async function collectBetsVisually(handTick) {
   const soleWinner = live().length === 1 ? live()[0] : null;
@@ -1691,6 +1694,7 @@ if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
 }
 }     
 function finish(){
+  pendingPreAction = null;
  if(over)return; tick++; busy=false; pendingAISeat=-1; clearTurnTimer(); clearBlindSequence(); clearActionTimers(); over=true; actQueue=[];  const survivors = live(); if (survivors.length === 1 && survivors[0].bet > 0) {   survivors[0].stack += survivors[0].bet;   survivors[0].bet = 0; }  collectBetsIntoPot();
  let winners=[],winnerScore=null;humanWinnerReveal=false;winningCards=[];aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
  if(survivors.length===1)winners=survivors;else{street=4;const ranked=survivors.map(p=>({p,s:score([...p.hole,...board])})).sort((a,b)=>cmp(b.s,a.s));winnerScore=ranked[0].s;winners=ranked.filter(x=>cmp(x.s,winnerScore)===0).map(x=>x.p)}
@@ -1797,7 +1801,36 @@ function canUserAct() {
     queueHead() === user &&
     !hasActedThisStreet(user);
 }
+function canUserPreAct() {
+  return (
+    !over &&
+    !busy &&
+    !dealInProgress &&
+    !initialDealInProgress &&
+    !gamePaused &&
+    !betControlOpen &&
+    actor !== user &&
+    actQueue.includes(user) &&
+    eligible(user) &&
+    !hasActedThisStreet(user)
+  );
+}
 
+function selectPreAction(type) {
+  if (!canUserPreAct()) return;
+
+  if (type === 'fold' || type === 'allCall') {
+    pendingPreAction = { type };
+  } else {
+    pendingPreAction = {
+      type,
+      expectedCurrentBet: currentBet,
+      expectedPlayerBet: players[user].bet
+    };
+  }
+
+  render();
+}
 function closeBetControl() {
   if (!betControlOpen) return;
 
@@ -1812,14 +1845,35 @@ $('fold').onclick = () => {
     return;
   }
 
-  userAct('fold');
+  if (canUserAct()) {
+    userAct('fold');
+    return;
+  }
+
+  selectPreAction('fold');
 };
+
 $('checkCall').onclick = () => {
   closeBetControl();
-  userAct('call');
+
+  if (canUserAct()) {
+    userAct('call');
+    return;
+  }
+
+  if (currentBet > players[user].bet) {
+    selectPreAction('call');
+  } else {
+    selectPreAction('check');
+  }
 };
 
 $('raise').onclick = () => {
+  if (canUserPreAct()) {
+    selectPreAction('allCall');
+    return;
+  }
+
   if (!canUserAct()) return;
 
   if (!betControlOpen) {
@@ -1837,7 +1891,6 @@ $('raise').onclick = () => {
 
   userAct('raise', selectedAmount);
 };
-
 
 $('nextHand').onclick = () => {
   if (!gamePaused) newHand();
@@ -1879,6 +1932,7 @@ if (!over && !dealInProgress) {
 }
 }
 function resetStacksAndRestart(){
+  pendingPreAction = null;
   if (winnerChipAnimating) return;
   cancelAllInAdvanceTimer();
   resetAllInTableLight();
