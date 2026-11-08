@@ -9,7 +9,9 @@ export function createBetControl({ table, getState, format }) {
   const fmt = typeof format === 'function'
     ? format
     : value => Math.round(value).toLocaleString('ru-RU');
-
+const backdrop = document.createElement('div');
+backdrop.className = 'bet-control-backdrop';
+table.appendChild(backdrop);
   const root = document.createElement('div');
   root.id = 'betControl';
   root.className = 'bet-control';
@@ -311,18 +313,19 @@ const requiredMin = Math.max(bigBlind, currentBet);
     }
   });
 
-  function open() {
-    const bounds = getBounds();
-    value = bounds.min;
-    root.classList.add('is-open');
-    draw();
-    requestAnimationFrame(draw);
-  }
-
-  function close() {
-    root.classList.remove('is-open');
-    dragging = false;
-  }
+function open() {
+  const bounds = getBounds();
+  value = bounds.min;
+  backdrop.classList.add('is-active');
+  root.classList.add('is-open');
+  draw();
+  requestAnimationFrame(draw);
+}
+ function close() {
+  root.classList.remove('is-open');
+  backdrop.classList.remove('is-active');
+  dragging = false;
+}
 
   function reset() {
     close();
