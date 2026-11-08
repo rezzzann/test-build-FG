@@ -74,6 +74,26 @@ function updateTurnClockOverlay() {
   turnClockOverlay.style.width = `${rect.width}px`;
   turnClockOverlay.style.height = `${rect.height}px`;
   turnClockOverlay.style.borderRadius = getComputedStyle(seat).borderRadius;
+  const svg = turnClockOverlay.querySelector('svg');
+const rectShape = svg?.querySelector('rect');
+
+if (svg && rectShape) {
+  const width = rect.width;
+  const height = rect.height;
+  const radius = parseFloat(
+    getComputedStyle(seat).borderTopLeftRadius
+  ) || 0;
+
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+
+  rectShape.setAttribute('x', '1.5');
+  rectShape.setAttribute('y', '1.5');
+  rectShape.setAttribute('width', Math.max(0, width - 3));
+  rectShape.setAttribute('height', Math.max(0, height - 3));
+  rectShape.setAttribute('rx', radius);
+}
 }
 
 function clearActionClock() {
@@ -110,10 +130,23 @@ function startActionClock(seat) {
     startedAt: performance.now()
   };
 
-  const overlay = document.createElement('div');
-  overlay.className = 'turn-clock-overlay';
-  document.body.appendChild(overlay);
+ const overlay = document.createElement('div');
+overlay.className = 'turn-clock-overlay';
 
+overlay.innerHTML = `
+  <svg aria-hidden="true">
+    <rect
+      pathLength="1000"
+      fill="none"
+      stroke="#39ff78"
+      stroke-width="3"
+      stroke-dasharray="1000"
+      stroke-dashoffset="1000"
+    />
+  </svg>
+`;
+
+document.body.appendChild(overlay);
   turnClockOverlay = overlay;
   updateTurnClockOverlay();
 
