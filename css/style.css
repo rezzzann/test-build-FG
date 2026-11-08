@@ -1092,3 +1092,12 @@ box-shadow:none;
 .seat:not(.user-seat) .win-display {
   transform: translate(-50%, -15px);
 }
+/* Плавное исчезновение сумм ставок во время сбора фишек */
+.hand-bet {
+  opacity: 1;
+  transition: opacity var(--bet-fade-duration, .85s) ease;
+}
+
+.hand-bet.collecting {
+  opacity: 0;
+}
