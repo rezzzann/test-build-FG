@@ -1333,64 +1333,59 @@ body,
   justify-content: center;
 }
 
-/* Таймер хода — независимая непрерывная обводка */
-@property --turn-progress {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@property --turn-color {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: #39ff78;
-}
-
-@keyframes turnClockSweep {
-  from {
-    --turn-progress: 0deg;
-    --turn-color: #39ff78;
-  }
-
-  35% {
-    --turn-color: #d8e94d;
-  }
-
-  70% {
-    --turn-color: #ff9638;
-  }
-
-  to {
-    --turn-progress: 360deg;
-    --turn-color: #ff3038;
-  }
-}
+/* Таймер хода — равномерное заполнение SVG-контура */
 
 .turn-clock-overlay {
   position: fixed;
   z-index: 999;
   pointer-events: none;
-  border: 3px solid transparent;
-
-  background: conic-gradient(
-    from -90deg,
-    var(--turn-color) 0deg var(--turn-progress),
-    transparent var(--turn-progress) 360deg
-  ) border-box;
-
-  -webkit-mask:
-    linear-gradient(#000 0 0) padding-box,
-    linear-gradient(#000 0 0);
-
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-
-  animation: turnClockSweep 15s linear forwards;
+  background: none;
+  border: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .turn-clock-overlay {
-    animation-duration: 15s;
+.turn-clock-overlay svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.turn-clock-overlay rect {
+  animation:
+    turnClockProgress 15s linear forwards,
+    turnClockColor 15s linear forwards;
+}
+
+@keyframes turnClockProgress {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
+@keyframes turnClockColor {
+  0% {
+    stroke: #39ff78;
+  }
+
+  35% {
+    stroke: #d8e94d;
+  }
+
+  70% {
+    stroke: #ff9638;
+  }
+
+  100% {
+    stroke: #ff3038;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-clock-overlay rect {
+    animation-duration: 15s;
+  }
+}
