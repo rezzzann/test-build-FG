@@ -1528,12 +1528,20 @@ const feedbackReminder = initFeedbackReminder({
   getGamePaused: () => gamePaused,
   getTournamentMode: () => tournamentMode
 });
+      function liftWinningCards() {
+  document
+    .querySelectorAll('.winning-lift-target')
+    .forEach(card => {
+      card.classList.add('winning-lift');
+    });
+}
  async function animateAIShowdownCards(handTick) {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    aiShowdownRevealBack = false;
-    render();
-    return;
-  }
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  aiShowdownRevealBack = false;
+  render();
+  liftWinningCards();
+  return;
+}
 
   const backs = [
     ...document.querySelectorAll('.ai-seat-cards .ai-reveal-back')
@@ -1578,7 +1586,10 @@ const feedbackReminder = initFeedbackReminder({
     }
   ).finished.catch(() => {})));
 
-  if (handTick === tick && !gamePaused) render();
+  if (handTick === tick && !gamePaused) {
+  render();
+  liftWinningCards();
+}
 }     
 function finish(){
  if(over)return; tick++; busy=false; pendingAISeat=-1; clearTurnTimer(); clearBlindSequence(); clearActionTimers(); over=true; actQueue=[];  const survivors = live(); if (survivors.length === 1 && survivors[0].bet > 0) {   survivors[0].stack += survivors[0].bet;   survivors[0].bet = 0; }  collectBetsIntoPot();
