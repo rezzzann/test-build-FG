@@ -399,8 +399,7 @@ height: clamp(61px, 8.7vw, 96px);
 .app{padding:5px;gap:4px}.table{border-radius:34%/23%}.seat{min-width:91px;padding:5px;gap:5px}.avatar{width:34px;height:34px;font-size:19px}.name{font-size:9px}.stack{font-size:10px}.state{font-size:9px}
 .community{top:50%;gap:3px}.community .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}.community .rank{font-size:16px}.community .center{font-size:23px}
 .hole{top:calc(73% - clamp(35px,9.5vw,45px));gap:4px;width:calc(clamp(48px,13vw,62px)*2 + 4px)}.hole .card{width:clamp(48px,13vw,62px);height:clamp(70px,19vw,90px);padding:4px}.hole .rank{font-size:20px}.hole .center{font-size:29px}
-.hole.winner-hole{top:calc(50% + clamp(27.5px,7.5vw,35px) + 5px);gap:3px}.hole.winner-hole .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}.hole.winner-hole .rank{font-size:16px}.hole.winner-hole .center{font-size:23px}.hole.ai-loser-hole{top:calc(73% - clamp(27.5px,7.5vw,35px));gap:3px}
-.hole.ai-loser-hole .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}
+.hole.winner-hole{top:calc(50% + clamp(27.5px,7.5vw,35px) + 5px);gap:3px}.hole.winner-hole .card{width:clamp(38px,10.5vw,49px);height:clamp(55px,15vw,70px);padding:4px}.hole.winner-hole .rank{font-size:16px}.hole.winner-hole .center{font-size:23px}
 .opponent-cards.ai-winner-cards,.opponent-cards.ai-winner-cards.revealed{top:calc(60% - clamp(55px,15vw,70px)*1.5 - 10px)!important;gap:3px!important}
 .opponent-cards.ai-winner-cards .mini-card,.opponent-cards.ai-winner-cards.revealed .mini-card{width:clamp(38px,10.5vw,49px)!important;height:clamp(55px,15vw,70px)!important;padding:4px}
 .opponent-cards.ai-winner-cards .mini-rank,.opponent-cards.ai-winner-cards.revealed .mini-rank{top:4px!important;left:4px!important;font-size:16px!important}
@@ -417,8 +416,6 @@ height: clamp(61px, 8.7vw, 96px);
 .hand-bet.b3{top:calc(39% - 1px);right:calc(1% + 25px + 25px)}
 .actions{flex-wrap:wrap;min-height:82px;gap:4px}.act{flex:1;min-width:0;padding:20px 3px}.betbox{order:5;width:100%;justify-content:center}.betbox input{width:55vw}.next-hand{width:calc((100% - 12px)/4);height:clamp(58px,14vw,66px);font-size:clamp(10px,3vw,13px)}
 .pot{top:25%}.action-label{font-size:clamp(18px,5vw,24px);bottom:calc(100% + 5px)}.action-label.thinking{font-size:clamp(11px,3vw,14px)}.action-label.allin-label{font-size:clamp(19px,5vw,25px)}.wm{font-size:clamp(12px,3vw,19px);gap:7px;letter-spacing:.12em}.wm:before,.wm:after{width:clamp(12px,4vw,25px)}.win-display{bottom:calc(100% + 10px);min-width:80px}.win-word{font-size:clamp(27px,8vw,37px)}.win-prize{font-size:clamp(11px,3vw,14px)}.win-combo{font-size:clamp(8px,2.3vw,10px)}
-.hole.folded-hole{top:calc(73% - clamp(35px,9.5vw,45px) + 30px)!important;gap:3px!important}
-.hole.folded-hole .card{width:clamp(38px,10.5vw,49px)!important;height:clamp(55px,15vw,70px)!important;padding:4px!important}
 .action-label.bet-label,.action-label.raise-label,.action-label.small-blind-label,.action-label.big-blind-label{max-width:min(46vw,155px);gap:2px;bottom:calc(100% + 5px)}
 .action-label .bet-action-name{font-size:clamp(13px,3.7vw,18px)}
 .action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:clamp(12px,3.3vw,16px)}
@@ -434,15 +431,12 @@ height: clamp(61px, 8.7vw, 96px);
 }
 @media(max-height:420px) and (orientation:landscape){
 .app{padding:3px 8px;gap:2px}.actions{min-height:37px}.act{padding:12px}.card{height:clamp(48px,15vh,76px);width:clamp(36px,5.2vw,60px)}.hole .card{height:clamp(52px,16vh,82px);width:clamp(39px,5.4vw,64px)}
-.hole.winner-hole{top:calc(50% + clamp(24px,7.5vh,38px) + 5px)}.hole.winner-hole .card{height:clamp(48px,15vh,76px);width:clamp(36px,5.2vw,60px)}.hole.ai-loser-hole{top:calc(73% - clamp(24px,7.5vh,41px))}
-.hole.ai-loser-hole .card{height:clamp(48px,15vh,76px);width:clamp(36px,5.2vw,60px)}
+.hole.winner-hole{top:calc(50% + clamp(24px,7.5vh,38px) + 5px)}.hole.winner-hole .card{height:clamp(48px,15vh,76px);width:clamp(36px,5.2vw,60px)}
 .opponent-cards.ai-winner-cards,.opponent-cards.ai-winner-cards.revealed{top:calc(60% - clamp(48px,15vh,76px)*1.5 - 10px)!important}
 .opponent-cards.ai-winner-cards .mini-card,.opponent-cards.ai-winner-cards.revealed .mini-card{height:clamp(48px,15vh,76px)!important;width:clamp(36px,5.2vw,60px)!important}
 .opponent-cards.ai-winner-cards .mini-rank,.opponent-cards.ai-winner-cards.revealed .mini-rank{font-size:17px!important}
 .opponent-cards.ai-winner-cards .mini-suit,.opponent-cards.ai-winner-cards.revealed .mini-suit{font-size:26px!important}
 .seat{padding:4px 6px}.avatar{width:32px;height:32px}.seat.user-seat{min-width:155px;padding:5px 8px}.user-seat .avatar{width:43px;height:55px}.user-seat .stack{font-size:14px}.hole{top:calc(73% - clamp(26px,8vh,41px));width:calc(clamp(39px,5.4vw,64px)*2 + 5px)}.community{top:50%}.s0{top:8%}.opponent-cards.c0{top:calc(17% + 5px);left:calc(50% - 25px);width:48px}.action-label{font-size:20px}.opponent-cards .mini-card{width:22px;height:31px}.opponent-cards.revealed .mini-card{width:29px;height:42px}.action-label.allin-label{font-size:23px}.next-hand{height:55px}.win-word{font-size:30px}.win-prize{font-size:11px}.win-combo{font-size:9px}
-.hole.folded-hole{top:calc(73% - clamp(26px,8vh,41px) + 24px)!important;gap:3px!important}
-.hole.folded-hole .card{height:clamp(48px,15vh,76px)!important;width:clamp(36px,5.2vw,60px)!important;padding:4px!important}
 .action-label.bet-label,.action-label.raise-label,.action-label.small-blind-label,.action-label.big-blind-label{bottom:calc(100% + 5px);gap:2px;max-width:180px}
 .action-label .bet-action-name{font-size:17px}
 .action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:15px}
