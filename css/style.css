@@ -280,6 +280,20 @@ height: clamp(61px, 8.7vw, 96px);
     transform: translateY(0);
   }
 }
+.seat-info.info-return {
+  animation: playerInfoReturn .4s ease both;
+}
+
+@keyframes playerInfoReturn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .s0{top:8%;left:50%;transform:translateX(-50%)}.s1{top:31%;right:2%}.s2{top:31%;left:2%}.s3{bottom:1%;left:50%;transform:translateX(-50%)}
 .win-display{position:absolute;left:50%;bottom:calc(100% + 13px);transform:translateX(-50%);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:500;white-space:nowrap;text-align:center;pointer-events:none;min-width:100px;}
 .win-display.visible{display:flex}.win-word{font-size:clamp(30px,5vw,48px);line-height:.95;font-weight:1000;letter-spacing:.08em;color:#ffdc70;-webkit-text-stroke:1px #8e5b13;text-shadow:0 0 3px #fff4bc,0 0 9px #ffd04a,0 0 18px #e99b19,0 3px 4px #000;}
