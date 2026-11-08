@@ -1804,7 +1804,6 @@ function canUserAct() {
 function canUserPreAct() {
   return (
     !over &&
-    !busy &&
     !dealInProgress &&
     !initialDealInProgress &&
     !gamePaused &&
