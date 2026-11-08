@@ -38,7 +38,7 @@ const $=id=>document.getElementById(id),user=0;
       const winnerChipVfx = createWinnerChipVfx();
 const seatClass=['s3','s2','s0','s1'],cardPos=['','c2','c0','c1'];
 const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУДАУН'],N=4;
-const GAME_VERSION='v0.5.13 alpha;
+const GAME_VERSION='v0.5.13 alpha';
       // ВРЕМЕННЫЙ ТЕСТ: все ИИ идут ALL-IN в первой раздаче.
 const TEST_FIRST_HAND_AI_ALL_IN = false;
 const DISPLAY_VERSION=GAME_VERSION;
