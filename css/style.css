@@ -1311,3 +1311,24 @@ body,
   white-space: nowrap;
   font-size: 0.75em;
 }
+/* Фиксированная высота кнопок действий */
+.actions > .act:not(.next-hand) {
+  height: 58px;
+  min-height: 58px;
+  max-height: 58px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+}
+
+/* Содержимое не влияет на размеры кнопок */
+.actions > .act:not(.next-hand) .action-button-label {
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
