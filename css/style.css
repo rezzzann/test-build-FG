@@ -1054,10 +1054,11 @@ box-shadow:none;
 }
 .bet-control.is-open{opacity:1;visibility:visible;pointer-events:auto}
 .amount-line {
-  display: inline-flex;
+  display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 4px;
+  width: max-content;
   margin: 0 auto 2px;
   padding: 4px 11px;
   line-height: 1.15;
