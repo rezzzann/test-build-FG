@@ -1528,7 +1528,20 @@ const feedbackReminder = initFeedbackReminder({
   getGamePaused: () => gamePaused,
   getTournamentMode: () => tournamentMode
 });
-      function liftWinningCards() {
+    async function liftWinningCards(handTick) {
+  // Дополнительная пауза после вскрытия карт.
+  await new Promise(resolve => setTimeout(resolve, 120));
+
+  // Даём браузеру отрисовать исходное положение всех карт.
+  await new Promise(resolve => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+
+  if (handTick !== tick || gamePaused) return;
+
+  // Запускаем подъём всех пяти карт одновременно.
   document
     .querySelectorAll('.winning-lift-target')
     .forEach(card => {
@@ -1539,7 +1552,7 @@ const feedbackReminder = initFeedbackReminder({
 if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
   aiShowdownRevealBack = false;
   render();
-  liftWinningCards();
+  await liftWinningCards(handTick);
   return;
 }
 
@@ -1586,9 +1599,9 @@ if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     }
   ).finished.catch(() => {})));
 
-  if (handTick === tick && !gamePaused) {
+ if (handTick === tick && !gamePaused) {
   render();
-  liftWinningCards();
+  await liftWinningCards(handTick);
 }
 }     
 function finish(){
