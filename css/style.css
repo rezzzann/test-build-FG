@@ -703,10 +703,6 @@ height: clamp(61px, 8.7vw, 96px);
 .hole.winner-hole {
   left: calc(50% + 12px) !important;
 }
-/* Горизонтальное положение карт пользователя при проигрыше */
-.hole.ai-loser-hole {
-  left: calc(50% + 12px) !important;
-}
 /* Плавное появление надписей действий игрока */
 @keyframes actionLabelAppear {
   from {
