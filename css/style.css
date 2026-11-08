@@ -1332,3 +1332,70 @@ body,
   align-items: center;
   justify-content: center;
 }
+/* Таймер хода — прогресс и изменение цвета */
+@property --turn-progress {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --turn-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #39ff78;
+}
+
+@keyframes turnClockSweep {
+  from {
+    --turn-progress: 0deg;
+    --turn-color: #39ff78;
+  }
+
+  35% {
+    --turn-color: #d8e94d;
+  }
+
+  70% {
+    --turn-color: #ff9638;
+  }
+
+  to {
+    --turn-progress: 360deg;
+    --turn-color: #ff3038;
+  }
+}
+
+/* Бегущая обводка карточки активного игрока */
+.seat.turn-clock-active::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: 8;
+  border: 3px solid transparent;
+  border-radius: inherit;
+  pointer-events: none;
+
+  background: conic-gradient(
+    from -90deg,
+    var(--turn-color) 0deg var(--turn-progress),
+    transparent var(--turn-progress) 360deg
+  ) border-box;
+
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  animation: turnClockSweep 15s linear forwards;
+  animation-delay: calc(-1 * var(--turn-elapsed, 0s));
+  animation-fill-mode: both;
+}
+
+/* Уважение настройки уменьшения анимации */
+@media (prefers-reduced-motion: reduce) {
+  .seat.turn-clock-active::before {
+    animation-duration: 15s;
+  }
+}
