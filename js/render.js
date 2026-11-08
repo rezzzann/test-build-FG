@@ -497,32 +497,70 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     renderHandBets();
    
 
-    const canAct =
-      !over &&
-      !busy &&
-      !gamePaused &&
-      actor === 0 &&
-      eligible(0) &&
-      actQueue.includes(0) &&
-      !hasActedThisStreet(0);
+const canAct =
+  !over &&
+  !busy &&
+  !gamePaused &&
+  actor === 0 &&
+  eligible(0) &&
+  actQueue.includes(0) &&
+  !hasActedThisStreet(0);
 
- $('fold').disabled = !canAct;
-$('checkCall').disabled = !canAct;
-$('raise').disabled = !canAct;
+const canPreAct =
+  !over &&
+  !busy &&
+  !gamePaused &&
+  !dealInProgress &&
+  !initialDealInProgress &&
+  !betControlOpen &&
+  actor !== 0 &&
+  actQueue.includes(0) &&
+  eligible(0) &&
+  !hasActedThisStreet(0);
 
-$('fold').textContent = betControlOpen ? 'ОТМЕНА' : 'ФОЛД';
+const pending = s.pendingPreAction;
 
-    $('checkCall').textContent =
-      currentBet > players[0].bet
-        ? 'КОЛЛ ' + fmt(currentBet - players[0].bet)
-        : 'ЧЕК';
+const setActionButton = (id, label, actionType) => {
+  const button = $(id);
+  const selected = pending?.type === actionType;
 
-    const isRaise = currentBet > players[0].bet;
-    $('raise').textContent = betControlOpen
-  ? 'ПОДТВЕРДИТЬ'
-  : isRaise ? 'РЕЙЗ' : 'СТАВКА';
+  button.disabled = !(canAct || canPreAct);
 
-$('raise').classList.toggle('bet-mode', !isRaise);
+  button.classList.toggle('pre-action-mode', canPreAct);
+  button.classList.toggle('pre-action-selected', canPreAct && selected);
+
+  button.innerHTML = canPreAct
+    ? `<span class="pre-action-dot ${selected ? 'selected' : ''}"></span><span>${label}</span>`
+    : label;
+};
+
+setActionButton('fold', 'ФОЛД', 'fold');
+
+const callAvailable = currentBet > players[0].bet;
+
+setActionButton(
+  'checkCall',
+  callAvailable
+    ? 'КОЛЛ ' + fmt(currentBet - players[0].bet)
+    : 'ЧЕК',
+  callAvailable ? 'call' : 'check'
+);
+
+$('raise').disabled = !(canAct || canPreAct);
+
+$('raise').classList.toggle('pre-action-mode', canPreAct);
+$('raise').classList.toggle(
+  'pre-action-selected',
+  canPreAct && pending?.type === 'allCall'
+);
+
+$('raise').innerHTML = canPreAct
+  ? `<span class="pre-action-dot ${pending?.type === 'allCall' ? 'selected' : ''}"></span><span>УРАВНИВАТЬ ВСЁ</span>`
+  : (betControlOpen
+      ? 'ПОДТВЕРДИТЬ'
+      : callAvailable ? 'РЕЙЗ' : 'СТАВКА');
+
+$('raise').classList.toggle('bet-mode', !callAvailable);
 $('raise').classList.toggle('bet-confirming', betControlOpen);
 
     $('nextHand').classList.toggle('visible', over);
