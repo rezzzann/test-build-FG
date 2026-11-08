@@ -45,7 +45,7 @@ const fireVfx = createFireVfx({
   }
 
 function stateMarkup(p, i, actor, over, street) {
-  if (p.stack <= 0 && p.folded) return 'ВЫБЫЛ';
+  if (p.eliminated) return 'ВЫБЫЛ';
   if (p.folded) return 'ФОЛД';
   if (p.allin) return 'ALL-IN';
 
@@ -455,8 +455,22 @@ if (isInWinningHand) {
       return html;
     }).join('')}</div>`
   : '';
-
-      return `<div data-player-index="${i}" class="seat ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over, street)}</div></div></div>`;
+const seatInfoMarkup = p.eliminated && p.showTournamentStats
+  ? `
+    <div class="seat-info stats-visible">
+      <div class="seat-stat-line">ПОБЕД: ${p.tournamentStats.wins}</div>
+      <div class="seat-stat-line">ПОРАЖЕНИЙ: ${p.tournamentStats.losses}</div>
+      <div class="seat-stat-line">МАКС. СТЕК: ${fmt(p.tournamentStats.maxStack)} PP</div>
+    </div>
+  `
+  : `
+    <div class="seat-info">
+      <div class="name">${i === 0 ? 'Вы' : p.name}</div>
+      <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${fmt(p.stack)} PP`}</div>
+      <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
+    </div>
+  `;
+      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
