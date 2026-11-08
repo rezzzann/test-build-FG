@@ -1060,6 +1060,7 @@ box-shadow:none;
   gap: 4px;
   width: max-content;
   margin: 0 auto 2px;
+  transform: translateX(-30px);
   padding: 4px 11px;
   line-height: 1.15;
   background: rgba(105, 110, 116, .88);
