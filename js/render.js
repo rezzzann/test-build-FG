@@ -551,7 +551,7 @@ const callAvailable = currentBet > players[0].bet;
 setActionButton(
   'checkCall',
   callAvailable
-    ? 'КОЛЛ ' + fmt(currentBet - players[0].bet)
+    ? `КОЛЛ <span class="call-amount">${fmt(currentBet - players[0].bet)}</span>`
     : 'ЧЕК',
   callAvailable ? 'call' : 'check',
   'pre-action-call'
