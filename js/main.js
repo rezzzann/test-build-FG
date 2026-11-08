@@ -678,7 +678,6 @@ flareFire,   extinguishFire } = createRenderer({
     winnerPayouts,
     winnerCombo,
     actor,
-    turnClock: activeTurnClock,
 pendingPreAction,
 over,
     busy,
