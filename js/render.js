@@ -122,7 +122,6 @@ function renderCommunity() {
   const el = $('community');
   const count = board.length;
 
-  el.classList.toggle('ai-winner-board', !!aiWinnerReveal);
   $('table').classList.toggle('ai-winner-state', !!aiWinnerReveal);
 
   const renderedBoardCount = getRenderedBoardCount();
@@ -175,6 +174,10 @@ function renderCommunity() {
         (humanWinnerReveal || aiWinnerReveal) &&
           !isInWinningHand
       );
+      node.classList.toggle(
+  'winning-lift-target',
+  isInWinningHand
+);
 
       node.classList.toggle(
         'deal-pending',
@@ -223,7 +226,7 @@ function renderCommunity() {
     const pending = communityDealingIndices.includes(i);
 
     const cardHTML = `
-      <div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
+      <div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isWinningCard ? 'winning-lift-target' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
         <span class="rank">${c.r === 'T' ? '10' : c.r}</span>
         <span class="center">${c.s}</span>
       </div>
@@ -340,6 +343,12 @@ if (animateWinnerEntrance) {
 
   const isInWinningHand =
   humanWinnerReveal && winningCards.includes(c);
+      if (isInWinningHand) {
+  html = html.replace(
+    'class="card',
+    'class="card winning-lift-target'
+  );
+}
 
 if (
   (humanWinnerReveal || aiWinnerReveal) &&
@@ -423,7 +432,12 @@ const winnerCardsMarkup = showAISeatCards
         !!aiWinnerAnalysis?.coreCards.includes(c);
 
       let html = miniCard(c, true, isAICore);
-
+if (isInWinningHand) {
+  html = html.replace(
+    'class="mini-card',
+    'class="mini-card winning-lift-target'
+  );
+}
       if (isAIWinner && !isInWinningHand) {
   html = html.replace(
     'class="mini-card',
