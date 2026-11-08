@@ -497,6 +497,7 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     renderHandBets();
    
 
+
 const canAct =
   !over &&
   !busy &&
@@ -506,35 +507,40 @@ const canAct =
   actQueue.includes(0) &&
   !hasActedThisStreet(0);
 
-const canPreAct =
+const showPreActionMode =
+  gameStarted &&
   !over &&
   !gamePaused &&
-  !dealInProgress &&
-  !initialDealInProgress &&
-  !betControlOpen &&
-  actor >= 0 &&
   actor !== 0 &&
   actQueue.includes(0) &&
   eligible(0) &&
   !hasActedThisStreet(0);
 
+const canPreAct =
+  showPreActionMode &&
+  !dealInProgress &&
+  !initialDealInProgress &&
+  !betControlOpen &&
+  actor >= 0;
+
 const pending = s.pendingPreAction;
 
-const setActionButton = (id, label, actionType) => {
+const setActionButton = (id, label, actionType, selectedClass) => {
   const button = $(id);
   const selected = pending?.type === actionType;
 
   button.disabled = !(canAct || canPreAct);
 
-  button.classList.toggle('pre-action-mode', canPreAct);
-  button.classList.toggle('pre-action-selected', canPreAct && selected);
+  button.classList.toggle('pre-action-mode', showPreActionMode);
+  button.classList.toggle('pre-action-selected', showPreActionMode && selected);
+  button.classList.toggle(selectedClass, showPreActionMode && selected);
 
-  button.innerHTML = canPreAct
+  button.innerHTML = showPreActionMode
     ? `<span class="pre-action-dot ${selected ? 'selected' : ''}"></span><span>${label}</span>`
     : label;
 };
 
-setActionButton('fold', 'ФОЛД', 'fold');
+setActionButton('fold', 'ФОЛД', 'fold', 'pre-action-fold');
 
 const callAvailable = currentBet > players[0].bet;
 
@@ -543,25 +549,33 @@ setActionButton(
   callAvailable
     ? 'КОЛЛ ' + fmt(currentBet - players[0].bet)
     : 'ЧЕК',
-  callAvailable ? 'call' : 'check'
+  callAvailable ? 'call' : 'check',
+  'pre-action-call'
 );
 
-$('raise').disabled = !(canAct || canPreAct);
+const raiseButton = $('raise');
 
-$('raise').classList.toggle('pre-action-mode', canPreAct);
-$('raise').classList.toggle(
+raiseButton.disabled = !(canAct || canPreAct);
+
+raiseButton.classList.toggle('pre-action-mode', showPreActionMode);
+raiseButton.classList.toggle(
   'pre-action-selected',
-  canPreAct && pending?.type === 'allCall'
+  showPreActionMode && pending?.type === 'allCall'
+);
+raiseButton.classList.toggle(
+  'pre-action-allcall',
+  showPreActionMode && pending?.type === 'allCall'
 );
 
-$('raise').innerHTML = canPreAct
+raiseButton.innerHTML = showPreActionMode
   ? `<span class="pre-action-dot ${pending?.type === 'allCall' ? 'selected' : ''}"></span><span>УРАВНИВАТЬ ВСЁ</span>`
   : (betControlOpen
       ? 'ПОДТВЕРДИТЬ'
       : callAvailable ? 'РЕЙЗ' : 'СТАВКА');
 
-$('raise').classList.toggle('bet-mode', !callAvailable);
-$('raise').classList.toggle('bet-confirming', betControlOpen);
+raiseButton.classList.toggle('bet-mode', !callAvailable);
+raiseButton.classList.toggle('bet-confirming', betControlOpen);
+
 
     $('nextHand').classList.toggle('visible', over);
     $('exitButton').classList.toggle('visible', gameStarted);
