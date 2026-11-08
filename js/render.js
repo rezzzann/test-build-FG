@@ -497,8 +497,26 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     renderHandBets();
    
 
-const canAct = s.canUserAct;
-const canPreAct = s.canUserPreAct;
+const canAct =
+  !over &&
+  !busy &&
+  !gamePaused &&
+  actor === 0 &&
+  eligible(0) &&
+  actQueue.includes(0) &&
+  !hasActedThisStreet(0);
+
+const canPreAct =
+  !over &&
+  !gamePaused &&
+  !dealInProgress &&
+  !initialDealInProgress &&
+  !betControlOpen &&
+  actor >= 0 &&
+  actor !== 0 &&
+  actQueue.includes(0) &&
+  eligible(0) &&
+  !hasActedThisStreet(0);
 
 const pending = s.pendingPreAction;
 
