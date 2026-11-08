@@ -513,7 +513,7 @@ const canPreAct =
   !dealInProgress &&
   !initialDealInProgress &&
   !betControlOpen &&
-  actor !== 0 &&
+  actor >= 0 && actor !== 0 &&
   actQueue.includes(0) &&
   eligible(0) &&
   !hasActedThisStreet(0);
