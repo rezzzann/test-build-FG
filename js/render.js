@@ -524,6 +524,7 @@ const canPreAct =
   !hasActedThisStreet(0);
 const pending = s.pendingPreAction;
 
+
 const setActionButton = (id, label, actionType, selectedClass) => {
   const button = $(id);
   const selected = pending?.type === actionType;
@@ -534,10 +535,14 @@ const setActionButton = (id, label, actionType, selectedClass) => {
   button.classList.toggle('pre-action-selected', showPreActionMode && selected);
   button.classList.toggle(selectedClass, showPreActionMode && selected);
 
-  button.innerHTML = showPreActionMode
-    ? `<span class="pre-action-dot ${selected ? 'selected' : ''}"></span><span>${label}</span>`
-    : label;
+  button.innerHTML = `
+    ${showPreActionMode
+      ? `<span class="pre-action-dot ${selected ? 'selected' : ''}"></span>`
+      : ''}
+    <span class="action-button-label">${label}</span>
+  `;
 };
+
 
 setActionButton('fold', 'ФОЛД', 'fold', 'pre-action-fold');
 
@@ -566,11 +571,18 @@ raiseButton.classList.toggle(
   showPreActionMode && pending?.type === 'allCall'
 );
 
-raiseButton.innerHTML = showPreActionMode
-  ? `<span class="pre-action-dot ${pending?.type === 'allCall' ? 'selected' : ''}"></span><span>УРАВНИВАТЬ ВСЁ</span>`
-  : (betControlOpen
-      ? 'ПОДТВЕРДИТЬ'
-      : callAvailable ? 'РЕЙЗ' : 'СТАВКА');
+raiseButton.innerHTML = `
+  ${showPreActionMode
+    ? `<span class="pre-action-dot ${pending?.type === 'allCall' ? 'selected' : ''}"></span>`
+    : ''}
+  <span class="action-button-label">
+    ${showPreActionMode
+      ? 'УРАВНИВАТЬ<br>ВСЁ'
+      : betControlOpen
+        ? 'ПОДТВЕРДИТЬ'
+        : callAvailable ? 'РЕЙЗ' : 'СТАВКА'}
+  </span>
+`;
 
 raiseButton.classList.toggle('bet-mode', !callAvailable);
 raiseButton.classList.toggle('bet-confirming', betControlOpen);
