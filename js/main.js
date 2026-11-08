@@ -1348,7 +1348,8 @@ function advanceQueue(){
    return;
  }
  while(actQueue.length&&hasActedThisStreet(actQueue[0]))actQueue.shift();if(actQueue.length===0){advanceStreet();return}
- actor = actQueue[0];  const p = players[actor];  if (p) {   p.action = '';   p.actionAmount = 0; }  // Проверяем предварительное действие пользователя. if (actor === user && pendingPreAction) {   const action = pendingPreAction;   pendingPreAction = null;    const isUnconditional =     action.type === 'fold' ||     action.type === 'allCall';    const situationUnchanged =     currentBet === action.expectedCurrentBet &&     players[user].bet === action.expectedPlayerBet;    if (isUnconditional || situationUnchanged) {     const actionType =       action.type === 'fold'         ? 'fold'         : action.type === 'check'           ? 'check'           : 'call';      if (applyAction(user, { t: actionType })) {       advanceQueue();       return;     }   } }  render();  if (actor !== user) {   scheduleAI(actor); }
+ actor = actQueue[0];  const p = players[actor];  if (p) {   p.action = '';   p.actionAmount = 0; }  // Проверяем предварительное действие пользователя. 
+  if (actor === user && pendingPreAction) {   const action = pendingPreAction;   pendingPreAction = null;    const isUnconditional =     action.type === 'fold' ||     action.type === 'allCall';    const situationUnchanged =     currentBet === action.expectedCurrentBet &&     players[user].bet === action.expectedPlayerBet;    if (isUnconditional || situationUnchanged) {     const actionType =       action.type === 'fold'         ? 'fold'         : action.type === 'check'           ? 'check'           : 'call';      if (applyAction(user, { t: actionType })) {       advanceQueue();       return;     }   } }  render();  if (actor !== user) {   scheduleAI(actor); }
 }
 async function collectBetsVisually(handTick) {
   const soleWinner = live().length === 1 ? live()[0] : null;
