@@ -579,7 +579,7 @@ export function createEffects({
       '(prefers-reduced-motion: reduce)'
     ).matches;
 
-    let maxCount = 0;
+    let maxCount = 0; const betDisplaysToFade = [];
 
     bets.forEach((amount, playerIndex) => {
       if (!Number.isFinite(amount) || amount <= 0) return;
@@ -598,6 +598,7 @@ export function createEffects({
       }
 
       maxCount = Math.max(maxCount, config.count);
+       betDisplaysToFade.push(betDisplay);
 
       const flyingClass = config.color === 'blue'
         ? 'blue-flying'
@@ -650,14 +651,34 @@ export function createEffects({
       }
     });
 
-    if (!maxCount) return Promise.resolve();
+ if (!maxCount) return Promise.resolve();
 
-    return new Promise(resolve => {
-      setTimeout(
-        resolve,
-        reduceMotion ? 180 : 850 + (maxCount - 1) * 75
-      );
-    });
+// Длительность затухания совпадает с длительностью полёта фишек.
+const duration = reduceMotion
+  ? 180
+  : 850 + (maxCount - 1) * 75;
+
+const handBetsContainer = document.getElementById('handBets');
+
+// Не позволяем рендеру пересоздавать суммы во время анимации.
+handBetsContainer?.classList.add('is-collecting');
+
+// Одновременно запускаем плавное исчезновение всех сумм.
+betDisplaysToFade.forEach(betDisplay => {
+  betDisplay.style.setProperty(
+    '--bet-fade-duration',
+    `${duration}ms`
+  );
+
+  betDisplay.classList.add('collecting');
+});
+
+return new Promise(resolve => {
+  setTimeout(() => {
+    handBetsContainer?.classList.remove('is-collecting');
+    resolve();
+  }, duration);
+});
   }
   return {
     animateBetChip,
