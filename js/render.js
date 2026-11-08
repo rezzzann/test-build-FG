@@ -492,9 +492,11 @@ if (isInWinningHand) {
       actQueue.includes(0) &&
       !hasActedThisStreet(0);
 
-    $('fold').disabled = !canAct;
-    $('checkCall').disabled = !canAct;
-    $('raise').disabled = !canAct;
+ $('fold').disabled = !canAct;
+$('checkCall').disabled = !canAct;
+$('raise').disabled = !canAct;
+
+$('fold').textContent = betControlOpen ? 'ОТМЕНА' : 'ФОЛД';
 
     $('checkCall').textContent =
       currentBet > players[0].bet
