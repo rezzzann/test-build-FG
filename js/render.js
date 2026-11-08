@@ -44,7 +44,7 @@ const fireVfx = createFireVfx({
     return action === 'ДУМАЕТ'   ? 'ДУМАЕТ<span class="thinking-dots"><i>.</i><i>.</i><i>.</i></span>'   : action;
   }
 
-function stateMarkup(p, i, actor, over) {
+function stateMarkup(p, i, actor, over, street) {
   if (p.stack <= 0 && p.folded) return 'ВЫБЫЛ';
   if (p.folded) return 'ФОЛД';
   if (p.allin) return 'ALL-IN';
@@ -57,7 +57,7 @@ function stateMarkup(p, i, actor, over) {
   if (p.action === 'СТАВКА') return 'СТАВКА';
   if (p.action === 'РЕЙЗ') return 'РЕЙЗ';
 
-  if (i === actor && !over) return 'ХОД';
+  if (i === actor && !over && p.actedStreet !== street) return 'ХОД';
 
   // Остальные действия: КОЛЛ, ЧЕК и т. д.
   if (p.action) return p.action;
@@ -456,7 +456,7 @@ if (isInWinningHand) {
     }).join('')}</div>`
   : '';
 
-      return `<div data-player-index="${i}" class="seat ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over)}</div></div></div>`;
+      return `<div data-player-index="${i}" class="seat ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div><div><div class="name">${i === 0 ? 'Вы' : p.name}</div><div class="stack">${fmt(p.stack)} PP</div><div class="state">${stateMarkup(p, i, actor, over, street)}</div></div></div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
