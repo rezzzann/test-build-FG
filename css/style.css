@@ -1018,6 +1018,22 @@ transform: translate(-50%, -50%);
 }
 /* Дуговой регулятор ставки */
 .actions .betbox{display:none!important}
+.bet-control-backdrop {
+  position: absolute;
+  inset: -14px;
+  z-index: 30;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, .48);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .22s ease, visibility .22s ease;
+}
+
+.bet-control-backdrop.is-active {
+  opacity: 1;
+  visibility: visible;
+}
 
 .bet-control{
 --bet-control-scale:1;
