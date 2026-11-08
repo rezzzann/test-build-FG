@@ -508,7 +508,6 @@ const canAct =
 
 const canPreAct =
   !over &&
-  !busy &&
   !gamePaused &&
   !dealInProgress &&
   !initialDealInProgress &&
