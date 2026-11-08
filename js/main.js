@@ -1773,14 +1773,19 @@ function start(){
   player.showTournamentStats = true;
   render();
 
-  playerStatsViewTimers[index] = setTimeout(() => {
-    if (players[index]) {
-      players[index].showTournamentStats = false;
-    }
+playerStatsViewTimers[index] = setTimeout(() => {
+  if (players[index]) {
+    players[index].showTournamentStats = false;
+    players[index].statsReturning = true;
+  }
 
-    playerStatsViewTimers[index] = null;
-    render();
-  }, 5000);
+  playerStatsViewTimers[index] = null;
+  render();
+
+  if (players[index]) {
+    players[index].statsReturning = false;
+  }
+}, 5000);
 });
 function canUserAct() {
   return !over &&
