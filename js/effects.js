@@ -66,11 +66,11 @@ const EFFECTS_CSS = String.raw`
 }
 
 .hole {
-  transition: top .35s ease, gap .35s ease;
+  transition: top .35s ease, gap .35s ease, filter .4s ease;
 }
 
 .hole .card {
-  transition: width .35s ease, height .35s ease, box-shadow .25s, border-color .25s;
+  transition: width .35s ease, height .35s ease, box-shadow .25s, border-color .25s, filter .4s ease;
 }
 .hole .card.user-card-flip {
   animation: ai-card-flip .55s ease-out both;
@@ -80,10 +80,6 @@ const EFFECTS_CSS = String.raw`
 .opponent-cards.ai-winner-cards,
 .opponent-cards.ai-winner-cards.revealed {
   animation: aiWinnerCardsIn .65s cubic-bezier(.22,.75,.25,1) .5s both;
-  transition: none !important;
-}
-
-.hole.folded-hole {
   transition: none !important;
 }
 
