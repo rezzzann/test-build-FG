@@ -511,18 +511,17 @@ const showPreActionMode =
   gameStarted &&
   !over &&
   !gamePaused &&
-  actor !== 0 &&
-  actQueue.includes(0) &&
-  eligible(0) &&
-  !hasActedThisStreet(0);
+  actor !== 0;
 
 const canPreAct =
   showPreActionMode &&
   !dealInProgress &&
   !initialDealInProgress &&
   !betControlOpen &&
-  actor >= 0;
-
+  actor >= 0 &&
+  actQueue.includes(0) &&
+  eligible(0) &&
+  !hasActedThisStreet(0);
 const pending = s.pendingPreAction;
 
 const setActionButton = (id, label, actionType, selectedClass) => {
