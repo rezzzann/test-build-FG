@@ -464,7 +464,7 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     </div>
   `
   : `
-    <div class="seat-info">
+    <div class="seat-info ${p.statsReturning ? 'info-return' : ''}">
       <div class="name">${i === 0 ? 'Вы' : p.name}</div>
       <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${fmt(p.stack)} PP`}</div>
       <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
