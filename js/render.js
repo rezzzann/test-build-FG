@@ -513,6 +513,14 @@ $('raise').classList.toggle('bet-confirming', betControlOpen);
     $('exitButton').disabled = dealInProgress || initialDealInProgress;
     // Обновляем положение огня после отрисовки карточек игроков.
 fireVfx.update();
+    // Восстанавливаем подъём победных карт после повторной отрисовки.
+if (s.winningLiftActive) {
+  document
+    .querySelectorAll('.winning-lift-target')
+    .forEach(card => {
+      card.classList.add('winning-lift');
+    });
+}
   }
 
   return {
