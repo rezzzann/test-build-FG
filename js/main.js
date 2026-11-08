@@ -52,9 +52,29 @@ let blindRemaining = getTournamentSettings(tournamentMode).blindLevelDuration;
 const BUG_REPORT_ENDPOINT='https://pokereza-bug-reporter.17-rezan.workers.dev/report';
 let players=[],deck=[],board=[],pot=0,currentBet=0,street=0,actor=-1,handNo=0;
       // Таймер хода игрока и визуальный таймер ИИ.
+
 const ACTION_CLOCK_DURATION = 15000;
 let actionClockTimer = null;
 let activeTurnClock = null;
+let turnClockOverlay = null;
+
+function updateTurnClockOverlay() {
+  if (!turnClockOverlay || !activeTurnClock) return;
+
+  const seat = document.querySelector(
+    `.seat[data-player-index="${activeTurnClock.seat}"]`
+  );
+
+  if (!seat) return;
+
+  const rect = seat.getBoundingClientRect();
+
+  turnClockOverlay.style.left = `${rect.left}px`;
+  turnClockOverlay.style.top = `${rect.top}px`;
+  turnClockOverlay.style.width = `${rect.width}px`;
+  turnClockOverlay.style.height = `${rect.height}px`;
+  turnClockOverlay.style.borderRadius = getComputedStyle(seat).borderRadius;
+}
 
 function clearActionClock() {
   if (actionClockTimer !== null) {
@@ -62,16 +82,40 @@ function clearActionClock() {
     actionClockTimer = null;
   }
 
+  if (turnClockOverlay) {
+    turnClockOverlay.remove();
+    turnClockOverlay = null;
+  }
+
   activeTurnClock = null;
 }
 
 function startActionClock(seat) {
+  // Не перезапускаем таймер при повторном вызове
+  // для того же игрока в рамках того же хода.
+  if (
+    activeTurnClock &&
+    activeTurnClock.seat === seat &&
+    activeTurnClock.tick === tick
+  ) {
+    updateTurnClockOverlay();
+    return;
+  }
+
   clearActionClock();
 
   activeTurnClock = {
     seat,
+    tick,
     startedAt: performance.now()
   };
+
+  const overlay = document.createElement('div');
+  overlay.className = 'turn-clock-overlay';
+  document.body.appendChild(overlay);
+
+  turnClockOverlay = overlay;
+  updateTurnClockOverlay();
 
   // Для ИИ таймер только визуальный.
   if (seat !== user) return;
@@ -98,10 +142,12 @@ function startActionClock(seat) {
       return;
     }
 
-    // Время истекло — автоматический фолд.
     userAct('fold');
   }, ACTION_CLOCK_DURATION);
 }
+
+window.addEventListener('resize', updateTurnClockOverlay);
+
       let pendingPreAction = null;
       let playerStatsViewTimers = [];
 let over=false,busy=false,sb=10,bb=20,log=[],tick=0,turnTimer=null,actQueue=[],firstToAct=3; let dealerSeat=0;
@@ -1438,10 +1484,10 @@ if (actor === user && pendingPreAction) {
   }
 }
 
-// Запускаем визуальный таймер активного игрока.
-startActionClock(actor);
-
 render();
+
+// Запускаем таймер после обновления карточки игрока.
+startActionClock(actor);
 
 if (actor !== user) {
   scheduleAI(actor);
