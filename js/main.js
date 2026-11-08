@@ -1903,6 +1903,9 @@ function captureGameState(){
   players:players.map(p=>({...p,hole:p.hole?.map(c=>({...c})),bet:Number(p.bet)||0,total:Number(p.total)||0,actionTimer:null,actionId:(p.actionId||0)+1})),
   deck:deck.map(c=>({...c})),board:board.map(c=>({...c})),pot,currentBet,street,actor,handNo,over,sb,bb,log:[...log],tick,
   actQueue:[...actQueue],firstToAct,dealerSeat,renderedBoardCount,winnerIds:[...winnerIds],winnerPayouts:{...winnerPayouts},winnerCombo,
+   pendingPreAction: pendingPreAction
+  ? { ...pendingPreAction }
+  : null,
   humanWinnerReveal,winningLiftActive,winningCards:winningCards.map(c=>({...c})),humanFoldedCards,aiWinnerReveal,aiWinnerId,aiWinningCards:aiWinningCards.map(c=>({...c})),
   pendingAISeat,tournamentMode,blindLevel,blindRemaining,blindSequencePending:blindSequenceTimer!==null
  };
@@ -1922,6 +1925,9 @@ function restoreSavedGame(){
  players=s.players.map(p=>({...p,actionTimer:null}));deck=s.deck.map(c=>({...c}));board=s.board.map(c=>({...c}));
  pot=s.pot;currentBet=s.currentBet;street=s.street;actor=s.actor;handNo=s.handNo;over=s.over;sb=s.sb;bb=s.bb;log=[...s.log];tick=Math.max(tick,s.tick)+1;
  actQueue=[...s.actQueue]; firstToAct=s.firstToAct; dealerSeat=s.dealerSeat??dealerSeat; renderedBoardCount=s.renderedBoardCount;winnerIds=[...s.winnerIds];winnerPayouts={...s.winnerPayouts};winnerCombo=s.winnerCombo;
+  pendingPreAction = s.pendingPreAction
+  ? { ...s.pendingPreAction }
+  : null;
  humanWinnerReveal=s.humanWinnerReveal;winningLiftActive=!!s.winningLiftActive;winningCards=s.winningCards.map(c=>({...c}));humanFoldedCards=s.humanFoldedCards;aiWinnerReveal=s.aiWinnerReveal;aiWinnerId=s.aiWinnerId;aiWinningCards=s.aiWinningCards.map(c=>({...c}));
  pendingAISeat=s.pendingAISeat;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
