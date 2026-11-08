@@ -70,7 +70,7 @@ const EFFECTS_CSS = String.raw`
 }
 
 .hole .card {
-  transition: width .35s ease, height .35s ease, box-shadow .25s, border-color .25s, filter .4s ease;
+  transition: top .36s ease, width .35s ease, height .35s ease, box-shadow .25s, border-color .25s, filter .4s ease;
 }
 .hole .card.user-card-flip {
   animation: ai-card-flip .55s ease-out both;
