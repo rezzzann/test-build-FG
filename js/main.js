@@ -582,8 +582,6 @@ flareFire,   extinguishFire } = createRenderer({
     winnerCombo,
     actor,
 pendingPreAction,
-canUserAct: canUserAct(),
-canUserPreAct: canUserPreAct(),
 over,
     busy,
     gamePaused,
