@@ -1537,7 +1537,7 @@ if ((a.t === 'bet' || a.t === 'raise') && call > 0) {
     a = { t: 'call' };
   }
 }
- if(a.t==='fold'){if(i !== user) {animateAIFoldCards(i);}{p.folded=true;if(i===user)humanFoldedCards=true;showAction(i,'ФОЛД');logit(p.name+': ФОЛД')}
+ if(a.t==='fold'){if(i!==user)animateAIFoldCards(i);p.folded=true;if(i===user)humanFoldedCards=true;showAction(i,'ФОЛД');logit(p.name+': ФОЛД')}
  else if(a.t==='check'){if(call>0)a={t:'call'};else{showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}}
  if(a.t==='call'){const amount=Math.min(call,p.stack);if(amount===0){showAction(i,'ЧЕК');logit(p.name+': ЧЕК')}else{p.stack-=amount;p.bet+=amount;p.total+=amount;chipAmount=amount;if(p.stack===0)p.allin=true;const label=p.allin?'ALL-IN':'КОЛЛ';showAction(i,label);logit(p.name+': '+label)}}
  else if(a.t==='bet'||a.t==='raise'){   const requested=Number(a.amt)||bb;   const minimum=Math.max(bb,currentBet);   const target=Math.max(minimum,requested);   const amount=Math.min(Math.max(0,target-p.bet),p.stack);
