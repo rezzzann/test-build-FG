@@ -1446,6 +1446,7 @@ render();
 if (actor !== user) {
   scheduleAI(actor);
 }
+  }
 async function collectBetsVisually(handTick) {
   const soleWinner = live().length === 1 ? live()[0] : null;
 const bets = players.map(p =>
