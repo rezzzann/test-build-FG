@@ -1809,7 +1809,7 @@ function canUserPreAct() {
     !initialDealInProgress &&
     !gamePaused &&
     !betControlOpen &&
-    actor !== user &&
+    actor >= 0 && actor !== user &&
     actQueue.includes(user) &&
     eligible(user) &&
     !hasActedThisStreet(user)
