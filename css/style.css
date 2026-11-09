@@ -574,12 +574,12 @@ height: clamp(61px, 8.7vw, 96px);
   z-index: 2;
 }
 
-/* Зелёная обводка основных карт комбинации. */
+/* Золотая обводка основных карт комбинации. */
 .card.combo-core {
-  border: 3px solid #39ff78 !important;
+  border: 2px solid #f0d08a !important;
   box-shadow:
-    0 0 0 2px #168c46aa,
-    0 0 13px #39ff78bb,
+    0 0 0 2px #c5a15b66,
+    0 0 12px #e5bd63cc,
     0 2px 5px #0008 !important;
   z-index: 3;
 }
