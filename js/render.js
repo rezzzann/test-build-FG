@@ -478,7 +478,7 @@ if (isInWinningHand) {
       return html;
     }).join('')}</div>`
   : '';
-const seatInfoMarkup = p.eliminated && p.showTournamentStats
+const seatInfoMarkup = i === 0 && p.eliminated && p.showTournamentStats
   ? `
     <div class="seat-info stats-visible">
       <div class="seat-stat-line">ПОБЕД: ${p.tournamentStats.wins}</div>
