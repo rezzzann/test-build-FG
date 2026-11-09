@@ -63,6 +63,18 @@ const ACTION_CLOCK_DURATION = 15000;
 let actionClockTimer = null;
 let activeTurnClock = null;
 let turnClockOverlay = null;
+let pendingActionClockRestore = null;
+
+function getActionClockSnapshot() {
+  if (!activeTurnClock) return null;
+
+  const elapsed = performance.now() - activeTurnClock.startedAt;
+
+  return {
+    seat: activeTurnClock.seat,
+    remaining: Math.max(0, activeTurnClock.duration - elapsed)
+  };
+}
 
 function updateTurnClockOverlay() {
   if (!turnClockOverlay || !activeTurnClock) return;
@@ -134,10 +146,24 @@ function startActionClock(seat) {
 
   clearActionClock();
 
+  const restoredClock =
+    pendingActionClockRestore?.seat === seat
+      ? pendingActionClockRestore
+      : null;
+
+  pendingActionClockRestore = null;
+
+  const remaining = restoredClock
+    ? restoredClock.remaining
+    : ACTION_CLOCK_DURATION;
+
+  const elapsed = ACTION_CLOCK_DURATION - remaining;
+
   activeTurnClock = {
     seat,
     tick,
-    startedAt: performance.now()
+    startedAt: performance.now(),
+    duration: remaining
   };
 
  const overlay = document.createElement('div');
@@ -159,6 +185,11 @@ overlay.innerHTML = `
 document.body.appendChild(overlay);
   turnClockOverlay = overlay;
   updateTurnClockOverlay();
+    const clockRect = overlay.querySelector('rect');
+
+  if (clockRect && elapsed > 0) {
+    clockRect.style.animationDelay = `-${elapsed}ms`;
+  }
 
   // Для ИИ таймер только визуальный.
   if (seat !== user) return;
@@ -186,7 +217,7 @@ document.body.appendChild(overlay);
     }
 
     userAct('fold');
-  }, ACTION_CLOCK_DURATION);
+  }, remaining);
 }
 
 window.addEventListener('resize', updateTurnClockOverlay);
@@ -2233,7 +2264,7 @@ function captureGameState(){
   ? { ...pendingPreAction }
   : null,
   humanWinnerReveal,winningLiftActive,winningCards:winningCards.map(c=>({...c})),humanFoldedCards,aiWinnerReveal,aiWinnerId,aiWinningCards:aiWinningCards.map(c=>({...c})),
-  pendingAISeat,tournamentMode,blindLevel,blindRemaining,blindSequencePending:blindSequenceTimer!==null
+  pendingAISeat,actionClock: getActionClockSnapshot(),tournamentMode,blindLevel,blindRemaining,blindSequencePending:blindSequenceTimer!==null
  };
 }
 function pauseGameForMenu(){
@@ -2255,7 +2286,7 @@ function restoreSavedGame(){
   ? { ...s.pendingPreAction }
   : null;
  humanWinnerReveal=s.humanWinnerReveal;winningLiftActive=!!s.winningLiftActive;winningCards=s.winningCards.map(c=>({...c}));humanFoldedCards=s.humanFoldedCards;aiWinnerReveal=s.aiWinnerReveal;aiWinnerId=s.aiWinnerId;aiWinningCards=s.aiWinningCards.map(c=>({...c}));
- pendingAISeat=s.pendingAISeat;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
+ pendingAISeat=s.pendingAISeat;pendingActionClockRestore = s.actionClock || null;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
  savedGameState=null;render();renderHandBets();tournamentClock.start();
