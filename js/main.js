@@ -2123,7 +2123,7 @@ function start(){
   const index = Number(seat.dataset.playerIndex);
   const player = players[index];
 
-  if (!player?.eliminated) return;
+  if (index !== user || !player?.eliminated) return;
 
   if (playerStatsViewTimers[index] !== null &&
       playerStatsViewTimers[index] !== undefined) {
