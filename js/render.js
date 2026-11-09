@@ -292,6 +292,7 @@ function renderCommunity() {
       actQueue,
       currentBet,
       gameStarted,
+      testManualNextHand,
       dealInProgress,
       collectingBets,
       betControlOpen,
@@ -617,7 +618,7 @@ raiseButton.classList.toggle('bet-mode', !callAvailable);
 raiseButton.classList.toggle('bet-confirming', betControlOpen);
 
 
-    $('nextHand').classList.toggle('visible', over);
+    $('nextHand').classList.toggle(   'visible',   over && testManualNextHand );
     $('exitButton').classList.toggle('visible', gameStarted);
     $('exitButton').disabled = dealInProgress || initialDealInProgress;
     // Обновляем положение огня после отрисовки карточек игроков.
