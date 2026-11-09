@@ -45,7 +45,7 @@ const TEST_FIRST_HAND_AI_ALL_IN = false;
      // Временно возвращает ручной переход к следующей раздаче.
 const TEST_MANUAL_NEXT_HAND = false;
       // ALL-IN для всех ИИ на каждой раздаче.
-const TEST_ALL_HANDS_AI_ALL_IN = false;
+const TEST_ALL_HANDS_AI_ALL_IN = true;
 // Включение / отключение таймера хода.
 const TEST_ACTION_CLOCK_ENABLED = true;
 const DISPLAY_VERSION=GAME_VERSION;
