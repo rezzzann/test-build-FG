@@ -92,25 +92,37 @@ function renderHandBets() {
     return `<div class="hand-bet b${i} visible" data-player="${i}" aria-label="Ставка ${fmt(p.bet)} PP"><span class="bet-chips">${chips}</span><span class="bet-total">${fmt(p.bet)} PP</span></div>`;
   }).join('');
 }
-  function shouldShowComboCore(state) {
-    const {
-      currentHandAnalysis,
-      street,
-      over,
-      humanWinnerReveal
-    } = state;
+function shouldShowComboCore(state) {
+  const {
+    currentHandAnalysis,
+    street,
+    over,
+    humanWinnerReveal,
+    dealInProgress,
+    initialDealInProgress,
+    communityDealingIndices = []
+  } = state;
 
-    // После проигрыша на вскрытии особая обводка скрывается.
-    if (over && !humanWinnerReveal) return false;
+  // После проигрыша на вскрытии подсветка пользователя отключена.
+  if (over && !humanWinnerReveal) return false;
 
-    // Префлоп: выделяем только карманную пару.
-    if (street === 0) {
-      return currentHandAnalysis?.score?.[0] === 1;
-    }
-
-    // На остальных улицах показываем основные карты комбинации.
-    return true;
+  // Не показываем подсветку до полного завершения раздачи карт.
+  if (
+    dealInProgress ||
+    initialDealInProgress ||
+    communityDealingIndices.length > 0
+  ) {
+    return false;
   }
+
+  // Префлоп: выделяем только карманную пару.
+  if (street === 0) {
+    return currentHandAnalysis?.score?.[0] === 1;
+  }
+
+  // На остальных улицах показываем основные карты комбинации.
+  return true;
+}
 
 function renderCommunity() {
   const state = getState();
