@@ -547,6 +547,8 @@ const canPreAct =
 const pending = s.pendingPreAction;
     const hideUserActions =
   players[0].folded ||
+  players[0].eliminated ||
+  players[0].stack <= 0 ||
   initialDealInProgress ||
   (players[0].dealtCount || 0) < 2;
 
