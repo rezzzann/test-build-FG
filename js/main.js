@@ -42,6 +42,8 @@ const streetNames=['ПРЕФЛОП','ФЛОП','ТЁРН','РИВЕР','ШОУД
 const GAME_VERSION='v0.5.15 alpha';
       // ВРЕМЕННЫЙ ТЕСТ: все ИИ идут ALL-IN в первой раздаче.
 const TEST_FIRST_HAND_AI_ALL_IN = false;
+     // Временно возвращает ручной переход к следующей раздаче.
+const TEST_MANUAL_NEXT_HAND = false;
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
