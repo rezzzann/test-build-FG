@@ -533,10 +533,15 @@ const canPreAct =
   eligible(0) &&
   !hasActedThisStreet(0);
 const pending = s.pendingPreAction;
+    const hideUserActions =
+  players[0].folded ||
+  initialDealInProgress ||
+  (players[0].dealtCount || 0) < 2;
 
 
 const setActionButton = (id, label, actionType, selectedClass) => {
   const button = $(id);
+  button.style.display = hideUserActions ? 'none' : '';
   const selected = pending?.type === actionType;
 
   button.disabled = !(canAct || canPreAct);
@@ -568,6 +573,7 @@ setActionButton(
 );
 
 const raiseButton = $('raise');
+    raiseButton.style.display = hideUserActions ? 'none' : '';
 
 raiseButton.disabled = !(canAct || canPreAct);
 
