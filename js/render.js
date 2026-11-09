@@ -573,7 +573,7 @@ const setActionButton = (id, label, actionType, selectedClass) => {
 };
 
 
-setActionButton('fold', 'ФОЛД', 'fold', 'pre-action-fold');
+setActionButton(   'fold',   betControlOpen ? 'ОТМЕНА' : 'ФОЛД',   'fold',   'pre-action-fold' );
 
 const callAvailable = currentBet > players[0].bet;
 
