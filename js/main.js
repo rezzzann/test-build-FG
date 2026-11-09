@@ -2025,9 +2025,13 @@ async function finish() {
     p => p.stack > 0
   ).length;
 
-  if (playersWithChips < 2) {
-    return;
-  }
+if (playersWithChips < 2) {
+  const champion = players.find(p => p.stack > 0);
+
+  logit(`Турнир завершён. Победитель: ${champion?.name || '—'}`);
+  render();
+  return;
+}
 
   // Три секунды после завершения анимаций.
   if (!(await waitForDeal(3000, finishedHandTick))) {
