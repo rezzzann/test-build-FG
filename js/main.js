@@ -44,6 +44,10 @@ const GAME_VERSION='v0.5.15 alpha';
 const TEST_FIRST_HAND_AI_ALL_IN = false;
      // Временно возвращает ручной переход к следующей раздаче.
 const TEST_MANUAL_NEXT_HAND = false;
+      // ALL-IN для всех ИИ на каждой раздаче.
+const TEST_ALL_HANDS_AI_ALL_IN = false;
+// Включение / отключение таймера хода.
+const TEST_ACTION_CLOCK_ENABLED = true;
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
@@ -113,6 +117,10 @@ function clearActionClock() {
 }
 
 function startActionClock(seat) {
+    if (!TEST_ACTION_CLOCK_ENABLED) {
+    clearActionClock();
+    return;
+  }
   // Не перезапускаем таймер при повторном вызове
   // для того же игрока в рамках того же хода.
   if (
@@ -1618,7 +1626,7 @@ function scheduleAI(i){
  busy=true;pendingAISeat=i;const myTick=tick;
  turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){   if(myTick===tick){     busy=false;     clearThinking(i);   }   return; }turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
   showThinking(i);render();turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){   busy=false;   pendingAISeat=-1;   clearThinking(i);   return; }
-   const call=Math.max(0,currentBet-players[i].bet),action=TEST_FIRST_HAND_AI_ALL_IN && handNo === 1?{ t:'allin'}:decide(players[i],call,board,currentBet,bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
+   const call = Math.max(0, currentBet - players[i].bet);  const forceAIAllIn =   TEST_ALL_HANDS_AI_ALL_IN ||   (TEST_FIRST_HAND_AI_ALL_IN && handNo === 1);  const action = forceAIAllIn   ? { t: 'allin' }   : decide(players[i], call, board, currentBet, bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
   },Math.floor(Math.random()*2501)+1000);
  },1200);
 }
