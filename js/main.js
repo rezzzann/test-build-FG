@@ -518,6 +518,22 @@ const effects = createEffects({
   getPaused: () => gamePaused
 });
 let pendingAISeat=-1;
+      let aiDecisionTimerState = null;
+let pendingAIDelayRestore = null;
+
+function getAIDelaySnapshot() {
+  if (!aiDecisionTimerState) return null;
+
+  return {
+    seat: aiDecisionTimerState.seat,
+    stage: aiDecisionTimerState.stage,
+    remaining: Math.max(
+      0,
+      aiDecisionTimerState.duration -
+      (performance.now() - aiDecisionTimerState.startedAt)
+    )
+  };
+}
 function applyTournamentMode(resetClock=true){
  const high=tournamentMode==='highroller';
  $('table').classList.toggle('high-roller',high);
@@ -1375,6 +1391,8 @@ function newHand() {
   clearDealSequence();
   busy = false;
   pendingAISeat = -1;
+  aiDecisionTimerState = null;
+pendingAIDelayRestore = null;
 
   clearTurnTimer();
   clearBlindSequence();
@@ -1652,14 +1670,102 @@ if (!collected) return;
     handTick
   );
 }
-function scheduleAI(i){
- if(over||gamePaused||dealInProgress||busy||queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return;
- busy=true;pendingAISeat=i;const myTick=tick;
- turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){   if(myTick===tick){     busy=false;     clearThinking(i);   }   return; }turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){busy=false;pendingAISeat=-1;return}
-  showThinking(i);render();turnTimer=setTimeout(()=>{if(myTick!==tick||over||gamePaused){if(myTick===tick)busy=false;return}turnTimer=null;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i)){   busy=false;   pendingAISeat=-1;   clearThinking(i);   return; }
-   const call = Math.max(0, currentBet - players[i].bet);  const forceAIAllIn =   TEST_ALL_HANDS_AI_ALL_IN ||   (TEST_FIRST_HAND_AI_ALL_IN && handNo === 1);  const action = forceAIAllIn   ? { t: 'allin' }   : decide(players[i], call, board, currentBet, bb);busy=false;pendingAISeat=-1;if(applyAction(i,action,myTick))advanceQueue();
-  },Math.floor(Math.random()*2501)+1000);
- },1200);
+function scheduleAI(i) {
+  if (
+    over ||
+    gamePaused ||
+    dealInProgress ||
+    busy ||
+    queueHead() !== i ||
+    !eligible(i) ||
+    hasActedThisStreet(i)
+  ) return;
+
+  busy = true;
+  pendingAISeat = i;
+
+  const myTick = tick;
+
+  const restored =
+    pendingAIDelayRestore?.seat === i
+      ? pendingAIDelayRestore
+      : null;
+
+  pendingAIDelayRestore = null;
+
+  const startStage = (stage, duration) => {
+    const state = {
+      seat: i,
+      stage,
+      duration,
+      startedAt: performance.now()
+    };
+
+    aiDecisionTimerState = state;
+
+    turnTimer = setTimeout(() => {
+      if (aiDecisionTimerState !== state) return;
+
+      turnTimer = null;
+
+      if (myTick !== tick || over || gamePaused) {
+        return;
+      }
+
+      if (
+        queueHead() !== i ||
+        !eligible(i) ||
+        hasActedThisStreet(i)
+      ) {
+        aiDecisionTimerState = null;
+        busy = false;
+        pendingAISeat = -1;
+        clearThinking(i);
+        return;
+      }
+
+      if (stage === 'beforeThinking') {
+        showThinking(i);
+        render();
+
+        const thinkingDuration =
+          Math.floor(Math.random() * 2501) + 1000;
+
+        startStage('thinking', thinkingDuration);
+        return;
+      }
+
+      aiDecisionTimerState = null;
+
+      const call = Math.max(0, currentBet - players[i].bet);
+
+      const forceAIAllIn =
+        TEST_ALL_HANDS_AI_ALL_IN ||
+        (TEST_FIRST_HAND_AI_ALL_IN && handNo === 1);
+
+      const action = forceAIAllIn
+        ? { t: 'allin' }
+        : decide(players[i], call, board, currentBet, bb);
+
+      busy = false;
+      pendingAISeat = -1;
+
+      if (applyAction(i, action, myTick)) {
+        advanceQueue();
+      }
+    }, duration);
+  };
+
+  if (restored) {
+    if (restored.stage === 'thinking') {
+      showThinking(i);
+      render();
+    }
+
+    startStage(restored.stage, restored.remaining);
+  } else {
+    startStage('beforeThinking', 1200);
+  }
 }
       // Анимация сброса карманных карт ИИ в центр стола.
 function animateAIFoldCards(playerIndex) {
@@ -1915,6 +2021,8 @@ async function finish() {
   tick++;
   busy = false;
   pendingAISeat = -1;
+  aiDecisionTimerState = null;
+pendingAIDelayRestore = null;
 
   clearTurnTimer();
   clearActionClock();
@@ -2264,7 +2372,7 @@ function captureGameState(){
   ? { ...pendingPreAction }
   : null,
   humanWinnerReveal,winningLiftActive,winningCards:winningCards.map(c=>({...c})),humanFoldedCards,aiWinnerReveal,aiWinnerId,aiWinningCards:aiWinningCards.map(c=>({...c})),
-  pendingAISeat,actionClock: getActionClockSnapshot(),tournamentMode,blindLevel,blindRemaining,blindSequencePending:blindSequenceTimer!==null
+  pendingAISeat, aiDelay: getAIDelaySnapshot(), actionClock: getActionClockSnapshot(), tournamentMode, blindLevel, blindRemaining, blindSequencePending: blindSequenceTimer !== null
  };
 }
 function pauseGameForMenu(){
@@ -2286,7 +2394,7 @@ function restoreSavedGame(){
   ? { ...s.pendingPreAction }
   : null;
  humanWinnerReveal=s.humanWinnerReveal;winningLiftActive=!!s.winningLiftActive;winningCards=s.winningCards.map(c=>({...c}));humanFoldedCards=s.humanFoldedCards;aiWinnerReveal=s.aiWinnerReveal;aiWinnerId=s.aiWinnerId;aiWinningCards=s.aiWinningCards.map(c=>({...c}));
- pendingAISeat=s.pendingAISeat;pendingActionClockRestore = s.actionClock || null;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
+ pendingAISeat = s.pendingAISeat; pendingAIDelayRestore = s.aiDelay || null; aiDecisionTimerState = null; pendingActionClockRestore = s.actionClock || null;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
  savedGameState=null;render();renderHandBets();tournamentClock.start();
