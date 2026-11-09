@@ -720,6 +720,7 @@ over,
     actQueue,
     currentBet,
         gameStarted,
+        testManualNextHand: TEST_MANUAL_NEXT_HAND,
     dealInProgress,
     collectingBets,
     betControlOpen,
@@ -775,19 +776,19 @@ function setWinnerChipControlsLocked(locked) {
 
 function playWinnerChipForWinner(winnerIndexes) {
   // Фишка предназначена исключительно пользователю.
-  // Пользователь должен сам пойти ALL-IN и выиграть раздачу.
- if (
-  !winnerIndexes.includes(user) ||
-  !players[user]?.wentAllInThisHand ||
-  live().length <= 1
-) return;
-  // Цель — центральная часть карточки пользователя,
-  // где отображаются имя, стек и статус.
+  if (
+    !winnerIndexes.includes(user) ||
+    !players[user]?.wentAllInThisHand ||
+    live().length <= 1
+  ) {
+    return Promise.resolve();
+  }
+
   const target = document.querySelector(
     '#seats .seat.user-seat > div:last-child'
   );
 
-  if (!target) return;
+  if (!target) return Promise.resolve();
 
   setWinnerChipControlsLocked(true);
 
@@ -801,10 +802,10 @@ function playWinnerChipForWinner(winnerIndexes) {
   } catch (error) {
     console.error('Winner chip animation error:', error);
     setWinnerChipControlsLocked(false);
-    return;
+    return Promise.resolve();
   }
 
-  Promise.resolve(animation)
+  return Promise.resolve(animation)
     .catch(error => {
       console.error('Winner chip animation error:', error);
     })
@@ -1366,11 +1367,6 @@ aiShowdownRevealBack = false;
   $('table').classList.remove('ai-winner-state');
   $('nextHand').classList.remove('visible');
 
-  if (players[user] && players[user].stack <= 0) {
-    logit('Стек пуст — нажми «Сбросить стек»');
-    render();
-    return;
-  }
 winnerChipVfx.fadeOut();
   handNo++;
   shuffle();
@@ -1872,41 +1868,179 @@ if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
   await liftWinningCards(handTick);
 }
 }     
-function finish(){
+async function finish() {
   pendingPreAction = null;
- if(over)return; tick++; busy=false; pendingAISeat=-1; clearTurnTimer(); clearActionClock(); clearBlindSequence(); clearActionTimers(); over=true; actQueue=[];  const survivors = live(); if (survivors.length === 1 && survivors[0].bet > 0) {   survivors[0].stack += survivors[0].bet;   survivors[0].bet = 0; }  collectBetsIntoPot();
- let winners=[],winnerScore=null;humanWinnerReveal=false;winningCards=[];aiWinnerReveal=false;aiWinnerId=-1;aiWinningCards=[];
- if(survivors.length===1)winners=survivors;else{street=4;const ranked=survivors.map(p=>({p,s:score([...p.hole,...board])})).sort((a,b)=>cmp(b.s,a.s));winnerScore=ranked[0].s;winners=ranked.filter(x=>cmp(x.s,winnerScore)===0).map(x=>x.p)}
- const each=Math.floor(pot/winners.length),rem=pot%winners.length;winnerIds=[];winnerPayouts={};
- winners.forEach((p,i)=>{
-  const payout=each+(i===0?rem:0);
-  p.stack+=payout;
-  const idx=players.indexOf(p);
-  winnerIds.push(idx);
-  winnerPayouts[idx]=payout
-});
 
-// Фиксируем статистику после выплаты банка.
-recordCompletedHand(players, winnerIds);
-  // Запоминаем ИИ-победителей, у которых пламя уже горит. 
-  const aiFlamingWinners = winnerIds.filter(   index => index !== user && players[index]?.allinFlame );  settleAllInFire(winnerIds);
- winnerCombo=survivors.length>1&&winnerScore?handNames[winnerScore[0]]:'БЕЗ ВСКРЫТИЯ';const userWon=winners.includes(players[user]);
- if(userWon){humanWinnerReveal=true;if(survivors.length>1&&board.length===5)winningCards=bestFive([...players[user].hole,...board]).cards}
- else{const aiWinners=winners.filter(p=>players.indexOf(p)!==user);if(aiWinners.length>0){aiWinnerReveal=survivors.length>1;aiWinnerId=players.indexOf(aiWinners[0]);humanFoldedCards=true;if(survivors.length>1&&board.length===5)aiWinningCards=bestFive([...aiWinners[0].hole,...board]).cards}}
+  if (over) return;
+
+  tick++;
+  busy = false;
+  pendingAISeat = -1;
+
+  clearTurnTimer();
+  clearActionClock();
+  clearBlindSequence();
+  clearActionTimers();
+
+  over = true;
+  actQueue = [];
+
+  const survivors = live();
+
+  if (survivors.length === 1 && survivors[0].bet > 0) {
+    survivors[0].stack += survivors[0].bet;
+    survivors[0].bet = 0;
+  }
+
+  collectBetsIntoPot();
+
+  let winners = [];
+  let winnerScore = null;
+
+  humanWinnerReveal = false;
+  winningCards = [];
+  aiWinnerReveal = false;
+  aiWinnerId = -1;
+  aiWinningCards = [];
+
+  if (survivors.length === 1) {
+    winners = survivors;
+  } else {
+    street = 4;
+
+    const ranked = survivors
+      .map(p => ({
+        p,
+        s: score([...p.hole, ...board])
+      }))
+      .sort((a, b) => cmp(b.s, a.s));
+
+    winnerScore = ranked[0].s;
+
+    winners = ranked
+      .filter(x => cmp(x.s, winnerScore) === 0)
+      .map(x => x.p);
+  }
+
+  const each = Math.floor(pot / winners.length);
+  const rem = pot % winners.length;
+
+  winnerIds = [];
+  winnerPayouts = {};
+
+  winners.forEach((p, i) => {
+    const payout = each + (i === 0 ? rem : 0);
+
+    p.stack += payout;
+
+    const idx = players.indexOf(p);
+
+    winnerIds.push(idx);
+    winnerPayouts[idx] = payout;
+  });
+
+  recordCompletedHand(players, winnerIds);
+
+  const aiFlamingWinners = winnerIds.filter(
+    index => index !== user && players[index]?.allinFlame
+  );
+
+  settleAllInFire(winnerIds);
+
+  winnerCombo =
+    survivors.length > 1 && winnerScore
+      ? handNames[winnerScore[0]]
+      : 'БЕЗ ВСКРЫТИЯ';
+
+  const userWon = winners.includes(players[user]);
+
+  if (userWon) {
+    humanWinnerReveal = true;
+
+    if (survivors.length > 1 && board.length === 5) {
+      winningCards = bestFive([
+        ...players[user].hole,
+        ...board
+      ]).cards;
+    }
+  } else {
+    const aiWinners = winners.filter(
+      p => players.indexOf(p) !== user
+    );
+
+    if (aiWinners.length > 0) {
+      aiWinnerReveal = survivors.length > 1;
+      aiWinnerId = players.indexOf(aiWinners[0]);
+      humanFoldedCards = true;
+
+      if (survivors.length > 1 && board.length === 5) {
+        aiWinningCards = bestFive([
+          ...aiWinners[0].hole,
+          ...board
+        ]).cards;
+      }
+    }
+  }
+
   aiShowdownRevealBack = survivors.length > 1;
-$('message').textContent=userWon?'Победа!':`Победитель: ${winners.map(p=>p.name).join(', ')}`;
-render();
 
-// Вспышка у ИИ-победителей с уже существующим пламенем.
-aiFlamingWinners.forEach(index => flareFire(index));
+  $('message').textContent = userWon
+    ? 'Победа!'
+    : `Победитель: ${winners.map(p => p.name).join(', ')}`;
 
-// Запускаем наградную фишку после определения победителя.
-playWinnerChipForWinner(winnerIds);
+  render();
 
-if (aiShowdownRevealBack) {
-  animateAIShowdownCards(tick);
-}
- feedbackReminder.showAfterThirdHand();
+  aiFlamingWinners.forEach(index => flareFire(index));
+
+  const finishedHandTick = tick;
+
+  // Ждём завершения всех основных финальных анимаций.
+  const finishAnimations = [
+    playWinnerChipForWinner(winnerIds)
+  ];
+
+  if (aiShowdownRevealBack) {
+    finishAnimations.push(
+      animateAIShowdownCards(finishedHandTick)
+    );
+  }
+
+  feedbackReminder.showAfterThirdHand();
+
+  await Promise.all(finishAnimations);
+
+  // Не продолжаем, если игра была остановлена или перезапущена.
+  if (
+    finishedHandTick !== tick ||
+    gamePaused ||
+    !over ||
+    TEST_MANUAL_NEXT_HAND
+  ) {
+    return;
+  }
+
+  // Турнир заканчивается только тогда, когда фишки остались
+  // у одного игрока. Если пользователь выбыл, ИИ продолжают.
+  const playersWithChips = players.filter(
+    p => p.stack > 0
+  ).length;
+
+  if (playersWithChips < 2) {
+    return;
+  }
+
+  // Три секунды после завершения анимаций.
+  if (!(await waitForDeal(3000, finishedHandTick))) {
+    return;
+  }
+
+  if (
+    finishedHandTick === tick &&
+    !gamePaused &&
+    over
+  ) {
+    newHand();
+  }
 }
 function userAct(t, selectedAmount) {
   if (
@@ -2071,7 +2205,9 @@ $('raise').onclick = () => {
 };
 
 $('nextHand').onclick = () => {
-  if (!gamePaused) newHand();
+  if (!gamePaused && TEST_MANUAL_NEXT_HAND) {
+    newHand();
+  }
 };
  $('newHand').onclick=()=>{if(!gamePaused){if(over)newHand();else logit('Завершите текущую раздачу')}};
  $('reset').onclick=()=>{if(!gamePaused)resetStacksAndRestart()};resetBetSlider();
