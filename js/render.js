@@ -545,10 +545,9 @@ const canPreAct =
   eligible(0) &&
   !hasActedThisStreet(0);
 const pending = s.pendingPreAction;
-    const hideUserActions =
+  const hideUserActions =
   players[0].folded ||
   players[0].eliminated ||
-  players[0].stack <= 0 ||
   initialDealInProgress ||
   (players[0].dealtCount || 0) < 2;
 
