@@ -605,18 +605,7 @@ height: clamp(61px, 8.7vw, 96px);
   animation: none;
   transition: opacity 300ms ease;
 }
-  content: "";
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  border: 2px solid #f0d08a;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 10;
-  opacity: 1;
-  animation: none;
-  transition: opacity 300ms ease;
-}
+ 
 
 /* Плавное затухание старой комбинации. */
 .table.combo-transition-out .card.combo-core::before {
