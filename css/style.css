@@ -572,10 +572,10 @@ height: clamp(61px, 8.7vw, 96px);
     0 0 0 2px #c5a15b66,
     0 0 12px #e5bd63cc,
     0 2px 5px #0008;
-  transition: box-shadow .28s ease;
+  transition: box-shadow .3s ease;
 }
 
-/* Рамка располагается поверх карты и не меняет её размеры. */
+/* Базовое состояние рамки — без повторного запуска анимации при рендере. */
 .card.winning-card::before,
 .card.combo-core::before,
 .mini-card.winning-card::before {
@@ -587,20 +587,38 @@ height: clamp(61px, 8.7vw, 96px);
   border-radius: inherit;
   pointer-events: none;
   z-index: 10;
+  opacity: 1;
+  animation: none;
+  transition: opacity 300ms ease;
+}
+
+/* Плавное затухание старой комбинации. */
+.table.combo-transition-out .card.combo-core::before {
   opacity: 0;
+}
+
+.table.combo-transition-out .card.combo-core {
+  box-shadow: none;
+}
+
+/* Плавное появление новой комбинации. */
+.table.combo-transition-in .card.combo-core::before {
   animation: winningCardFrameIn .3s ease forwards;
 }
-/* Плавное затухание старой комбинации перед обновлением. */
-.table.combo-transition-out .card.combo-core::before {
-  animation: none;
-  opacity: 0;
-  transition: opacity 300ms ease;
+
+.table.combo-transition-in .card.combo-core {
+  animation: winningCardGlowIn .3s ease forwards;
 }
 
 .table.combo-transition-out .hand-summary {
   opacity: 0;
   transition: opacity 300ms ease;
 }
+
+.table.combo-transition-in .hand-summary {
+  transition: opacity 300ms ease;
+}
+
 .card.winning-card {
   z-index: 2;
 }
@@ -609,7 +627,6 @@ height: clamp(61px, 8.7vw, 96px);
   z-index: 3;
 }
 
-/* Плавное появление золотой рамки. */
 @keyframes winningCardFrameIn {
   from {
     opacity: 0;
@@ -619,6 +636,17 @@ height: clamp(61px, 8.7vw, 96px);
   }
 }
 
+@keyframes winningCardGlowIn {
+  from {
+    box-shadow: none;
+  }
+  to {
+    box-shadow:
+      0 0 0 2px #c5a15b66,
+      0 0 12px #e5bd63cc,
+      0 2px 5px #0008;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .card.winning-card::before,
   .card.combo-core::before,
