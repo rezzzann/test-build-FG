@@ -19,7 +19,6 @@ table.appendChild(backdrop);
   root.innerHTML = `
     <div class="amount-line">
       <span class="amount" id="amount">20</span>
-      <span class="unit">PP</span>
     </div>
 
     <div class="curve-stage">
