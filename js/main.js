@@ -514,6 +514,7 @@ let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,sa
       // Состояние плавного обновления подсветки комбинации.
 let comboDisplayAnalysis = null;
 let comboDisplayLocked = false;
+let comboDisplayShowCore = false;
 let comboTransitionPhase = '';
 let lastBetFlight = Promise.resolve();      
 const effects = createEffects({
@@ -793,8 +794,9 @@ currentHandAnalysis: players[user] &&
   players[user].hole?.length
     ? analyzeHand([...players[user].hole, ...board])
     : null,
-    comboDisplayAnalysis,
+   comboDisplayAnalysis,
 comboDisplayLocked,
+comboDisplayShowCore,
 comboTransitionPhase,
 
 aiWinnerAnalysis: aiWinningCards.length &&
@@ -908,6 +910,10 @@ async function transitionComboDisplay(handTick) {
       ? analyzeHand([...players[user].hole, ...board])
       : null;
 
+  const nextShowCore = street === 0
+    ? nextAnalysis?.score?.[0] === 1
+    : !!nextAnalysis;
+
   const getSignature = analysis => {
     if (!analysis) return '';
 
@@ -922,8 +928,11 @@ async function transitionComboDisplay(handTick) {
   const previousSignature = getSignature(comboDisplayAnalysis);
   const nextSignature = getSignature(nextAnalysis);
 
-  // Если комбинация не изменилась — анимация не нужна.
-  if (previousSignature === nextSignature) {
+  // Если комбинация не изменилась, оставляем подсветку без анимации.
+  if (
+    previousSignature === nextSignature &&
+    comboDisplayShowCore === nextShowCore
+  ) {
     comboDisplayAnalysis = nextAnalysis;
     comboDisplayLocked = false;
     comboTransitionPhase = '';
@@ -931,19 +940,27 @@ async function transitionComboDisplay(handTick) {
     return true;
   }
 
-  // Фаза 1: плавно затухает старая подсветка.
+  const reduceMotion = matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  const duration = reduceMotion ? 0 : 300;
+
+  // Старая комбинация остаётся зафиксированной.
+  // Плавно убираем её рамки и подпись.
   comboTransitionPhase = 'out';
   render();
 
-  if (!(await waitForDeal(300, handTick))) return false;
+  if (!(await waitForDeal(duration, handTick))) return false;
 
-  // Фаза 2: устанавливаем новую комбинацию.
+  // Устанавливаем новую комбинацию и запускаем её появление.
   comboDisplayAnalysis = nextAnalysis;
+  comboDisplayShowCore = nextShowCore;
   comboDisplayLocked = false;
   comboTransitionPhase = 'in';
   render();
 
-  if (!(await waitForDeal(300, handTick))) return false;
+  if (!(await waitForDeal(duration, handTick))) return false;
 
   comboTransitionPhase = '';
   render();
@@ -1347,10 +1364,12 @@ if (communityCard && !reduceMotion) {
 
     const updated = await transitionComboDisplay(handTick);
     if (!updated) return;
-  } else {
-    comboDisplayLocked = false;
-    comboTransitionPhase = '';
-  }
+} else {
+  comboDisplayAnalysis = null;
+  comboDisplayShowCore = false;
+  comboDisplayLocked = false;
+  comboTransitionPhase = '';
+}
 
   busy = false;
   render();
@@ -1454,6 +1473,10 @@ function newHand() {
   lastBetFlight = Promise.resolve();
 
   initialDealInProgress = false;
+  comboDisplayAnalysis = null;
+comboDisplayLocked = false;
+comboDisplayShowCore = false;
+comboTransitionPhase = '';
 
   tick++;
   const thisHandTick = tick;
@@ -1698,13 +1721,18 @@ const collected = await collectBetsVisually(handTick);
 collectingBets = false;
 
 if (!collected) return;
-// Сохраняем текущую комбинацию до открытия новых карт.
+// Сохраняем комбинацию и правила её подсветки
+// именно для предыдущей улицы.
 comboDisplayAnalysis =
   players[user] &&
   !players[user].folded &&
   players[user].hole?.length
     ? analyzeHand([...players[user].hole, ...board])
     : null;
+
+comboDisplayShowCore = street === 0
+  ? comboDisplayAnalysis?.score?.[0] === 1
+  : !!comboDisplayAnalysis;
 
 comboDisplayLocked = true;
 comboTransitionPhase = '';
@@ -2455,7 +2483,7 @@ function captureGameState(){
  };
 }
 function pauseGameForMenu(){
- if(winnerChipAnimating||!gameStarted||gamePaused||dealInProgress||initialDealInProgress)return;  if (blindSequenceTimer !== null) {   logit('Дождись завершения выставления блайндов');   return; }
+ if(   winnerChipAnimating ||   !gameStarted ||   gamePaused ||   dealInProgress ||   initialDealInProgress ||   comboTransitionPhase ) return;  if (blindSequenceTimer !== null) {   logit('Дождись завершения выставления блайндов');   return; }
   resetBetSlider();
  savedGameState=captureGameState();cancelAllInAdvanceTimer();tournamentClock.stop(true);savedGameState.blindRemaining=blindRemaining;gamePaused=true;tick++;clearTurnTimer();clearActionClock();clearBlindSequence();clearActionTimers();busy=false;
  $('startScreen').classList.remove('hidden');$('startScreen').classList.add('exit-mode');$('exitMenuButtons').classList.add('visible');$('playButton').style.display='none';
@@ -2489,6 +2517,10 @@ function resetStacksAndRestart(){
 clearPlayerStatsViewTimers();
   // Полный сброс ожиданий предыдущей игры.
   lastBetFlight = Promise.resolve();
+  comboDisplayAnalysis = null;
+comboDisplayLocked = false;
+comboDisplayShowCore = false;
+comboTransitionPhase = '';
   initialDealInProgress = false;
   dealInProgress = false;
   busy = false;
