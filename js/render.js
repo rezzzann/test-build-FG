@@ -547,6 +547,7 @@ const canPreAct =
   !hasActedThisStreet(0);
 const pending = s.pendingPreAction;
   const hideUserActions =
+  over ||
   players[0].folded ||
   players[0].eliminated ||
   initialDealInProgress ||
