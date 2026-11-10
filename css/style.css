@@ -1337,7 +1337,7 @@ body,
 
 .turn-clock-overlay {
   position: fixed;
-  z-index: 999;
+  z-index: 34;
   pointer-events: none;
   background: none;
   border: none;
