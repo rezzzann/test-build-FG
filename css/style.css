@@ -588,9 +588,19 @@ height: clamp(61px, 8.7vw, 96px);
   pointer-events: none;
   z-index: 10;
   opacity: 0;
-  animation: winningCardFrameIn .28s ease forwards;
+  animation: winningCardFrameIn .3s ease forwards;
+}
+/* Плавное затухание старой комбинации перед обновлением. */
+.table.combo-transition-out .card.combo-core::before {
+  animation: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
 }
 
+.table.combo-transition-out .hand-summary {
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
 .card.winning-card {
   z-index: 2;
 }
