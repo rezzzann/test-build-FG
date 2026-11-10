@@ -10,7 +10,7 @@ import {
   dequeue as removeFromQueue,
   queueHead as getQueueHead
 } from './round.js';
-import { card, miniCard, fmt } from './format.js';
+import { card, miniCard, fmt, compactFmt } from './format.js';
 import {
   getBetChipConfig,
   getBetChipCount,
@@ -544,7 +544,7 @@ function applyTournamentMode(resetClock=true){
 }
 function updateTournamentDisplay(){
  const high=tournamentMode==='highroller';
- $('blindsDisplay').textContent=`БЛАЙНДЫ ${fmt(sb)} / ${fmt(bb)}`;
+ $('blindsDisplay').textContent=`БЛАЙНДЫ ${compactFmt(sb)} / ${compactFmt(bb)}`;
  $('handStatus').textContent=high?`HIGH ROLLER · УР. ${blindLevel+1} · ${Math.ceil(Math.max(0,blindRemaining)/1000)}с`:'';
  $('table').classList.toggle('high-roller',high);
  $('tableWatermark').textContent=high?'HIGH ROLLER':'POKEREZA';
@@ -798,6 +798,7 @@ aiWinnerAnalysis: aiWinningCards.length &&
   card,
   miniCard,
   fmt,
+  compactFmt,
   getBetChipConfig,
   streetNames,
   seatClass,
@@ -817,7 +818,7 @@ aiWinnerAnalysis: aiWinningCards.length &&
     currentBet,
     bb
   }),
-  format: fmt
+  format: compactFmt
 });
 function setWinnerChipControlsLocked(locked) {
   winnerChipAnimating = locked;
