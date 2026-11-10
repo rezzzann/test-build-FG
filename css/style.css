@@ -576,9 +576,35 @@ height: clamp(61px, 8.7vw, 96px);
 }
 
 /* Базовое состояние рамки — без повторного запуска анимации при рендере. */
+/* Рамка выигрышных карт — сохраняем прежнюю анимацию WIN. */
 .card.winning-card::before,
-.card.combo-core::before,
 .mini-card.winning-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px solid #f0d08a;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: winningCardFrameIn .3s ease forwards;
+}
+
+/* Рамка обычной комбинации. */
+.card.combo-core::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px solid #f0d08a;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 1;
+  animation: none;
+  transition: opacity 300ms ease;
+}
   content: "";
   position: absolute;
   inset: 0;
