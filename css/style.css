@@ -627,13 +627,9 @@ height: clamp(61px, 8.7vw, 96px);
   box-shadow: none;
 }
 
-/* Плавное появление новой комбинации. */
+/* Плавное появление новой комбинации без анимации положения карты. */
 .table.combo-transition-in .card.combo-core::before {
   animation: winningCardFrameIn .3s ease forwards;
-}
-
-.table.combo-transition-in .card.combo-core {
-  animation: winningCardGlowIn .3s ease forwards;
 }
 
 .table.combo-transition-out .hand-summary {
