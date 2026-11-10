@@ -37,12 +37,24 @@ const fireVfx = createFireVfx({
     return classes[action] || '';
   }
 
-  function actionMarkup(action) {
-    if (['М. БЛАЙНД', 'Б. БЛАЙНД', 'СТАВКА', 'РЕЙЗ'].includes(action)) {
-      return `<span class="bet-action-name">${action}</span>`;
-    }
-    return action === 'ДУМАЕТ'   ? 'ДУМАЕТ<span class="thinking-dots"><i>.</i><i>.</i><i>.</i></span>'   : action;
+function actionMarkup(action) {
+  const actionLabels = {
+    'ФОЛД': 'сбросил',
+    'КОЛЛ': 'уровнял',
+    'СТАВКА': 'поставил',
+    'РЕЙЗ': 'поднял'
+  };
+
+  if (['М. БЛАЙНД', 'Б. БЛАЙНД', 'СТАВКА', 'РЕЙЗ'].includes(action)) {
+    return `<span class="bet-action-name">${actionLabels[action] || action}</span>`;
   }
+
+  if (action === 'ДУМАЕТ') {
+    return 'ДУМАЕТ<span class="thinking-dots"><i>.</i><i>.</i><i>.</i></span>';
+  }
+
+  return actionLabels[action] || action;
+}
 
 function stateMarkup(p, i, actor, over, street) {
   if (p.eliminated) return 'ВЫБЫЛ';
@@ -574,15 +586,15 @@ const setActionButton = (id, label, actionType, selectedClass) => {
 };
 
 
-setActionButton(   'fold',   betControlOpen ? 'ОТМЕНА' : 'ФОЛД',   'fold',   'pre-action-fold' );
+setActionButton('fold', betControlOpen ? 'ОТМЕНА' : 'FOLD', 'fold', 'pre-action-fold');
 
 const callAvailable = currentBet > players[0].bet;
 
 setActionButton(
   'checkCall',
   callAvailable
-    ? `КОЛЛ <span class="call-amount">${fmt(currentBet - players[0].bet)}</span>`
-    : 'ЧЕК',
+    ? `CALL <span class="call-amount">${fmt(currentBet - players[0].bet)}</span>`
+    : 'CHECK',
   callAvailable ? 'call' : 'check',
   'pre-action-call'
 );
@@ -608,10 +620,10 @@ raiseButton.innerHTML = `
     : ''}
   <span class="action-button-label">
     ${showPreActionMode
-      ? 'УРАВНИВАТЬ<br>ВСЁ'
+      ? 'RAISE<br>ALL'
       : betControlOpen
-        ? 'ПОДТВЕРДИТЬ'
-        : callAvailable ? 'РЕЙЗ' : 'СТАВКА'}
+        ? callAvailable ? 'RAISE' : 'BET'
+        : callAvailable ? 'RAISE' : 'BET'}
   </span>
 `;
 
