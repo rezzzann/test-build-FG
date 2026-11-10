@@ -944,7 +944,7 @@ async function transitionComboDisplay(handTick) {
     '(prefers-reduced-motion: reduce)'
   ).matches;
 
-  const duration = reduceMotion ? 0 : 300;
+  const duration = reduceMotion ? 0 : 600;
 
   // Старая комбинация остаётся зафиксированной.
   // Плавно убираем её рамки и подпись.
