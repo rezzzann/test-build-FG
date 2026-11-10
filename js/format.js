@@ -14,4 +14,27 @@ export function miniCard(c, reveal = false, isWinning = false) {
 export function fmt(n) {
   return Math.max(0, Math.round(n)).toLocaleString('ru-RU');
 }
+export function compactFmt(n) {
+  const value = Math.max(0, Math.round(Number(n) || 0));
 
+  if (value < 1000) return String(value);
+
+  const units = [
+    [1e9, 'B'],
+    [1e6, 'M'],
+    [1e3, 'K']
+  ];
+
+  for (const [divisor, suffix] of units) {
+    if (value >= divisor) {
+      const integer = Math.floor(value / divisor);
+      const fraction = String(value % divisor)
+        .padStart(Math.log10(divisor), '0')
+        .replace(/0+$/, '');
+
+      return `${integer}${fraction ? '.' + fraction : ''}${suffix}`;
+    }
+  }
+
+  return String(value);
+}
