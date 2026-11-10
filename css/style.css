@@ -297,7 +297,7 @@ height: clamp(61px, 8.7vw, 96px);
 .win-display{position:absolute;left:50%;bottom:calc(100% + 13px);transform:translateX(-50%);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:500;white-space:nowrap;text-align:center;pointer-events:none;min-width:100px;}
 .win-display.visible{display:flex}.win-word{font-size:clamp(30px,5vw,48px);line-height:.95;font-weight:1000;letter-spacing:.08em;color:#ffdc70;-webkit-text-stroke:1px #8e5b13;text-shadow:0 0 3px #fff4bc,0 0 9px #ffd04a,0 0 18px #e99b19,0 3px 4px #000;}
 .win-prize{font-size:clamp(12px,1.7vw,17px);font-weight:1000;color:#fff0b0;text-shadow:0 2px 4px #000,0 0 8px #000;margin-top:5px}.win-combo{font-size:clamp(9px,1.2vw,12px);font-weight:900;color:#fff;text-shadow:0 2px 4px #000;margin-top:2px}
-.action-label{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);z-index:7;color:#ffe3a0;font-size:clamp(20px,3vw,29px);font-weight:1000;line-height:1.1;white-space:nowrap;text-shadow:0 2px 4px #000,0 0 8px #000;pointer-events:none;letter-spacing:.04em}
+.action-label{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);z-index:7;color:#ffe3a0;font-size:clamp(14px,2.1vw,20px);font-weight:1000;line-height:1.1;white-space:nowrap;text-shadow:0 2px 4px #000,0 0 8px #000;pointer-events:none;letter-spacing:.04em}
 .action-label:empty{display:none}
 .action-label.thinking{color:#fff;font-size:clamp(13px,1.8vw,17px);font-weight:800;letter-spacing:0;animation:thinkingPulse 1.5s ease-in-out infinite;animation-delay:var(--thinking-animation-delay, 0s);}
 .action-label.thinking .thinking-dots{display:inline-flex;gap:1px;margin-left:2px}.action-label.thinking .thinking-dots i{font-style:normal;opacity:.25;animation:thinkingDotPulse 1.2s ease-in-out infinite;animation-delay:calc(var(--thinking-animation-delay, 0s) + var(--dot-delay, 0s))}.action-label.thinking .thinking-dots i:nth-child(1){--dot-delay:0s}.action-label.thinking .thinking-dots i:nth-child(2){--dot-delay:.2s}.action-label.thinking .thinking-dots i:nth-child(3){--dot-delay:.4s}@keyframes thinkingDotPulse{0%,20%,100%{opacity:.25;transform:translateY(0)}40%,60%{opacity:1;transform:translateY(-2px)}}
@@ -306,8 +306,8 @@ height: clamp(61px, 8.7vw, 96px);
 .action-label.call-label,.action-label.check-label{color:#39ff78;text-shadow:0 0 4px #00b84d,0 0 9px #007d38,0 2px 4px #000}
 .action-label.allin-label{color:#ffb02e;font-size:clamp(21px,3.2vw,31px);font-weight:1000;letter-spacing:.055em;background:linear-gradient(180deg,#fff7b0 0%,#ffd447 20%,#ff941c 43%,#ff4b13 68%,#f20e21 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 2px #fff0a0) drop-shadow(0 0 5px #ff8a00) drop-shadow(0 0 10px #ff2800);}
 .action-label.bet-label,.action-label.raise-label,.action-label.small-blind-label,.action-label.big-blind-label{bottom:calc(100% + 8px);display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;white-space:nowrap;max-width:min(44vw,190px);z-index:8}
-.action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:clamp(13px,1.9vw,18px);letter-spacing:.015em}
-.action-label .bet-action-name{display:block;font-size:clamp(15px,2.3vw,22px);line-height:1.05}
+.action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:clamp(9px,1.3vw,13px);letter-spacing:.015em}
+.action-label .bet-action-name{display:block;font-size:clamp(11px,1.6vw,15px);line-height:1.05}
 .action-label .bet-action-amount{display:none}
 .gold-chip{width:clamp(13px,1.8vw,18px);height:clamp(13px,1.8vw,18px);border-radius:50%;flex-shrink:0;display:inline-grid;place-items:center;color:#4a3210;font-size:clamp(8px,1.1vw,11px);font-weight:1000;line-height:1;background:radial-gradient(circle at 35% 30%,#fff0ae 0%,#e9c56b 32%,#bd8730 72%,#704718 100%);border:2px dashed #fff0b1;box-shadow:0 0 0 1px #7e561c,0 1px 3px #000b}
 .blue-chip{width:clamp(13px,1.8vw,18px);height:clamp(13px,1.8vw,18px);border-radius:50%;flex-shrink:0;display:inline-grid;place-items:center;color:#080b12;font-size:clamp(8px,1.1vw,11px);font-weight:1000;line-height:1;background:radial-gradient(circle at 35% 28%,#b8dcff 0%,#438be1 32%,#1450a0 70%,#082653 100%);border:2px solid #d7b765;box-shadow:0 0 0 1px #75551d,0 1px 3px #000b}
@@ -474,10 +474,10 @@ height: clamp(61px, 8.7vw, 96px);
 .hand-bet.b2{top:calc(17% + 4px);left:calc(50% + 0px)}
 .hand-bet.b3{top:calc(39% - 1px);right:calc(1% + 25px + 25px)}
 .actions{flex-wrap:wrap;min-height:82px;gap:4px}.act{flex:1;min-width:0;padding:20px 3px}.betbox{order:5;width:100%;justify-content:center}.betbox input{width:55vw}.next-hand{width:calc((100% - 12px)/4);height:clamp(58px,14vw,66px);font-size:clamp(10px,3vw,13px)}
-.pot{top:25%}.action-label{font-size:clamp(18px,5vw,24px);bottom:calc(100% + 5px)}.action-label.thinking{font-size:clamp(11px,3vw,14px)}.action-label.allin-label{font-size:clamp(19px,5vw,25px)}.wm{font-size:clamp(12px,3vw,19px);gap:7px;letter-spacing:.12em}.wm:before,.wm:after{width:clamp(12px,4vw,25px)}.win-display{bottom:calc(100% + 10px);min-width:80px}.win-word{font-size:clamp(27px,8vw,37px)}.win-prize{font-size:clamp(11px,3vw,14px)}.win-combo{font-size:clamp(8px,2.3vw,10px)}
+.pot{top:25%}.action-label{font-size:clamp(13px,3.5vw,17px);bottom:calc(100% + 5px)}.action-label.thinking{font-size:clamp(11px,3vw,14px)}.action-label.allin-label{font-size:clamp(19px,5vw,25px)}.wm{font-size:clamp(12px,3vw,19px);gap:7px;letter-spacing:.12em}.wm:before,.wm:after{width:clamp(12px,4vw,25px)}.win-display{bottom:calc(100% + 10px);min-width:80px}.win-word{font-size:clamp(27px,8vw,37px)}.win-prize{font-size:clamp(11px,3vw,14px)}.win-combo{font-size:clamp(8px,2.3vw,10px)}
 .action-label.bet-label,.action-label.raise-label,.action-label.small-blind-label,.action-label.big-blind-label{max-width:min(46vw,155px);gap:2px;bottom:calc(100% + 5px)}
 .action-label .bet-action-name{font-size:clamp(13px,3.7vw,18px)}
-.action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:clamp(12px,3.3vw,16px)}
+.action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:clamp(8px,2.3vw,11px)}
 .action-label .bet-action-amount{font-size:clamp(11px,3vw,14px);padding:3px 5px;gap:3px}
 .gold-chip,.blue-chip{width:14px;height:14px;font-size:8px}
 .seat.s0 .action-label.bet-label,.seat.s0 .action-label.raise-label{top:calc(100% + 5px);bottom:auto}
@@ -495,10 +495,10 @@ height: clamp(61px, 8.7vw, 96px);
 .opponent-cards.ai-winner-cards .mini-card,.opponent-cards.ai-winner-cards.revealed .mini-card{height:clamp(48px,15vh,76px)!important;width:clamp(36px,5.2vw,60px)!important}
 .opponent-cards.ai-winner-cards .mini-rank,.opponent-cards.ai-winner-cards.revealed .mini-rank{font-size:17px!important}
 .opponent-cards.ai-winner-cards .mini-suit,.opponent-cards.ai-winner-cards.revealed .mini-suit{font-size:26px!important}
-.seat{padding:4px 6px}.avatar{width:32px;height:32px}.seat.user-seat{min-width:155px;padding:5px 8px}.user-seat .avatar{width:43px;height:55px}.user-seat .stack{font-size:14px}.hole{top:calc(73% - clamp(26px,8vh,41px));width:calc(clamp(39px,5.4vw,64px)*2 + 5px)}.community{top:50%}.s0{top:8%}.opponent-cards.c0{top:calc(17% + 5px);left:calc(50% - 25px);width:48px}.action-label{font-size:20px}.opponent-cards .mini-card{width:22px;height:31px}.opponent-cards.revealed .mini-card{width:29px;height:42px}.action-label.allin-label{font-size:23px}.next-hand{height:55px}.win-word{font-size:30px}.win-prize{font-size:11px}.win-combo{font-size:9px}
+.seat{padding:4px 6px}.avatar{width:32px;height:32px}.seat.user-seat{min-width:155px;padding:5px 8px}.user-seat .avatar{width:43px;height:55px}.user-seat .stack{font-size:14px}.hole{top:calc(73% - clamp(26px,8vh,41px));width:calc(clamp(39px,5.4vw,64px)*2 + 5px)}.community{top:50%}.s0{top:8%}.opponent-cards.c0{top:calc(17% + 5px);left:calc(50% - 25px);width:48px}.action-label{font-size:14px}.opponent-cards .mini-card{width:22px;height:31px}.opponent-cards.revealed .mini-card{width:29px;height:42px}.action-label.allin-label{font-size:23px}.next-hand{height:55px}.win-word{font-size:30px}.win-prize{font-size:11px}.win-combo{font-size:9px}
 .action-label.bet-label,.action-label.raise-label,.action-label.small-blind-label,.action-label.big-blind-label{bottom:calc(100% + 5px);gap:2px;max-width:180px}
-.action-label .bet-action-name{font-size:17px}
-.action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:15px}
+.action-label .bet-action-name{font-size:12px}
+.action-label.small-blind-label .bet-action-name,.action-label.big-blind-label .bet-action-name{font-size:11px}
 .action-label .bet-action-amount{font-size:13px;padding:2px 6px}
 .gold-chip,.blue-chip{width:14px;height:14px;font-size:8px}
 .seat.s0 .action-label.bet-label,.seat.s0 .action-label.raise-label{top:calc(100% + 4px);bottom:auto}
