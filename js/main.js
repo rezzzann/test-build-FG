@@ -1710,19 +1710,8 @@ async function advanceStreet() {
   await lastBetFlight;
 
   if (handTick !== tick || gamePaused) return;
-busy = true;
-dealInProgress = true;
-collectingBets = true;
-clearTurnTimer();
-render();
 
-const collected = await collectBetsVisually(handTick);
-
-collectingBets = false;
-
-if (!collected) return;
-// Сохраняем комбинацию и правила её подсветки
-// именно для предыдущей улицы.
+// Сохраняем подсветку предыдущей улицы до начала любых анимаций.
 comboDisplayAnalysis =
   players[user] &&
   !players[user].folded &&
@@ -1736,6 +1725,18 @@ comboDisplayShowCore = street === 0
 
 comboDisplayLocked = true;
 comboTransitionPhase = '';
+
+busy = true;
+dealInProgress = true;
+collectingBets = true;
+clearTurnTimer();
+render();
+
+const collected = await collectBetsVisually(handTick);
+
+collectingBets = false;
+
+if (!collected) return;
   if (live().length <= 1) {
     dealInProgress = false;
     busy = false;
