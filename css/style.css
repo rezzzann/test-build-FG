@@ -572,7 +572,7 @@ height: clamp(61px, 8.7vw, 96px);
     0 0 0 2px #c5a15b66,
     0 0 12px #e5bd63cc,
     0 2px 5px #0008;
-  transition: box-shadow .3s ease;
+  transition: box-shadow .6s ease;
 }
 
 /* Базовое состояние рамки — без повторного запуска анимации при рендере. */
@@ -603,7 +603,7 @@ height: clamp(61px, 8.7vw, 96px);
   z-index: 10;
   opacity: 1;
   animation: none;
-  transition: opacity 300ms ease;
+  transition: opacity 600ms ease;
 }
  
 
@@ -618,16 +618,16 @@ height: clamp(61px, 8.7vw, 96px);
 
 /* Плавное появление новой комбинации без анимации положения карты. */
 .table.combo-transition-in .card.combo-core::before {
-  animation: winningCardFrameIn .3s ease forwards;
+  animation: winningCardFrameIn .6s ease forwards;
 }
 
 .table.combo-transition-out .hand-summary {
   opacity: 0;
-  transition: opacity 300ms ease;
+  transition: opacity 600ms ease;
 }
 
 .table.combo-transition-in .hand-summary {
-  transition: opacity 300ms ease;
+  transition: opacity 600ms ease;
 }
 
 .card.winning-card {
