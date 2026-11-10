@@ -107,8 +107,10 @@ function renderHandBets() {
   }).join('');
 }
 function shouldShowComboCore(state) {
-  const {
+   const {
     currentHandAnalysis,
+    comboDisplayAnalysis,
+    comboDisplayLocked,
     street,
     over,
     humanWinnerReveal,
@@ -117,21 +119,30 @@ function shouldShowComboCore(state) {
     communityDealingIndices = []
   } = state;
 
+  const displayAnalysis = comboDisplayLocked
+    ? comboDisplayAnalysis
+    : currentHandAnalysis;
+
   // После проигрыша на вскрытии подсветка пользователя отключена.
   if (over && !humanWinnerReveal) return false;
 
   // Не показываем подсветку до полного завершения раздачи карт.
   if (
-    dealInProgress ||
     initialDealInProgress ||
-    communityDealingIndices.length > 0
+    (
+      !comboDisplayLocked &&
+      (
+        dealInProgress ||
+        communityDealingIndices.length > 0
+      )
+    )
   ) {
     return false;
   }
 
   // Префлоп: выделяем только карманную пару.
   if (street === 0) {
-    return currentHandAnalysis?.score?.[0] === 1;
+    return displayAnalysis?.score?.[0] === 1;
   }
 
   // На остальных улицах показываем основные карты комбинации.
@@ -144,6 +155,8 @@ function renderCommunity() {
   const {
     board,
     humanWinnerReveal,
+        comboDisplayAnalysis,
+    comboDisplayLocked,
     aiWinnerReveal,
     winningCards,
     aiWinningCards,
@@ -151,6 +164,9 @@ function renderCommunity() {
     aiWinnerAnalysis,
     communityDealingIndices = []
   } = state;
+    const displayAnalysis = comboDisplayLocked
+    ? comboDisplayAnalysis
+    : currentHandAnalysis;
 
   const showComboCore = shouldShowComboCore(state);
   const el = $('community');
@@ -175,7 +191,7 @@ function renderCommunity() {
 
       const isHumanCore =
         !!humanWinnerReveal &&
-        !!currentHandAnalysis?.coreCards.includes(currentCard);
+        !!displayAnalysis?.coreCards.includes(currentCard);
 
       const isAIWinningCard =
         !!aiWinnerReveal &&
@@ -200,7 +216,7 @@ function renderCommunity() {
           ? isHumanCore
           : showComboCore &&
             !aiWinnerReveal &&
-            !!currentHandAnalysis?.coreCards.includes(currentCard)
+            !!displayAnalysis?.coreCards.includes(currentCard)
       );
 
       node.classList.toggle(
@@ -236,7 +252,7 @@ function renderCommunity() {
 
     const isHumanCore =
       !!humanWinnerReveal &&
-      !!currentHandAnalysis?.coreCards.includes(c);
+      !!displayAnalysis?.coreCards.includes(c);
 
     const isAICore =
       !!aiWinnerReveal &&
@@ -251,7 +267,7 @@ function renderCommunity() {
       : aiWinnerReveal
         ? isAICore
         : showComboCore &&
-          !!currentHandAnalysis?.coreCards.includes(c);
+          !!displayAnalysis?.coreCards.includes(c);
 
     const isDimmed =
       (humanWinnerReveal || aiWinnerReveal) &&
@@ -327,8 +343,12 @@ if (animateWinnerEntrance) {
   winnerAnimationPlayed = true;
 }
     const showComboCore = shouldShowComboCore(s);
-    const showUserCombo =
-  (!dealInProgress || collectingBets) && !userHoleRevealBack;
+    const displayAnalysis = s.comboDisplayLocked
+  ? s.comboDisplayAnalysis
+  : currentHandAnalysis;
+   const showUserCombo =
+  (s.comboDisplayLocked || !dealInProgress || collectingBets) &&
+  !userHoleRevealBack;
     $('pot').textContent = compactFmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
 
@@ -336,13 +356,13 @@ if (animateWinnerEntrance) {
 
    if (handSummary) {
   handSummary.textContent =
-    showUserCombo && currentHandAnalysis
-      ? currentHandAnalysis.name
+   showUserCombo && displayAnalysis
+  ? displayAnalysis.name
       : '';
 
   handSummary.classList.toggle(
     'visible',
-    showUserCombo && !!currentHandAnalysis
+    showUserCombo && !!displayAnalysis
   );
 }
 
@@ -367,7 +387,7 @@ if (animateWinnerEntrance) {
      if (
   showUserCombo &&
   showComboCore &&
-  currentHandAnalysis?.coreCards.includes(c)
+  displayAnalysis?.coreCards.includes(c)
 ) {
         html = html.replace(
           'class="card',
