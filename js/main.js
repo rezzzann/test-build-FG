@@ -511,6 +511,10 @@ let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
 let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
       let collectingBets = false;
       let betControlOpen = false;
+      // Состояние плавного обновления подсветки комбинации.
+let comboDisplayAnalysis = null;
+let comboDisplayLocked = false;
+let comboTransitionPhase = '';
 let lastBetFlight = Promise.resolve();      
 const effects = createEffects({
   getBetChipConfig,
@@ -789,6 +793,9 @@ currentHandAnalysis: players[user] &&
   players[user].hole?.length
     ? analyzeHand([...players[user].hole, ...board])
     : null,
+    comboDisplayAnalysis,
+comboDisplayLocked,
+comboTransitionPhase,
 
 aiWinnerAnalysis: aiWinningCards.length &&
   players[aiWinnerId]?.hole?.length
@@ -893,7 +900,57 @@ function waitForDeal(ms, handTick) {
     }, ms);
   });
 }
+async function transitionComboDisplay(handTick) {
+  const nextAnalysis =
+    players[user] &&
+    !players[user].folded &&
+    players[user].hole?.length
+      ? analyzeHand([...players[user].hole, ...board])
+      : null;
 
+  const getSignature = analysis => {
+    if (!analysis) return '';
+
+    const cards = (analysis.coreCards || [])
+      .map(c => `${c.r}${c.s}`)
+      .sort()
+      .join('|');
+
+    return `${analysis.name}|${cards}`;
+  };
+
+  const previousSignature = getSignature(comboDisplayAnalysis);
+  const nextSignature = getSignature(nextAnalysis);
+
+  // Если комбинация не изменилась — анимация не нужна.
+  if (previousSignature === nextSignature) {
+    comboDisplayAnalysis = nextAnalysis;
+    comboDisplayLocked = false;
+    comboTransitionPhase = '';
+    render();
+    return true;
+  }
+
+  // Фаза 1: плавно затухает старая подсветка.
+  comboTransitionPhase = 'out';
+  render();
+
+  if (!(await waitForDeal(300, handTick))) return false;
+
+  // Фаза 2: устанавливаем новую комбинацию.
+  comboDisplayAnalysis = nextAnalysis;
+  comboDisplayLocked = false;
+  comboTransitionPhase = 'in';
+  render();
+
+  if (!(await waitForDeal(300, handTick))) return false;
+
+  comboTransitionPhase = '';
+  render();
+
+  return true;
+}
+      
 function flyDealtCard(playerIndex, handTick, reduceMotion) {
   return new Promise(resolve => {
     if (handTick !== tick || gamePaused) {
@@ -1282,7 +1339,19 @@ if (communityCard && !reduceMotion) {
     street = 4;
   }
 
-  dealInProgress = false;
+   dealInProgress = false;
+
+  // При обычном переходе обновляем комбинацию только после раздачи.
+  if (!isRunout) {
+    busy = true;
+
+    const updated = await transitionComboDisplay(handTick);
+    if (!updated) return;
+  } else {
+    comboDisplayLocked = false;
+    comboTransitionPhase = '';
+  }
+
   busy = false;
   render();
 
@@ -1629,7 +1698,16 @@ const collected = await collectBetsVisually(handTick);
 collectingBets = false;
 
 if (!collected) return;
+// Сохраняем текущую комбинацию до открытия новых карт.
+comboDisplayAnalysis =
+  players[user] &&
+  !players[user].folded &&
+  players[user].hole?.length
+    ? analyzeHand([...players[user].hole, ...board])
+    : null;
 
+comboDisplayLocked = true;
+comboTransitionPhase = '';
   if (live().length <= 1) {
     dealInProgress = false;
     busy = false;
