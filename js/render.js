@@ -363,8 +363,7 @@ if (animateWinnerEntrance) {
         let html = (initialDealInProgress || userHoleRevealBack)
   ? '<div class="card back"></div>'
   : card(c);
-
-      // Зелёная обводка — только основные карты текущей комбинации.
+      
      if (
   showUserCombo &&
   showComboCore &&
