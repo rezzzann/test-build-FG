@@ -5,6 +5,7 @@ export function createRenderer({
   card,
   miniCard,
   fmt,
+  compactFmt,
   getBetChipConfig,
   streetNames,
   seatClass,
@@ -102,7 +103,7 @@ function renderHandBets() {
         : '<span class="gold-chip"></span>'
     ).join('');
 
-    return `<div class="hand-bet b${i} visible" data-player="${i}" aria-label="Ставка ${fmt(p.bet)} PP"><span class="bet-chips">${chips}</span><span class="bet-total">${fmt(p.bet)} PP</span></div>`;
+    return `<div class="hand-bet b${i} visible" data-player="${i}" aria-label="Ставка ${fmt(p.bet)} PP"><span class="bet-chips">${chips}</span><span class="bet-total">${compactFmt(p.bet)}</span></div>`;
   }).join('');
 }
 function shouldShowComboCore(state) {
@@ -328,7 +329,7 @@ if (animateWinnerEntrance) {
     const showComboCore = shouldShowComboCore(s);
     const showUserCombo =
   (!dealInProgress || collectingBets) && !userHoleRevealBack;
-    $('pot').textContent = fmt(pot);
+    $('pot').textContent = compactFmt(pot);
     $('street').textContent = streetNames[Math.min(street, 4)];
 
     const handSummary = $('handSummary');
@@ -349,7 +350,7 @@ if (animateWinnerEntrance) {
       ? `HIGH ROLLER · УР. ${blindLevel + 1} · ${Math.ceil(Math.max(0, blindRemaining) / 1000)}с`
       : '';
 
-    $('blindsDisplay').textContent = `БЛАЙНДЫ ${fmt(sb)} / ${fmt(bb)}`;
+    $('blindsDisplay').textContent = `БЛАЙНДЫ ${compactFmt(sb)} / ${compactFmt(bb)}`;
 
     renderCommunity();
 
@@ -452,7 +453,7 @@ const labelClass = actionClass(action);
       const isWinner = winnerIds.includes(i);
 
      const winMarkup = isWinner
-  ? `<div class="win-display visible ${animateWinnerEntrance ? 'win-entrance' : ''}"><div class="win-word">WIN</div><div class="win-prize">+${fmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
+  ? `<div class="win-display visible ${animateWinnerEntrance ? 'win-entrance' : ''}"><div class="win-word">WIN</div><div class="win-prize">+${compactFmt(winnerPayouts[i] || 0)} PP</div><div class="win-combo">${winnerCombo}</div></div>`
   : '';
 
 const showAISeatCards =
@@ -502,7 +503,7 @@ const seatInfoMarkup = i === 0 && p.eliminated && p.showTournamentStats
   : `
     <div class="seat-info ${p.statsReturning ? 'info-return' : ''}">
       <div class="name">${i === 0 ? 'Вы' : p.name}</div>
-      <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${fmt(p.stack)} PP`}</div>
+      <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${compactFmt(p.stack)} PP`}</div>
       <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
     </div>
   `;
@@ -594,7 +595,7 @@ const callAvailable = currentBet > players[0].bet;
 setActionButton(
   'checkCall',
   callAvailable
-    ? `CALL <span class="call-amount">${fmt(currentBet - players[0].bet)}</span>`
+    ? `CALL <span class="call-amount">${compactFmt(currentBet - players[0].bet)}</span>`
     : 'CHECK',
   callAvailable ? 'call' : 'check',
   'pre-action-call'
