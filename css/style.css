@@ -165,7 +165,6 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .hole .card{width:clamp(58px,8.5vw,94px);height:clamp(84px,12vw,132px);}
 .hole.winner-hole{top:calc(50% + clamp(35px,5.1vw,58px) + 6px);gap:clamp(4px,.7vw,9px)}
 .hole.winner-hole .card{width:clamp(48px,7vw,82px);height:clamp(70px,10.2vw,116px)}
-.card.winning-card,.mini-card.winning-card{border:2px solid #f0d08a!important;box-shadow:0 0 0 2px #c5a15b66,0 0 12px #e5bd63cc,0 2px 5px #0008!important;z-index:2}
 .opponent-cards.ai-winner-cards,.opponent-cards.ai-winner-cards.revealed{top:calc(60% - clamp(55px,15vw,70px)*1.5 - 10px)!important;left:50%!important;right:auto!important;transform:translate(-50%,0);gap:3px!important;opacity:1;z-index:5;filter:drop-shadow(0 2px 4px #000b);}
 .opponent-cards.ai-winner-cards .mini-card,.opponent-cards.ai-winner-cards.revealed .mini-card{width:clamp(38px,10.5vw,49px)!important;height:clamp(55px,15vw,70px)!important;padding:4px;border:1px solid #fff;border-radius:4px;background:linear-gradient(145deg,#fff 0%,#f8f8f5 100%);color:#171717;box-shadow:0 2px 5px #0009,inset 0 0 0 1px #deded8;overflow:hidden;flex-shrink:0}
 .opponent-cards.ai-winner-cards .mini-card.red,.opponent-cards.ai-winner-cards.revealed .mini-card.red{color:#c62836!important}
@@ -564,25 +563,61 @@ height: clamp(61px, 8.7vw, 96px);
   transform: translate(-50%, -50%) translateY(-3px);
 }
 
-/* Обычная золотая обводка — только выигравшие карты пользователя. */
-.card.winning-card {
-  border: 2px solid #f0d08a !important;
+
+/* Единое оформление золотой рамки выигрышных карт и основных карт комбинации. */
+.card.winning-card,
+.card.combo-core,
+.mini-card.winning-card {
   box-shadow:
     0 0 0 2px #c5a15b66,
     0 0 12px #e5bd63cc,
-    0 2px 5px #0008 !important;
+    0 2px 5px #0008;
+  transition: box-shadow .28s ease;
+}
+
+/* Рамка располагается поверх карты и не меняет её размеры. */
+.card.winning-card::before,
+.card.combo-core::before,
+.mini-card.winning-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px solid #f0d08a;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: winningCardFrameIn .28s ease forwards;
+}
+
+.card.winning-card {
   z-index: 2;
 }
 
-/* Золотая обводка основных карт комбинации. */
 .card.combo-core {
-  border: 2px solid #f0d08a !important;
-  box-shadow:
-    0 0 0 2px #c5a15b66,
-    0 0 12px #e5bd63cc,
-    0 2px 5px #0008 !important;
   z-index: 3;
 }
+
+/* Плавное появление золотой рамки. */
+@keyframes winningCardFrameIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card.winning-card::before,
+  .card.combo-core::before,
+  .mini-card.winning-card::before {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* Затемнение карт, не участвующих в лучшей комбинации. */
 .card.not-in-combo,
 .mini-card.not-in-combo {
