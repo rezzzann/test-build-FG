@@ -300,6 +300,7 @@ function renderCommunity() {
 
     const {
       players,
+      stackDisplayOverrides,
       pot,
       street,
       tournamentMode,
@@ -532,7 +533,7 @@ const seatInfoMarkup = i === 0 && p.eliminated && p.showTournamentStats
   : `
     <div class="seat-info ${p.statsReturning ? 'info-return' : ''}">
       <div class="name">${i === 0 ? 'Вы' : p.name}</div>
-      <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${compactFmt(p.stack)} PP`}</div>
+      <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${compactFmt(stackDisplayOverrides?.[i] ?? p.stack)} PP`}</div>
       <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
     </div>
   `;
