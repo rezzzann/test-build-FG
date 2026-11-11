@@ -100,7 +100,7 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 }
 .wm{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:clamp(8px,1.5vw,17px);white-space:nowrap;z-index:1;pointer-events:none;color:#d8b45f;font-size:clamp(13px,2.5vw,25px);font-weight:900;letter-spacing:.17em;text-shadow:0 0 5px #c5a15b55,0 1px 2px #0008;opacity:.78}
 .wm:before,.wm:after{content:"";display:block;width:clamp(18px,5vw,58px);height:1px;background:linear-gradient(90deg,transparent,#d5b66b,#f0d995);box-shadow:0 0 4px #c5a15b33}.wm:after{transform:scaleX(-1)}
-.pot{position:absolute;top:22%;left:50%;transform:translateX(-50%);z-index:2;text-align:center;font-size:clamp(11px,1.4vw,15px);font-weight:800;white-space:nowrap}
+.pot {   position: absolute;   top: 22%;   left: 50%;   transform: translateX(-50%);   z-index: 2;   text-align: center;   font-size: clamp(11px, 1.4vw, 15px);   font-weight: 800;   white-space: nowrap;   opacity: 1;   transition: opacity .4s ease;   pointer-events: none; }  .table.initial-deal-active .pot {   opacity: 0; }
 .pot small{display:block;color:#c6d5c8;font-size:.8em;margin-bottom:3px}
 .table.ai-winner-state .pot{visibility:hidden}
 .community{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;gap:clamp(4px,.7vw,9px);z-index:3;}
@@ -1487,6 +1487,7 @@ body,
   top: calc(22% - 72px);
   left: 50%;
   transform: translate(-50%, 25px) scale(0.666);
+  transform-origin: center center;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -1562,7 +1563,7 @@ body,
     filter: brightness(1);
   }
   35% {
-    scale: 1.13;
+    scale: 1.26;
     filter: brightness(1.65)
       drop-shadow(0 0 9px #e4bd68aa);
   }
