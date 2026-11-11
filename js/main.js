@@ -508,7 +508,7 @@ function cancelAllInAdvanceTimer() {
 let renderedBoardCount=0,winnerIds=[],winnerPayouts={},winnerCombo='';
 let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false,winningLiftActive=false;
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
-let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
+let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let autoPauseRequested = false; let autoPauseActive = false; let pageIsHidden = document.visibilityState === 'hidden'; let betFlightInProgress = false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
       let collectingBets = false;
 let betControlOpen = false;
 
@@ -1665,8 +1665,59 @@ if (playersWithChips === 2) {
   );
 }
 
+function tryAutoPause() {
+  if (
+    !autoPauseRequested ||
+    !pageIsHidden ||
+    !gameStarted ||
+    gamePaused
+  ) {
+    return false;
+  }
+
+  // Не прерываем игровые переходы и анимации.
+  if (
+    winnerChipAnimating ||
+    busy ||
+    betFlightInProgress ||
+    dealInProgress ||
+    initialDealInProgress ||
+    comboTransitionPhase ||
+    blindSequenceTimer !== null
+  ) {
+    return false;
+  }
+
+  pauseGameForMenu();
+
+  if (gamePaused) {
+    autoPauseRequested = false;
+    autoPauseActive = true;
+    return true;
+  }
+
+  return false;
+}
+      
 function advanceQueue(){
   if (over || gamePaused || dealInProgress) return;
+
+  if (autoPauseRequested) {
+    if (tryAutoPause()) return;
+
+    // Не запускаем следующий ход, пока ожидаем
+    // завершения текущей анимации или перехода.
+    if (
+      busy ||
+      betFlightInProgress ||
+      initialDealInProgress ||
+      comboTransitionPhase ||
+      blindSequenceTimer !== null ||
+      winnerChipAnimating
+    ) {
+      return;
+    }
+  }
 
   // Если остался один игрок — сразу объявляем его победителем.
   if (live().length <= 1) {
@@ -2061,7 +2112,7 @@ if (p.allin) {
   registerPlayerAllIn(i);
 }
 
- p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(   i,   chipAmount,   () => releaseStackDisplay(i) );       resolve();     });   }); }
+ p.actedStreet=street; dequeue(i); tick++; resetBetSlider();  if (chipAmount > 0) {   render();   betFlightInProgress = true;    lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       try {         await effects.animateBetChip(           i,           chipAmount,           () => releaseStackDisplay(i)         );       } finally {         betFlightInProgress = false;         resolve();          // Если пользователь ушёл во время полёта фишек,         // проверяем паузу до следующего игрового действия.         if (autoPauseRequested) {           advanceQueue();         }       }     });   }); }
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
 }
@@ -2332,6 +2383,7 @@ pendingAIDelayRestore = null;
   }
 
   await Promise.all(finishAnimations);
+  if (tryAutoPause()) return;
 
   // Не продолжаем, если игра была остановлена или перезапущена.
   if (
@@ -2373,6 +2425,7 @@ if (playersWithChips < 2) {
   if (!(await waitForDeal(3000, finishedHandTick))) {
     return;
   }
+  if (tryAutoPause()) return;
 
   if (
     finishedHandTick === tick &&
@@ -2628,6 +2681,9 @@ function resetStacksAndRestart(){
 clearPlayerStatsViewTimers();
   // Полный сброс ожиданий предыдущей игры.
   lastBetFlight = Promise.resolve();
+  autoPauseRequested = false;
+autoPauseActive = false;
+betFlightInProgress = false;
   stackDisplayOverrides = {};
   comboDisplayAnalysis = null;
 comboDisplayLocked = false;
@@ -2651,6 +2707,46 @@ $('classicModeButton').addEventListener('click',()=>chooseTournament('classic'))
 $('highRollerModeButton').addEventListener('click',()=>chooseTournament('highroller'));
 $('closeTournamentButton').addEventListener('click',()=>$('tournamentOverlay').classList.remove('visible'));
 $('tournamentOverlay').addEventListener('click',event=>{if(event.target===$('tournamentOverlay'))$('tournamentOverlay').classList.remove('visible')});
+function handlePageHidden() {
+  pageIsHidden = true;
+  autoPauseRequested = true;
+
+  // Если сейчас безопасный момент — ставим паузу сразу.
+  // Иначе дождёмся завершения текущего игрового этапа.
+  tryAutoPause();
+}
+
+function handlePageVisible() {
+  pageIsHidden = false;
+
+  // Автоматически продолжаем только ту игру,
+  // которую остановила именно автопауза.
+  if (autoPauseActive && savedGameState) {
+    autoPauseActive = false;
+    autoPauseRequested = false;
+    restoreSavedGame();
+    return;
+  }
+
+  // Если пользователь вернулся раньше безопасного момента,
+  // отменяем ожидающую автопаузу.
+  autoPauseRequested = false;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    handlePageHidden();
+  } else {
+    handlePageVisible();
+  }
+});
+
+window.addEventListener('pagehide', handlePageHidden);
+window.addEventListener('pageshow', event => {
+  if (event.persisted || document.visibilityState === 'visible') {
+    handlePageVisible();
+  }
+});                                                                                                                                                                                                          
 $('exitButton').addEventListener('click',pauseGameForMenu);
 $('resumeButton').addEventListener('click',restoreSavedGame);
 $('restartButton').addEventListener('click',resetStacksAndRestart);
