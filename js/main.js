@@ -1497,6 +1497,8 @@ if (sbAmount > 0 && players[smallBlindSeat].allin) {
 
 
 function newHand() {
+    // Применяем новый уровень блайндов только при начале раздачи.
+  tournamentClock.applyPendingLevel();
   pendingPreAction = null;
   clearActionClock();
   if (winnerChipAnimating) return;
