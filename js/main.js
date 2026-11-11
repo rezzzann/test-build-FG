@@ -1035,10 +1035,11 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
     }
 
     const isUser = playerIndex === user;
-    const target = isUser
-      ? $('hole')
-      : $('opponentCards').querySelector(`.${cardPos[playerIndex]}`);
-
+ const target = isUser
+  ? $('hole')
+  : document.querySelector(
+      `#seats .seat[data-player-index="${playerIndex}"] .opponent-cards`
+    );
     const deckStack = $('deckStack');
     const table = $('table');
 
@@ -1995,10 +1996,9 @@ function animateAIFoldCards(playerIndex) {
   const position = cardPos[playerIndex];
   if (!position) return;
 
-  const source = document.querySelector(
-    `.opponent-cards.${position}`
-  );
-
+ const source = document.querySelector(
+  `#seats .seat[data-player-index="${playerIndex}"] .opponent-cards`
+);
   const table = $('table');
 
   if (!source || !table) return;
