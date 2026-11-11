@@ -538,11 +538,11 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     <div class="seat-info ${p.statsReturning ? 'info-return' : ''}">
       <div class="name">${i === 0 ? 'Вы' : p.name}</div>
       <div class="stack">${p.eliminated ? 'ОТКРЫТЬ' : `${compactFmt(stackDisplayOverrides?.[i] ?? p.stack)} PP`}</div>
-      <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
+    
     </div>
   `;
 
-      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
+      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
     }).join('');
 
     $('opponentCards').innerHTML = players.map((p, i) => {
