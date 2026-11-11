@@ -2108,7 +2108,10 @@ const feedbackReminder = initFeedbackReminder({
   $,
   getHandNo: () => handNo,
   getGamePaused: () => gamePaused,
-  getTournamentMode: () => tournamentMode
+  getTournamentMode: () => tournamentMode,
+  setGamePaused: value => {
+    gamePaused = value;
+  }
 });
     async function liftWinningCards(handTick) {
   // Дополнительная пауза после вскрытия карт.
@@ -2328,11 +2331,21 @@ pendingAIDelayRestore = null;
     );
   }
 
-  feedbackReminder.showAfterThirdHand();
-
   await Promise.all(finishAnimations);
 
   // Не продолжаем, если игра была остановлена или перезапущена.
+  if (
+    finishedHandTick !== tick ||
+    gamePaused ||
+    !over
+  ) {
+    return;
+  }
+
+  // После всех финальных анимаций показываем напоминание
+  // и ждём, пока пользователь закроет окно.
+  await feedbackReminder.showAfterThirdHand();
+
   if (
     finishedHandTick !== tick ||
     gamePaused ||
