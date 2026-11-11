@@ -2112,7 +2112,10 @@ if (p.allin) {
   registerPlayerAllIn(i);
 }
 
- p.actedStreet=street; dequeue(i); tick++; resetBetSlider();  if (chipAmount > 0) {   render();   betFlightInProgress = true;    lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       try {         await effects.animateBetChip(           i,           chipAmount,           () => releaseStackDisplay(i)         );       } finally {         betFlightInProgress = false;         resolve();          // Если пользователь ушёл во время полёта фишек,         // проверяем паузу до следующего игрового действия.         if (autoPauseRequested) {           advanceQueue();         }       }     });   }); }
+ p.actedStreet=street; dequeue(i); tick++; resetBetSlider();  if (chipAmount > 0) {   render();   betFlightInProgress = true;    lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       try {         await effects.animateBetChip(           i,           chipAmount,           () => releaseStackDisplay(i)         );       } finally {         betFlightInProgress = false;         resolve();          
+ // Если пользователь ушёл во время полёта фишек,         
+ // проверяем паузу до следующего игрового действия.        
+  if (autoPauseRequested) {           advanceQueue();         }       }     });   }); }
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
 }
