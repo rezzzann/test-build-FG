@@ -2414,8 +2414,17 @@ function start(){
     clearTimeout(playerStatsViewTimers[index]);
   }
 
-  player.showTournamentStats = true;
-  render();
+const statsAlreadyVisible = player.showTournamentStats;
+
+player.showTournamentStats = true;
+
+if (!statsAlreadyVisible) {
+  player.statsRevealPlayed = false;
+}
+
+render();
+
+player.statsRevealPlayed = true;
 
 playerStatsViewTimers[index] = setTimeout(() => {
   if (players[index]) {
