@@ -1808,4 +1808,31 @@ transform-origin: center center;
 #seats .seat.s0 {
   translate: 0 -20px;
 }
+/* TEST: avatars x2 */
+#seats .seat:not(.user-seat) .avatar {
+  width: 68px;
+  height: 68px;
+  font-size: 38px;
+}
 
+#seats .seat.user-seat .avatar {
+  width: clamp(86px, 12vw, 124px);
+  height: clamp(86px, 12vw, 124px);
+  font-size: clamp(48px, 6.4vw, 68px);
+}
+
+/* Карты ИИ: привязка к игроку, центрирование, отступ 5px */
+#seats .seat .opponent-cards {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  transform: none;
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  width: max-content;
+  margin-top: 5px;
+  gap: 4px;
+  z-index: 5;
+}
