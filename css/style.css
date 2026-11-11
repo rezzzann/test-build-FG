@@ -1610,3 +1610,42 @@ body,
   }
 }
 
+/* Фиксированный размер карточек ИИ на всех устройствах */
+.seat:not(.user-seat) {
+  box-sizing: border-box;
+  width: 115px;
+  min-width: 115px;
+  max-width: 115px;
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+  padding: 5px 6px;
+  gap: 5px;
+}
+
+/* Единый размер аватара ИИ */
+.seat:not(.user-seat) .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 19px;
+}
+
+/* Содержимое не влияет на геометрию карточки */
+.seat:not(.user-seat) .seat-info {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.seat:not(.user-seat) .name,
+.seat:not(.user-seat) .stack,
+.seat:not(.user-seat) .state,
+.seat:not(.user-seat) .seat-stat-line {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
