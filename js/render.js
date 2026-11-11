@@ -531,7 +531,7 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     <div class="seat-info stats-visible ${p.statsRevealPlayed ? '' : 'stats-enter'}">
       <div class="seat-stat-line">W: ${p.tournamentStats.wins}</div>
       <div class="seat-stat-line">L: ${p.tournamentStats.losses}</div>
-      <div class="seat-stat-line">MAX: ${fmt(p.tournamentStats.maxStack)} PP</div>
+      <div class="seat-stat-line">MAX: ${compactFmt(p.tournamentStats.maxStack)} PP</div>
     </div>
   `
   : `
