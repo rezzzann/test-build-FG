@@ -2548,11 +2548,31 @@ function restoreSavedGame(){
  pendingAISeat = s.pendingAISeat; pendingAIDelayRestore = s.aiDelay || null; aiDecisionTimerState = null; pendingActionClockRestore = s.actionClock || null;tournamentMode=s.tournamentMode||tournamentMode;blindLevel=s.blindLevel??blindLevel;blindRemaining=s.blindRemaining??blindRemaining;applyTournamentMode(false);gamePaused=false;busy=false;clearTurnTimer();clearBlindSequence();clearActionTimers();
  $('community').innerHTML='';renderedBoardCount=0;renderCommunity();
  $('startScreen').classList.add('hidden');$('startScreen').classList.remove('exit-mode');$('exitMenuButtons').classList.remove('visible');$('playButton').style.display='';
- savedGameState=null;render();renderHandBets();tournamentClock.start();
+
+savedGameState = null;
+
+render();
+renderHandBets();
+tournamentClock.start();
+
+// Если раздача ещё продолжается — восстанавливаем очередь ходов.
 if (!over && !dealInProgress) {
   advanceQueue();
 }
+
+// Если раздача уже завершилась во время паузы,
+// запускаем следующую, если турнир ещё продолжается.
+else if (over && !TEST_MANUAL_NEXT_HAND) {
+  const playersWithChips = players.filter(
+    p => p.stack > 0
+  ).length;
+
+  if (playersWithChips >= 2) {
+    newHand();
+  }
 }
+}
+
 function resetStacksAndRestart(){
   pendingPreAction = null;
   if (winnerChipAnimating) return;
