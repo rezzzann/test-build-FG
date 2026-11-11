@@ -354,6 +354,11 @@ $('table').classList.toggle(
   'combo-transition-in',
   s.comboTransitionPhase === 'in'
 );
+    // Скрываем банк и название улицы на время начальной раздачи.
+$('table').classList.toggle(
+  'initial-deal-active',
+  initialDealInProgress
+);
     const displayAnalysis = s.comboDisplayLocked
   ? s.comboDisplayAnalysis
   : currentHandAnalysis;
