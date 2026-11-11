@@ -62,9 +62,14 @@ export function createTournamentClock({
   let deadline = 0;
   let timer = null;
   let displayTimer = null;
+  let pendingLevel = null;
 
   function stop(preserve = true) {
-    if (timer !== null) {
+    if (timer !== null) 
+    if (!preserve) {
+  pendingLevel = null;
+}
+    {
       if (preserve) {
         setRemaining(Math.max(0, deadline - Date.now()));
       }
@@ -81,6 +86,8 @@ export function createTournamentClock({
 
   function start() {
     if (getPaused() || timer !== null) return;
+    // Если уровень уже истёк, ждём начала следующей раздачи.
+if (pendingLevel !== null) return;
 // Загружаем длительность уровня для выбранного режима турнира.
     if (getRemaining() <= 0) {
       setRemaining(getTournamentSettings(getMode()).blindLevelDuration);
@@ -103,24 +110,37 @@ export function createTournamentClock({
 
       if (getPaused()) return;
 
-      const levels = getBlindLevels(getMode());
+    const levels = getBlindLevels(getMode());
 
-      if (getLevel() < levels.length - 1) {
-        const nextLevel = getLevel() + 1;
+if (getLevel() < levels.length - 1) {
+  pendingLevel = getLevel() + 1;
+}
 
-        setLevel(nextLevel);
-        setBlinds(levels[nextLevel]);
-        setRemaining(getTournamentSettings(getMode()).blindLevelDuration);
-
-        updateDisplay();
-        render();
-        start();
-      } else {
-        setRemaining(0);
-        updateDisplay();
-      }
+setRemaining(0);
+updateDisplay();
+render();
     }, getRemaining());
   }
 
-  return { start, stop };
+  return {   start,   stop,   applyPendingLevel };
+}
+function applyPendingLevel() {
+  if (pendingLevel === null) return false;
+
+  const levels = getBlindLevels(getMode());
+
+  setLevel(pendingLevel);
+  setBlinds(levels[pendingLevel]);
+
+  pendingLevel = null;
+
+  setRemaining(
+    getTournamentSettings(getMode()).blindLevelDuration
+  );
+
+  updateDisplay();
+  render();
+  start();
+
+  return true;
 }
