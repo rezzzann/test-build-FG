@@ -2188,6 +2188,14 @@ winningLiftActive = true;
     .forEach(card => {
       card.classList.add('winning-lift');
     });
+        // Ждём фактического завершения анимации подъёма карт.
+  const liftAnimations = [
+    ...document.querySelectorAll('.winning-lift')
+  ].flatMap(card => card.getAnimations());
+
+  await Promise.all(
+    liftAnimations.map(animation => animation.finished.catch(() => {}))
+  );
 }
  async function animateAIShowdownCards(handTick) {
 if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
