@@ -256,7 +256,7 @@ height: clamp(61px, 8.7vw, 96px);
   min-width: 0;
 }
 
-.seat-info.stats-visible {
+.seat-info.stats-enter {
   animation: playerStatsReveal .35s ease both;
 }
 
