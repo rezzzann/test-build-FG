@@ -510,7 +510,10 @@ let humanWinnerReveal=false,winningCards=[],humanFoldedCards=false,winningLiftAc
 let aiWinnerReveal=false,aiWinnerId=-1,aiWinningCards=[];
 let chipFlightId=0,blindSequenceTimer=null,gameStarted=false,gamePaused=false,savedGameState=null; let dealInProgress=false; let communityDealingIndices = new Set(); let userHoleRevealBack = false; let aiShowdownRevealBack = false;let initialDealInProgress = false;
       let collectingBets = false;
-      let betControlOpen = false;
+let betControlOpen = false;
+
+// Временные значения стека для отображения до старта полёта фишек.
+let stackDisplayOverrides = {};
       // Состояние плавного обновления подсветки комбинации.
 let comboDisplayAnalysis = null;
 let comboDisplayLocked = false;
@@ -661,7 +664,7 @@ function runBlindSequence(sbi, sbAmount, bbi, bbAmount, handTick) {
 
   if (sbAmount > 0) {
     requestAnimationFrame(() => {
-      effects.animateBetChip(sbi, sbAmount);
+      effects.animateBetChip(   sbi,   sbAmount,   () => releaseStackDisplay(sbi) );
     });
   }
 
@@ -686,7 +689,7 @@ function runBlindSequence(sbi, sbAmount, bbi, bbAmount, handTick) {
 
     if (bbAmount > 0) {
       requestAnimationFrame(() => {
-        effects.animateBetChip(bbi, bbAmount);
+        effects.animateBetChip(   bbi,   bbAmount,   () => releaseStackDisplay(bbi) );
       });
     }
 
@@ -755,6 +758,7 @@ flareFire,   extinguishFire } = createRenderer({
   $,
   getState: () => ({
     players,
+    stackDisplayOverrides,
     pot,
     street,
     tournamentMode,
@@ -878,7 +882,37 @@ function playWinnerChipForWinner(winnerIndexes) {
       setWinnerChipControlsLocked(false);
     });
 }
-function post(i, n) {   const p = players[i];    if (!p || p.folded || p.stack <= 0) return 0;    const v = Math.min(n, p.stack);    if (v <= 0) return 0;    p.stack -= v;   p.bet += v;   p.total += v;    if (p.stack === 0) {     p.allin = true;   }    return v; }
+      function releaseStackDisplay(playerIndex) {
+  if (!Object.prototype.hasOwnProperty.call(
+    stackDisplayOverrides,
+    playerIndex
+  )) {
+    return;
+  }
+
+  delete stackDisplayOverrides[playerIndex];
+  render();
+}
+function post(i, n) {
+  const p = players[i];
+
+  if (!p || p.folded || p.stack <= 0) return 0;
+
+  const v = Math.min(n, p.stack);
+  if (v <= 0) return 0;
+
+  stackDisplayOverrides[i] = p.stack;
+
+  p.stack -= v;
+  p.bet += v;
+  p.total += v;
+
+  if (p.stack === 0) {
+    p.allin = true;
+  }
+
+  return v;
+}
 function resetBetSlider() {   betControlOpen = false;   betControl.reset(); }
 
 function clearDealSequence() {
@@ -1471,7 +1505,7 @@ function newHand() {
 
   // Не переносим ожидание анимации фишек в новую раздачу.
   lastBetFlight = Promise.resolve();
-
+stackDisplayOverrides = {};
   initialDealInProgress = false;
   comboDisplayAnalysis = null;
 comboDisplayLocked = false;
@@ -1967,7 +2001,7 @@ function animateAIFoldCards(playerIndex) {
 function applyAction(i,a,myTick){
  if(over||gamePaused)return false;if(typeof myTick==='number'&&myTick!==tick)return false;if(queueHead()!==i||!eligible(i)||hasActedThisStreet(i))return false;
   clearActionClock();
- const p=players[i],oldBet=currentBet,call=Math.max(0,currentBet-p.bet);let raised=false,chipAmount=0;
+ const p = players[i]; const previousStack = p.stack; const oldBet = currentBet; const call = Math.max(0, currentBet - p.bet); let raised = false; let chipAmount = 0;
   // Если выбранная сумма не превышает текущую ставку,
 // это уравнивание, а не повышение.
 if ((a.t === 'bet' || a.t === 'raise') && call > 0) {
@@ -1993,7 +2027,10 @@ if (p.allin) {
 
   registerPlayerAllIn(i);
 }
- p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(i, chipAmount);       resolve();     });   }); }
+  if (chipAmount > 0) {
+  stackDisplayOverrides[i] = previousStack;
+}
+ p.actedStreet=street;dequeue(i);tick++;resetBetSlider();if(chipAmount>0){   render();   lastBetFlight = new Promise(resolve => {     requestAnimationFrame(async () => {       await effects.animateBetChip(   i,   chipAmount,   () => releaseStackDisplay(i) );       resolve();     });   }); }
  if(raised){rebuildQueueFromStart((i+1)%N);const k=actQueue.indexOf(i);if(k>=0)actQueue.splice(k,1);actQueue.forEach(idx=>{players[idx].actedStreet=-1})}
  render();return true;
 }
@@ -2518,6 +2555,7 @@ function resetStacksAndRestart(){
 clearPlayerStatsViewTimers();
   // Полный сброс ожиданий предыдущей игры.
   lastBetFlight = Promise.resolve();
+  stackDisplayOverrides = {};
   comboDisplayAnalysis = null;
 comboDisplayLocked = false;
 comboDisplayShowCore = false;
