@@ -525,21 +525,23 @@ if (isInWinningHand) {
       return html;
     }).join('')}</div>`
   : '';
-const seatInfoMarkup = i === 0 && p.eliminated && p.showTournamentStats
+
+const seatInfoMarkup = p.eliminated && p.showTournamentStats
   ? `
     <div class="seat-info stats-visible">
-      <div class="seat-stat-line">ПОБЕД: ${p.tournamentStats.wins}</div>
-      <div class="seat-stat-line">ПОРАЖЕНИЙ: ${p.tournamentStats.losses}</div>
-      <div class="seat-stat-line">МАКС. СТЕК: ${fmt(p.tournamentStats.maxStack)} PP</div>
+      <div class="seat-stat-line">W: ${p.tournamentStats.wins}</div>
+      <div class="seat-stat-line">L: ${p.tournamentStats.losses}</div>
+      <div class="seat-stat-line">MAX: ${fmt(p.tournamentStats.maxStack)} PP</div>
     </div>
   `
   : `
     <div class="seat-info ${p.statsReturning ? 'info-return' : ''}">
       <div class="name">${i === 0 ? 'Вы' : p.name}</div>
-      <div class="stack">${p.eliminated ? 'ПОСМОТРЕТЬ' : `${compactFmt(stackDisplayOverrides?.[i] ?? p.stack)} PP`}</div>
+      <div class="stack">${p.eliminated ? 'ОТКРЫТЬ' : `${compactFmt(stackDisplayOverrides?.[i] ?? p.stack)} PP`}</div>
       <div class="state">${stateMarkup(p, i, actor, over, street)}</div>
     </div>
   `;
+
       return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
     }).join('');
 
