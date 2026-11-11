@@ -2,11 +2,11 @@
 // Время указывается в миллисекундах.
 export const TOURNAMENT_SETTINGS = {
   classic: {
-    blindLevelDuration: 180000 // 3 минуты 
+    blindLevelDuration: 10000 // 3 минуты 
   },
 
   highroller: {
-    blindLevelDuration: 180000 // 3 минуты 
+    blindLevelDuration: 10000 // 3 минуты 
   }
 };
 
