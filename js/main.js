@@ -550,13 +550,38 @@ function applyTournamentMode(resetClock=true){
  [sb,bb]=getBlindLevels(tournamentMode)[blindLevel]||getBlindLevels(tournamentMode)[0];
  updateTournamentDisplay();
 }
-function updateTournamentDisplay(){
- const high=tournamentMode==='highroller';
- $('blindsDisplay').textContent=`БЛАЙНДЫ ${compactFmt(sb)} / ${compactFmt(bb)}`;
- $('handStatus').textContent=high?`HIGH ROLLER · УР. ${blindLevel+1} · ${Math.ceil(Math.max(0,blindRemaining)/1000)}с`:'';
- $('table').classList.toggle('high-roller',high);
- $('tableWatermark').textContent=high?'HIGH ROLLER':'POKEREZA';
+
+function updateTournamentDisplay() {
+  const high = tournamentMode === 'highroller';
+
+  const blindsDisplay = $('blindsDisplay');
+  const blindsValues = $('blindsValues');
+  const nextBlinds = `${compactFmt(sb)} / ${compactFmt(bb)}`;
+
+  if (blindsDisplay && blindsValues) {
+    const previousBlinds = blindsDisplay.dataset.blinds;
+
+    if (previousBlinds !== nextBlinds) {
+      blindsValues.textContent = nextBlinds;
+      blindsDisplay.dataset.blinds = nextBlinds;
+
+      // Анимация только при реальном изменении блайндов.
+      if (previousBlinds) {
+        blindsDisplay.classList.remove('level-up');
+        void blindsDisplay.offsetWidth;
+        blindsDisplay.classList.add('level-up');
+      }
+    }
+  }
+
+  $('handStatus').textContent = high
+    ? `HIGH ROLLER · УР. ${blindLevel + 1} · ${Math.ceil(Math.max(0, blindRemaining) / 1000)}с`
+    : '';
+
+  $('table').classList.toggle('high-roller', high);
+  $('tableWatermark').textContent = high ? 'HIGH ROLLER' : 'POKEREZA';
 }
+
 const tournamentClock = createTournamentClock({
   getMode: () => tournamentMode,
   getPaused: () => gamePaused,
