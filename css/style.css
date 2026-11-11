@@ -1486,9 +1486,8 @@ body,
   position: absolute;
   top: calc(22% - 72px);
   left: 50%;
-transform: translate(-50%, 25px);
+transform: translate(-50%, 25px) scale(0.666);
 transform-origin: center center;
-scale: 0.666;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -1560,16 +1559,16 @@ scale: 0.666;
 
 @keyframes blindsLevelUp {
   0% {
-    scale: 0.666;
+   transform: translate(-50%, 25px) scale(0.666);
     filter: brightness(1);
   }
   35% {
-    scale: 0.839;
+  transform: translate(-50%, 25px) scale(0.839);
     filter: brightness(1.65)
       drop-shadow(0 0 9px #e4bd68aa);
   }
   100% {
-    scale: 0.666;
+   transform: translate(-50%, 25px) scale(0.666);
     filter: brightness(1);
   }
 }
