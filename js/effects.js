@@ -460,7 +460,7 @@ export function createEffects({
    * @param {number} playerIndex Индекс игрока.
    * @param {number} amount Размер поставленной суммы.
    */
-  function animateBetChip(playerIndex, amount = 0) {
+  function animateBetChip(   playerIndex,   amount = 0,   onFlightStart = () => {} ) {
     if (getPaused()) return;
     if (!Number.isInteger(playerIndex)) return;
     if (playerIndex < 0 || playerIndex >= seatClass.length) return;
@@ -475,7 +475,7 @@ export function createEffects({
       `.hand-bet.b${playerIndex}`
     );
 
-    if (!avatar || !betDisplay) return;
+    if (!avatar || !betDisplay) {   onFlightStart();   return; }
 
     const reduceMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
@@ -492,9 +492,17 @@ export function createEffects({
     const config = getBetChipConfig(amount);
 
     if (!config || !Number.isFinite(config.count) || config.count <= 0) {
-      return;
-    }
+  onFlightStart();
+  return;
+}
+let flightStarted = false;
 
+const notifyFlightStart = () => {
+  if (flightStarted) return;
+
+  flightStarted = true;
+  onFlightStart();
+};
     const count = config.count;
     const flyingClass = config.color === 'blue'
       ? 'blue-flying'
@@ -536,11 +544,12 @@ export function createEffects({
 
       document.body.appendChild(chip);
 
-      requestAnimationFrame(() => {
-        if (chip.isConnected) {
-          chip.classList.add('fly');
-        }
-      });
+     requestAnimationFrame(() => {
+  if (chip.isConnected) {
+    notifyFlightStart();
+    chip.classList.add('fly');
+  }
+});
 
       chip.addEventListener('animationend', () => {
         chip.remove();
