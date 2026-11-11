@@ -1649,3 +1649,27 @@ body,
   text-overflow: ellipsis;
 }
 
+/* Увеличенный размер карточек ИИ на ПК */
+@media (min-width: 1024px) and (pointer: fine) {
+  .seat:not(.user-seat) {
+    width: 145px;
+    min-width: 145px;
+    max-width: 145px;
+    height: 65px;
+    min-height: 65px;
+    max-height: 65px;
+    padding: 8px 9px;
+    gap: 7px;
+  }
+
+  .seat:not(.user-seat) .avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 24px;
+  }
+
+  .seat:not(.user-seat) .name {
+    font-size: 12px;
+  }
+}
+
