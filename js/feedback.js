@@ -3,9 +3,11 @@ export function initFeedbackReminder({
   $,
   getHandNo,
   getGamePaused,
-  getTournamentMode
+  getTournamentMode,
+  setGamePaused
 }) {
   const shownModes = new Set();
+  let resolveReminder = null;
 
   function showAfterThirdHand() {
     const mode = getTournamentMode();
@@ -15,17 +17,29 @@ export function initFeedbackReminder({
       getGamePaused() ||
       shownModes.has(mode)
     ) {
-      return;
+      return Promise.resolve(false);
     }
 
     shownModes.add(mode);
+    setGamePaused(true);
     $('feedbackReminder').classList.add('visible');
+
+    return new Promise(resolve => {
+      resolveReminder = resolve;
+    });
   }
 
   $('feedbackDismiss').addEventListener('click', () => {
     $('feedbackReminder').classList.remove('visible');
+
+    if (resolveReminder) {
+      const resolve = resolveReminder;
+      resolveReminder = null;
+
+      setGamePaused(false);
+      resolve(true);
+    }
   });
 
   return { showAfterThirdHand };
 }
-
