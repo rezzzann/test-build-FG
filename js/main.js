@@ -47,7 +47,7 @@ const TEST_MANUAL_NEXT_HAND = false;
       // ALL-IN для всех ИИ на каждой раздаче.
 const TEST_ALL_HANDS_AI_ALL_IN = false;
 // Включение / отключение таймера хода.
-const TEST_ACTION_CLOCK_ENABLED = true;
+const TEST_ACTION_CLOCK_ENABLED = false;
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
