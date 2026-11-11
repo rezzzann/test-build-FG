@@ -1484,7 +1484,7 @@ body,
 /* POKEREZA — центральное отображение блайндов */
 .table-blinds {
   position: absolute;
-  top: calc(22% - 46px);
+  top: calc(22% - 72px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
@@ -1575,7 +1575,7 @@ body,
 /* Портретная ориентация */
 @media (orientation: portrait) {
   .table-blinds {
-    top: calc(25% - 46px);
+    top: calc(25% - 60px);
   }
 
   .table-blinds-label {
@@ -1590,7 +1590,7 @@ body,
 /* Низкий экран в горизонтальной ориентации */
 @media (max-height: 420px) and (orientation: landscape) {
   .table-blinds {
-    top: calc(25% - 42px);
+    top: calc(25% - 56px);
   }
 
   .table-blinds-label {
