@@ -525,7 +525,12 @@ if (isInWinningHand) {
       return html;
     }).join('')}</div>`
   : '';
-
+const opponentCardsMarkup = i !== 0 && !p.folded && !over
+  ? `<div class="opponent-cards">${p.hole
+      .slice(0, Number.isInteger(p.dealtCount) ? p.dealtCount : p.hole.length)
+      .map(c => miniCard(c, false, false))
+      .join('')}</div>`
+  : '';
 const seatInfoMarkup = p.eliminated && p.showTournamentStats
   ? `
     <div class="seat-info stats-visible ${p.statsRevealPlayed ? '' : 'stats-enter'}">
@@ -542,29 +547,10 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     </div>
   `;
 
-      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
+      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}${opponentCardsMarkup}</div>`;
     }).join('');
 
-    $('opponentCards').innerHTML = players.map((p, i) => {
-      if (i === 0) return '';
-      if (p.folded) return '';
-
-      const pos = cardPos[i];
-      if (!pos) return '';
-
-      const revealed = over && !p.folded && (humanWinnerReveal || aiWinnerReveal);
-      const isAIWinner = aiWinnerReveal && i === aiWinnerId;
-     if (revealed) return '';
-
-      return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole
-  .slice(
-    0,
-    Number.isInteger(p.dealtCount)
-      ? p.dealtCount
-      : p.hole.length
-  )
-  .map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
-    }).join('');
+  
 
     renderHandBets();
    
