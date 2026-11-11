@@ -1668,7 +1668,6 @@ if (playersWithChips === 2) {
 function tryAutoPause() {
   if (
     !autoPauseRequested ||
-    !pageIsHidden ||
     !gameStarted ||
     gamePaused
   ) {
@@ -2638,6 +2637,8 @@ function pauseGameForMenu(){
 $('gameVersionDisplay').textContent=DISPLAY_VERSION;
 }
 function restoreSavedGame(){
+    autoPauseRequested = false;
+  autoPauseActive = false;
  if(!savedGameState)return;
  cancelAllInAdvanceTimer();
  const s=savedGameState;
@@ -2719,21 +2720,18 @@ function handlePageHidden() {
   tryAutoPause();
 }
 
+
 function handlePageVisible() {
   pageIsHidden = false;
 
-  // Автоматически продолжаем только ту игру,
-  // которую остановила именно автопауза.
-  if (autoPauseActive && savedGameState) {
-    autoPauseActive = false;
-    autoPauseRequested = false;
-    restoreSavedGame();
-    return;
+  // Если автопауза ожидала завершения анимации,
+  // пробуем установить её при возвращении.
+  if (autoPauseRequested) {
+    tryAutoPause();
   }
 
-  // Если пользователь вернулся раньше безопасного момента,
-  // отменяем ожидающую автопаузу.
-  autoPauseRequested = false;
+  // Не снимаем паузу автоматически.
+  // Продолжение — только по кнопке пользователя.
 }
 
 document.addEventListener('visibilitychange', () => {
