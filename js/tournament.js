@@ -48,6 +48,7 @@ export function getBlindLevels(mode) {
   return BLIND_LEVELS[mode] || BLIND_LEVELS.classic;
 }
 
+
 export function createTournamentClock({
   getMode,
   getPaused,
@@ -65,11 +66,11 @@ export function createTournamentClock({
   let pendingLevel = null;
 
   function stop(preserve = true) {
-    if (timer !== null) 
     if (!preserve) {
-  pendingLevel = null;
-}
-    {
+      pendingLevel = null;
+    }
+
+    if (timer !== null) {
       if (preserve) {
         setRemaining(Math.max(0, deadline - Date.now()));
       }
@@ -86,9 +87,11 @@ export function createTournamentClock({
 
   function start() {
     if (getPaused() || timer !== null) return;
+
     // Если уровень уже истёк, ждём начала следующей раздачи.
-if (pendingLevel !== null) return;
-// Загружаем длительность уровня для выбранного режима турнира.
+    if (pendingLevel !== null) return;
+
+    // Загружаем длительность уровня для выбранного режима турнира.
     if (getRemaining() <= 0) {
       setRemaining(getTournamentSettings(getMode()).blindLevelDuration);
     }
@@ -110,37 +113,42 @@ if (pendingLevel !== null) return;
 
       if (getPaused()) return;
 
-    const levels = getBlindLevels(getMode());
+      const levels = getBlindLevels(getMode());
 
-if (getLevel() < levels.length - 1) {
-  pendingLevel = getLevel() + 1;
-}
+      if (getLevel() < levels.length - 1) {
+        pendingLevel = getLevel() + 1;
+      }
 
-setRemaining(0);
-updateDisplay();
-render();
+      setRemaining(0);
+      updateDisplay();
+      render();
     }, getRemaining());
   }
 
-  return {   start,   stop,   applyPendingLevel };
-}
-function applyPendingLevel() {
-  if (pendingLevel === null) return false;
+  function applyPendingLevel() {
+    if (pendingLevel === null) return false;
 
-  const levels = getBlindLevels(getMode());
+    const levels = getBlindLevels(getMode());
 
-  setLevel(pendingLevel);
-  setBlinds(levels[pendingLevel]);
+    setLevel(pendingLevel);
+    setBlinds(levels[pendingLevel]);
 
-  pendingLevel = null;
+    pendingLevel = null;
 
-  setRemaining(
-    getTournamentSettings(getMode()).blindLevelDuration
-  );
+    setRemaining(
+      getTournamentSettings(getMode()).blindLevelDuration
+    );
 
-  updateDisplay();
-  render();
-  start();
+    updateDisplay();
+    render();
+    start();
 
-  return true;
+    return true;
+  }
+
+  return {
+    start,
+    stop,
+    applyPendingLevel
+  };
 }
