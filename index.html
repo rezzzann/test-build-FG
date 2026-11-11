@@ -102,13 +102,16 @@
 <header class="top">
  <div class="brand-wrap"><div class="brand">♠ POKEREZA <span>TOURNAMENT</span></div><div class="brand-version" id="gameVersionDisplay">v0.5.17 alpha</div></div>
  <div id="handStatus">ДЕМО · 4 МЕСТА</div>
- <div class="top-blinds"><span id="blindsDisplay">БЛАЙНДЫ 10 / 20</span><button class="exit-button" id="exitButton" type="button">ВЫХОД</button></div>
+ <div class="top-blinds">   <button class="exit-button" id="exitButton" type="button">ВЫХОД</button> </div>
 </header>
 <main class="tablewrap"><section class="table" id="table">
  <div class="wm" id="tableWatermark">POKEREZA</div><div class="deck-stack" id="deckStack" aria-label="Колода карт">
   <span class="deck-card deck-card-back"></span>
   <span class="deck-card deck-card-back"></span>
   <span class="deck-card deck-card-back"></span>
+</div><div class="table-blinds" id="blindsDisplay" aria-live="polite">
+  <span class="table-blinds-label">БЛАЙНДЫ</span>
+  <span class="table-blinds-values" id="blindsValues">10 / 20</span>
 </div><div class="pot" id="potDisplay"><small id="street">ПРЕФЛОП</small>БАНК: <span id="pot">0</span> PP</div>
  <div class="community" id="community"></div> <div class="hand-summary" id="handSummary" aria-live="polite"></div><div class="hole" id="hole"></div><div class="notice" id="notice"></div><div id="seats"></div><div id="opponentCards"></div><div id="handBets"></div>
 </section></main>
