@@ -1473,3 +1473,11 @@ body,
     animation-duration: 15s;
   }
 }
+
+/* STRATEGIST: смещение всех игровых элементов вверх на 25px */
+.seat.s0,
+.opponent-cards.c0,
+.hand-bet.b2 {
+  translate: 0 -25px;
+}
+
