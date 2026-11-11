@@ -381,8 +381,6 @@ $('table').classList.toggle(
       ? `HIGH ROLLER · УР. ${blindLevel + 1} · ${Math.ceil(Math.max(0, blindRemaining) / 1000)}с`
       : '';
 
-    $('blindsDisplay').textContent = `БЛАЙНДЫ ${compactFmt(sb)} / ${compactFmt(bb)}`;
-
     renderCommunity();
 
     const holeEl = $('hole');
