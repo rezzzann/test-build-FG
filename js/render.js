@@ -350,27 +350,24 @@ function positionPocketCards() {
 
     if (!cardWidth || !cardHeight) continue;
 
-    const overlap = isUser
-      ? Math.min(28, cardWidth * 0.3)
-      : Math.min(8, cardWidth * 0.3);
+const overlap = isUser
+  ? Math.min(28, cardWidth * 0.3)
+  : Math.min(16, cardWidth * 0.3);
 
-    const totalWidth = cardWidth * 2 - overlap;
+const totalWidth = cardWidth * 2 - overlap;
 
-    const centerX =
-      avatarRect.left + avatarRect.width / 2;
+// Карты ИИ начинаются в 20 px от левого края карточки игрока.
+const left = isUser
+  ? avatarRect.left + avatarRect.width / 2 -
+    tableRect.left - totalWidth / 2
+  : seatRect.left - tableRect.left + 20;
 
-    // 70% карты над карточкой игрока,
-    // 30% скрыты под ней.
-    const top =
-      seatRect.top -
-      tableRect.top -
-      cardHeight * 0.7;
-
-    const left =
-      centerX -
-      tableRect.left -
-      totalWidth / 2;
-
+// 70% высоты карты остаётся над карточкой игрока,
+// 30% заходит под неё.
+const top =
+  seatRect.top -
+  tableRect.top -
+  cardHeight * 0.7;
     target.style.setProperty(
       'position',
       'absolute',
