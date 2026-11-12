@@ -2215,6 +2215,7 @@ winningLiftActive = true;
   );
 }
  
+
 async function animateAIShowdownCards(handTick) {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     aiShowdownRevealBack = false;
@@ -2223,70 +2224,135 @@ async function animateAIShowdownCards(handTick) {
     return;
   }
 
-  // 1. Берём уже существующие рубашки карманных карт ИИ.
-  const backs = [
-    ...$('opponentCards').querySelectorAll(
-      '.opponent-cards.ai-seat-cards .ai-reveal-back'
-    )
-  ];
+  const root = $('opponentCards');
 
-  if (!backs.length) {
-    console.warn('[Showdown] Не найдены рубашки карманных карт ИИ');
+  // Собираем существующие рубашки всех участвующих в шоудауне ИИ.
+  const revealEntries = [];
+
+  players.forEach((player, playerIndex) => {
+    if (playerIndex === user || player.folded) return;
+
+    const pos = cardPos[playerIndex];
+    if (!pos) return;
+
+    const container = root.querySelector(
+      `.opponent-cards.${pos}`
+    );
+
+    if (!container) return;
+
+    const backs = Array.from(container.children)
+      .filter(el => el.classList.contains('ai-reveal-back'));
+
+    const dealtCount = Number.isInteger(player.dealtCount)
+      ? player.dealtCount
+      : player.hole.length;
+
+    player.hole.slice(0, dealtCount).forEach((card, cardIndex) => {
+      const element = backs[cardIndex];
+      if (!element) return;
+
+      revealEntries.push({
+        element,
+        playerIndex,
+        card
+      });
+    });
+  });
+
+  if (!revealEntries.length) {
+    console.warn('[Showdown] Не найдены рубашки карт ИИ');
+    aiShowdownRevealBack = false;
+    render();
+    await liftWinningCards(handTick);
     return;
   }
 
-  // 2. Первая половина переворота — точно как у пользователя.
-  await Promise.all(backs.map(el => el.animate(
-    [
-      { transform: 'perspective(700px) rotateY(0deg)' },
-      { transform: 'perspective(700px) rotateY(90deg)' }
-    ],
-    {
-      duration: 240,
-      easing: 'ease-in',
-      fill: 'forwards'
-    }
-  ).finished.catch(() => {})));
-
-  if (handTick !== tick || gamePaused) return;
-
-  // 3. Меняем рубашки на лицевые стороны.
-  // Рендерер сохраняет контейнеры и заменяет содержимое
-  // существующих карточек, как при вскрытии карт пользователя.
-  aiShowdownRevealBack = false;
-  render();
-
-  // 4. Получаем лицевые стороны после замены.
-  const faces = [
-    ...$('opponentCards').querySelectorAll(
-      '.opponent-cards.ai-seat-cards .mini-card'
-    )
-  ];
-
-  // 5. Вторая половина переворота — точно как у пользователя.
-  await Promise.all(faces.map(el => el.animate(
-    [
+  // Первая половина: существующие рубашки поворачиваются ребром.
+  await Promise.all(revealEntries.map(({ element }) =>
+    element.animate(
+      [
+        { transform: 'perspective(700px) rotateY(0deg)' },
+        { transform: 'perspective(700px) rotateY(90deg)' }
+      ],
       {
-        transform: 'perspective(700px) rotateY(-90deg)',
-        opacity: 0.8
-      },
-      {
-        transform: 'perspective(700px) rotateY(0deg)',
-        opacity: 1
+        duration: 240,
+        easing: 'ease-in',
+        fill: 'forwards'
       }
-    ],
-    {
-      duration: 240,
-      easing: 'ease-out',
-      fill: 'both'
-    }
-  ).finished.catch(() => {})));
+    ).finished.catch(() => {})
+  ));
 
   if (handTick !== tick || gamePaused) return;
 
-  render();
+  // Переключаем состояние, но НЕ вызываем render().
+  aiShowdownRevealBack = false;
+
+  // В момент поворота ребром непосредственно заменяем каждую рубашку
+  // лицевой стороной. Контейнеры игроков не пересоздаются.
+  const faces = [];
+
+  revealEntries.forEach(({ element, playerIndex, card }) => {
+    const isAIWinner =
+      aiWinnerReveal && playerIndex === aiWinnerId;
+
+    const isInWinningHand =
+      isAIWinner && aiWinningCards.includes(card);
+
+    const isAICore =
+      isAIWinner &&
+      !!analyzeHand([
+        ...players[aiWinnerId].hole,
+        ...board
+      ]).coreCards.includes(card);
+
+    const template = document.createElement('div');
+    template.innerHTML = miniCard(card, true, isAICore);
+
+    const face = template.firstElementChild;
+    if (!face) return;
+
+    if (isInWinningHand) {
+      face.classList.add('winning-lift-target');
+    }
+
+    if (isAIWinner && !isInWinningHand) {
+      face.classList.add('not-in-combo');
+    }
+
+    element.replaceWith(face);
+    faces.push(face);
+  });
+
+  if (handTick !== tick || gamePaused) return;
+
+  // Вторая половина: новые лицевые стороны поворачиваются к зрителю.
+  await Promise.all(faces.map(el =>
+    el.animate(
+      [
+        {
+          transform: 'perspective(700px) rotateY(-90deg)',
+          opacity: 0.8
+        },
+        {
+          transform: 'perspective(700px) rotateY(0deg)',
+          opacity: 1
+        }
+      ],
+      {
+        duration: 240,
+        easing: 'ease-out',
+        fill: 'both'
+      }
+    ).finished.catch(() => {})
+  ));
+
+  if (handTick !== tick || gamePaused) return;
+
+  // DOM уже содержит открытые карты. Повторный render не нужен.
   await liftWinningCards(handTick);
 }
+
 
 async function finish() {
   pendingPreAction = null;
