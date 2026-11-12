@@ -771,20 +771,6 @@ if (preserveShowdownCards) {
   }).join('');
 }
 
-
-    return `
-      <div class="opponent-cards ${pos} ai-seat-cards ai-winner-cards">
-        ${cardsMarkup}
-      </div>
-    `;
-  }
-
-  return `
-    <div class="opponent-cards ${pos}">
-      ${holeCards.map(() => '<span class="mini-card"></span>').join('')}
-    </div>
-  `;
-}).join('');
 positionPocketCards();
     renderHandBets();
    
