@@ -1474,9 +1474,8 @@ body,
   }
 }
 
-/* STRATEGIST: смещение всех игровых элементов вверх на 25px */
+/* STRATEGIST: смещение карточки игрока и ставки */
 .seat.s0,
-.opponent-cards.c0,
 .hand-bet.b2 {
   translate: 0 -20px;
 }
