@@ -2215,61 +2215,137 @@ winningLiftActive = true;
   );
 }
  async function animateAIShowdownCards(handTick) {
-if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  aiShowdownRevealBack = false;
-  render();
-  await liftWinningCards(handTick);
-  return;
-}
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    aiShowdownRevealBack = false;
+    render();
+    await liftWinningCards(handTick);
+    return;
+  }
 
-  const backs = [
-    ...document.querySelectorAll('.ai-seat-cards .ai-reveal-back')
-  ];
+  const revealEntries = [];
 
-  await Promise.all(backs.map(el => el.animate(
-    [
-      { transform: 'perspective(700px) rotateY(0deg)' },
-      { transform: 'perspective(700px) rotateY(90deg)' }
-    ],
-    {
-      duration: 240,
-      easing: 'ease-in',
-      fill: 'forwards'
-    }
-  ).finished.catch(() => {})));
+  // Собираем существующие рубашки карт ИИ.
+  players.forEach((player, playerIndex) => {
+    if (playerIndex === user || player.folded) return;
+
+    const pos = cardPos[playerIndex];
+    if (!pos) return;
+
+    const container = document.querySelector(
+      `#opponentCards .opponent-cards.${pos}`
+    );
+
+    if (!container) return;
+
+    const cards = Array.from(container.children)
+      .filter(el => el.classList.contains('mini-card'));
+
+    const dealtCount = Number.isInteger(player.dealtCount)
+      ? player.dealtCount
+      : player.hole.length;
+
+    player.hole.slice(0, dealtCount).forEach((card, cardIndex) => {
+      const element = cards[cardIndex];
+      if (!element) return;
+
+      revealEntries.push({
+        element,
+        playerIndex,
+        card
+      });
+    });
+  });
+
+  if (!revealEntries.length) {
+    aiShowdownRevealBack = false;
+    render();
+    await liftWinningCards(handTick);
+    return;
+  }
+
+  // Первая половина переворота: рубашки уходят ребром.
+  await Promise.all(
+    revealEntries.map(({ element }) =>
+      element.animate(
+        [
+          { transform: 'perspective(700px) rotateY(0deg)' },
+          { transform: 'perspective(700px) rotateY(90deg)' }
+        ],
+        {
+          duration: 260,
+          easing: 'ease-in',
+          fill: 'forwards'
+        }
+      ).finished.catch(() => {})
+    )
+  );
 
   if (handTick !== tick || gamePaused) return;
 
+  // Меняем содержимое тех же DOM-элементов.
+  // Полный render() посередине переворота не вызываем.
   aiShowdownRevealBack = false;
-  render();
 
-  const faces = [
-    ...document.querySelectorAll('.ai-seat-cards .mini-card')
-  ];
+  revealEntries.forEach(({ element, playerIndex, card }) => {
+    const isAIWinner =
+      aiWinnerReveal && playerIndex === aiWinnerId;
 
-  await Promise.all(faces.map(el => el.animate(
-    [
-      {
-        transform: 'perspective(700px) rotateY(-90deg)',
-        opacity: 0.8
-      },
-      {
-        transform: 'perspective(700px) rotateY(0deg)',
-        opacity: 1
-      }
-    ],
-    {
-      duration: 240,
-      easing: 'ease-out',
-      fill: 'both'
+    const isInWinningHand =
+      isAIWinner && aiWinningCards.includes(card);
+
+    const isAICore =
+      isAIWinner &&
+      !!players[aiWinnerId]?.hole &&
+      !!analyzeHand([
+        ...players[aiWinnerId].hole,
+        ...board
+      ]).coreCards.includes(card);
+
+    const template = document.createElement('span');
+    template.innerHTML = miniCard(card, true, isAICore);
+
+    const face = template.firstElementChild;
+    if (!face) return;
+
+    element.className = face.className;
+    element.innerHTML = face.innerHTML;
+
+    if (isInWinningHand) {
+      element.classList.add('winning-lift-target');
     }
-  ).finished.catch(() => {})));
 
- if (handTick === tick && !gamePaused) {
+    if (isAIWinner && !isInWinningHand) {
+      element.classList.add('not-in-combo');
+    }
+  });
+
+  // Вторая половина переворота: открываются лица карт.
+  await Promise.all(
+    revealEntries.map(({ element }) =>
+      element.animate(
+        [
+          {
+            transform: 'perspective(700px) rotateY(-90deg)'
+          },
+          {
+            transform: 'perspective(700px) rotateY(0deg)'
+          }
+        ],
+        {
+          duration: 260,
+          easing: 'ease-out',
+          fill: 'forwards'
+        }
+      ).finished.catch(() => {})
+    )
+  );
+
+  if (handTick !== tick || gamePaused) return;
+
+  // Теперь можно обновить интерфейс после завершения переворота.
   render();
   await liftWinningCards(handTick);
 }
-}     
 async function finish() {
   pendingPreAction = null;
 
