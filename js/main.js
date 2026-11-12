@@ -1208,7 +1208,8 @@ render();
 
 const faces = [...$('hole').querySelectorAll('.card')];
 
-  await Promise.all(faces.map(el => el.animate(
+  await Promise.all(faces.map((el, i) => {
+  const animation = el.animate(
     [
       {
         transform: 'perspective(700px) rotateY(-90deg)',
@@ -1224,7 +1225,26 @@ const faces = [...$('hole').querySelectorAll('.card')];
       easing: 'ease-out',
       fill: 'both'
     }
-  ).finished.catch(() => {})));
+  );
+
+  console.log(`[AI Reveal] Карта ${i}: старт`, {
+    connected: el.isConnected,
+    playState: animation.playState,
+    transform: getComputedStyle(el).transform
+  });
+
+  animation.onfinish = () => {
+    console.log(`[AI Reveal] Карта ${i}: завершена`);
+  };
+
+  animation.oncancel = () => {
+    console.warn(`[AI Reveal] Карта ${i}: ОТМЕНЕНА`);
+  };
+
+  return animation.finished.catch(error => {
+    console.warn(`[AI Reveal] Карта ${i}: ошибка`, error);
+  });
+}));
 
   if (handTick !== tick || gamePaused) return false;
 
