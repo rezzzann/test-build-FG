@@ -301,7 +301,7 @@ function positionPocketCards() {
 
   if (!table || !seats || !hole || !opponentCards) return;
 
-  const tableRect = table.getBoundingClientRect();
+  const tableRect = table.getBoundingClientRect(); const opponentCardsRect = opponentCards.getBoundingClientRect();
 
   opponentCards.style.position = 'absolute';
   opponentCards.style.inset = '0';
@@ -355,16 +355,22 @@ const overlap = isUser
 
 const totalWidth = cardWidth * 2 - overlap;
 
+// Для пользователя координаты считаем относительно стола,
+// для ИИ — относительно собственного слоя карманных карт.
+const positionOrigin = isUser
+  ? tableRect
+  : opponentCardsRect;
+
 // Единый отступ 20 px от левого края карточки игрока.
 const left =
   seatRect.left -
-  tableRect.left +
+  positionOrigin.left +
   20;
 
-// 70% карт над карточкой, 30% скрыто под ней.
+// 70% карты видно, 30% заходит под карточку игрока.
 const top =
   seatRect.top -
-  tableRect.top -
+  positionOrigin.top -
   cardHeight * 0.7;
     target.style.setProperty(
       'position',
