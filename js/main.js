@@ -2242,14 +2242,18 @@ async function animateAIShowdownCards(handTick) {
   console.log('aiShowdownRevealBack:', aiShowdownRevealBack);
   console.log('Всего карт в DOM:', cards.length);
 
-  cards.forEach((el, i) => {
-    console.log(`DOM card ${i}`, {
-      className: el.className,
-      isConnected: el.isConnected,
-      parent: el.parentElement?.className,
-      animation: el.getAnimations().map(a => a.playState),
-      rect: el.getBoundingClientRect().toJSON()
-    });
+console.log(`DOM card ${i}`, {
+  className: el.className,
+  isConnected: el.isConnected,
+  parent: el.parentElement?.className,
+  animation: el.getAnimations().map(a => a.playState),
+  rect: el.getBoundingClientRect().toJSON(),
+  opacity: getComputedStyle(el).opacity,
+  visibility: getComputedStyle(el).visibility,
+  display: getComputedStyle(el).display,
+  transform: getComputedStyle(el).transform,
+  backfaceVisibility: getComputedStyle(el).backfaceVisibility
+});
   });
 
   entries.forEach(({ element }, i) => {
