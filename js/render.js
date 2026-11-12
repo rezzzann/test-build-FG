@@ -497,34 +497,7 @@ const showAISeatCards =
 
 const isAIWinner = aiWinnerReveal && i === aiWinnerId;
 
-const winnerCardsMarkup = showAISeatCards
-  ? `<div class="ai-seat-cards">${p.hole.map(c => {
-    if (aiShowdownRevealBack) {
-  return '<span class="mini-card ai-reveal-back"></span>';
-}
-      const isInWinningHand =
-        isAIWinner && aiWinningCards.includes(c);
 
-      const isAICore =
-        isAIWinner &&
-        !!aiWinnerAnalysis?.coreCards.includes(c);
-
-      let html = miniCard(c, true, isAICore);
-if (isInWinningHand) {
-  html = html.replace(
-    'class="mini-card',
-    'class="mini-card winning-lift-target'
-  );
-}
-      if (isAIWinner && !isInWinningHand) {
-  html = html.replace(
-    'class="mini-card',
-    'class="mini-card not-in-combo'
-  );
-}
-      return html;
-    }).join('')}</div>`
-  : '';
 
 const seatInfoMarkup = p.eliminated && p.showTournamentStats
   ? `
@@ -542,29 +515,73 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     </div>
   `;
 
-      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}${winnerCardsMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
+      return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
     }).join('');
 
-    $('opponentCards').innerHTML = players.map((p, i) => {
-      if (i === 0) return '';
-      if (p.folded) return '';
+  $('opponentCards').innerHTML = players.map((p, i) => {
+  if (i === 0 || p.folded) return '';
 
-      const pos = cardPos[i];
-      if (!pos) return '';
+  const pos = cardPos[i];
+  if (!pos) return '';
 
-      const revealed = over && !p.folded && (humanWinnerReveal || aiWinnerReveal);
-      const isAIWinner = aiWinnerReveal && i === aiWinnerId;
-     if (revealed) return '';
+  const revealed =
+    over &&
+    !p.folded &&
+    (humanWinnerReveal || aiWinnerReveal);
 
-      return `<div class="opponent-cards ${pos} ${revealed ? 'revealed' : ''} ${isAIWinner ? 'ai-winner-cards' : ''}">${p.hole
-  .slice(
-    0,
-    Number.isInteger(p.dealtCount)
-      ? p.dealtCount
-      : p.hole.length
-  )
-  .map(c => {   const isInWinningHand =     isAIWinner && aiWinningCards.includes(c);    const isAICore =     isAIWinner &&     !!aiWinnerAnalysis?.coreCards.includes(c);    let html = miniCard(c, revealed, isAICore);    if (     (humanWinnerReveal || aiWinnerReveal) &&     !isInWinningHand   ) {     html = html.replace(       'class="mini-card',       'class="mini-card not-in-combo'     );   }    return html; }).join('')}</div>`;
+  const isAIWinner = aiWinnerReveal && i === aiWinnerId;
+
+  const dealtCount = Number.isInteger(p.dealtCount)
+    ? p.dealtCount
+    : p.hole.length;
+
+  const holeCards = p.hole.slice(0, dealtCount);
+
+  if (revealed) {
+    const cardsMarkup = holeCards.map(c => {
+      if (aiShowdownRevealBack) {
+        return '<span class="mini-card ai-reveal-back"></span>';
+      }
+
+      const isInWinningHand =
+        isAIWinner && aiWinningCards.includes(c);
+
+      const isAICore =
+        isAIWinner &&
+        !!aiWinnerAnalysis?.coreCards.includes(c);
+
+      let html = miniCard(c, true, isAICore);
+
+      if (isInWinningHand) {
+        html = html.replace(
+          'class="mini-card',
+          'class="mini-card winning-lift-target'
+        );
+      }
+
+      if (isAIWinner && !isInWinningHand) {
+        html = html.replace(
+          'class="mini-card',
+          'class="mini-card not-in-combo'
+        );
+      }
+
+      return html;
     }).join('');
+
+    return `
+      <div class="opponent-cards ${pos} ai-seat-cards ai-winner-cards">
+        ${cardsMarkup}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="opponent-cards ${pos}">
+      ${holeCards.map(() => '<span class="mini-card"></span>').join('')}
+    </div>
+  `;
+}).join('');
 
     renderHandBets();
    
