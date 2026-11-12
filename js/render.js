@@ -317,9 +317,9 @@ function positionPocketCards() {
 
     const avatar = seat?.querySelector('.avatar');
 
-    const target = i === 0
-      ? hole
-      : opponentCards.querySelector(`.c${i === 1 ? 2 : i === 2 ? 1 : 0}`);
+  const target = i === 0
+  ? hole
+  : opponentCards.querySelector(`.${cardPos[i]}`);
 
     if (!seat || !avatar || !target) continue;
 
