@@ -1142,24 +1142,28 @@ flyingCard.className = isUser
       resolve(success && handTick === tick && !gamePaused);
     };
 
-    const animation = flyingCard.animate([
-      {
-        left: `${startX}px`,
-        top: `${startY}px`,
-        width: `${startWidth}px`,
-        height: `${startHeight}px`
-      },
-      {
-        left: `${endX}px`,
-        top: `${endY}px`,
-        width: `${targetRect.width}px`,
-        height: `${targetRect.height}px`
-      }
-    ], {
-      duration: 280,
-      easing: 'cubic-bezier(.2,.8,.2,1)',
-      fill: 'forwards'
-    });
+  
+const animation = flyingCard.animate([
+  {
+    left: `${startX}px`,
+    top: `${startY}px`,
+    width: `${startWidth}px`,
+    height: `${startHeight}px`,
+    rotate: '0deg'
+  },
+  {
+    left: `${endX}px`,
+    top: `${endY}px`,
+    width: `${targetWidth}px`,
+    height: `${targetHeight}px`,
+    rotate: targetRotation
+  }
+], {
+  duration: 280,
+  easing: 'cubic-bezier(.2,.8,.2,1)',
+  fill: 'forwards'
+});
+
 
     animation.onfinish = () => finishAnimation(true);
     animation.oncancel = () => finishAnimation(false);
