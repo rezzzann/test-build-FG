@@ -2352,18 +2352,22 @@ async function animateAIShowdownCards(handTick) {
     template.innerHTML = miniCard(card, true, isAICore);
 
     const face = template.firstElementChild;
-    if (!face) return;
+if (!face) return;
 
-    if (isInWinningHand) {
-      face.classList.add('winning-lift-target');
-    }
+if (isInWinningHand) {
+  face.classList.add('winning-lift-target');
+}
 
-    if (isAIWinner && !isInWinningHand) {
-      face.classList.add('not-in-combo');
-    }
+if (isAIWinner && !isInWinningHand) {
+  face.classList.add('not-in-combo');
+}
 
-    element.replaceWith(face);
-    faces.push(face);
+// Начальное положение открытой карты — ребром к зрителю.
+face.style.transform = 'perspective(700px) rotateY(-90deg)';
+face.style.opacity = '0.8';
+
+element.replaceWith(face);
+faces.push(face);
   });
 
   if (handTick !== tick || gamePaused) return;
