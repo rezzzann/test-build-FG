@@ -293,6 +293,122 @@ function renderCommunity() {
   setRenderedBoardCount(count);
 }
 
+function positionPocketCards() {
+  const table = $('table');
+  const seats = $('seats');
+  const hole = $('hole');
+  const opponentCards = $('opponentCards');
+
+  if (!table || !seats || !hole || !opponentCards) return;
+
+  const tableRect = table.getBoundingClientRect();
+
+  opponentCards.style.position = 'absolute';
+  opponentCards.style.inset = '0';
+  opponentCards.style.width = '100%';
+  opponentCards.style.height = '100%';
+  opponentCards.style.pointerEvents = 'none';
+  opponentCards.style.zIndex = '3';
+
+  for (let i = 0; i < 4; i++) {
+    const seat = seats.querySelector(
+      `.seat[data-player-index="${i}"]`
+    );
+
+    const avatar = seat?.querySelector('.avatar');
+
+    const target = i === 0
+      ? hole
+      : opponentCards.querySelector(`.c${i === 1 ? 2 : i === 2 ? 1 : 0}`);
+
+    if (!seat || !avatar || !target) continue;
+
+    const seatRect = seat.getBoundingClientRect();
+    const avatarRect = avatar.getBoundingClientRect();
+
+    const isUser = i === 0;
+
+    let probe = target.querySelector(
+      isUser ? '.card' : '.mini-card'
+    );
+
+    let temporaryProbe = false;
+
+    if (!probe) {
+      probe = document.createElement(isUser ? 'div' : 'span');
+      probe.className = isUser ? 'card' : 'mini-card';
+      target.appendChild(probe);
+      temporaryProbe = true;
+    }
+
+    const cardRect = probe.getBoundingClientRect();
+
+    const cardWidth = cardRect.width;
+    const cardHeight = cardRect.height;
+
+    if (temporaryProbe) probe.remove();
+
+    if (!cardWidth || !cardHeight) continue;
+
+    const overlap = isUser
+      ? Math.min(28, cardWidth * 0.3)
+      : Math.min(8, cardWidth * 0.3);
+
+    const totalWidth = cardWidth * 2 - overlap;
+
+    const centerX =
+      avatarRect.left + avatarRect.width / 2;
+
+    // 70% карты над карточкой игрока,
+    // 30% скрыты под ней.
+    const top =
+      seatRect.top -
+      tableRect.top -
+      cardHeight * 0.7;
+
+    const left =
+      centerX -
+      tableRect.left -
+      totalWidth / 2;
+
+    target.style.setProperty(
+      'position',
+      'absolute',
+      'important'
+    );
+
+    target.style.setProperty(
+      'left',
+      `${left}px`,
+      'important'
+    );
+
+    target.style.setProperty(
+      'top',
+      `${top}px`,
+      'important'
+    );
+
+    target.style.setProperty(
+      'right',
+      'auto',
+      'important'
+    );
+
+    target.style.setProperty(
+      'transform',
+      'none',
+      'important'
+    );
+
+    target.style.width = `${totalWidth}px`;
+    target.style.height = `${cardHeight}px`;
+    target.style.display = 'flex';
+    target.style.gap = '0';
+    target.style.zIndex = '3';
+  }
+}
+
   function render() {
     const s = getState();
 
@@ -582,7 +698,7 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
     </div>
   `;
 }).join('');
-
+positionPocketCards();
     renderHandBets();
    
 
