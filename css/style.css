@@ -1956,3 +1956,86 @@ transform-origin: center center;
   width: clamp(30px, 4.2vw, 39px);
   height: clamp(43.5px, 6vw, 55.5px);
 }
+
+/* =========================================
+   POKEREZA — НОВАЯ АНИМАЦИЯ ВСКРЫТИЯ ИИ
+   ========================================= */
+
+#opponentCards .opponent-cards.ai-seat-cards .mini-card {
+  position: relative;
+  perspective: 800px;
+  transform-style: preserve-3d;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+#opponentCards .mini-card-flipper {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
+}
+
+#opponentCards .mini-card-back,
+#opponentCards .mini-card-front {
+  position: absolute;
+  inset: 0;
+  display: block;
+  box-sizing: border-box;
+  border-radius: 4px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+#opponentCards .mini-card-back {
+  background: linear-gradient(145deg, #263b32, #101a16);
+  border: 1px solid #d5bd83;
+  box-shadow: 0 1px 3px #0008;
+}
+
+#opponentCards .mini-card-back::after {
+  content: "♠";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid #d5bd83;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  color: #e4c98d;
+  font-size: clamp(17px, 2.5vw, 27px);
+}
+
+#opponentCards .mini-card-front {
+  transform: rotateY(180deg);
+  background: linear-gradient(145deg, #fff 0%, #f8f8f5 100%);
+  border: 1px solid #d8d8d3;
+  color: #171717;
+  box-shadow: 0 2px 4px #0006;
+}
+
+#opponentCards .mini-card-front.red {
+  color: #c62836 !important;
+}
+
+#opponentCards .mini-card-front .mini-rank {
+  top: 3px !important;
+  left: 4px !important;
+  font-size: clamp(11px, 1.5vw, 16px) !important;
+}
+
+#opponentCards .mini-card-front .mini-suit {
+  top: 21px !important;
+  left: 4px !important;
+  right: auto !important;
+  bottom: auto !important;
+  font-size: clamp(11px, 1.5vw, 16px) !important;
+}
+
+#opponentCards .mini-card-front .winning-card {
+  box-shadow: none;
+}
