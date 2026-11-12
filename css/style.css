@@ -1673,3 +1673,196 @@ transform-origin: center center;
   }
 }
 
+/* =========================================
+   POKEREZA — ВЕЕР КАРМАННЫХ КАРТ
+   Только расположение и геометрия
+   ========================================= */
+
+/* Карты пользователя: располагаются под карточкой игрока */
+.hole {
+  --hole-card-width: clamp(58px, 8.5vw, 94px);
+  --hole-card-height: clamp(84px, 12vw, 132px);
+
+  top: calc(100% - clamp(100px, 16vh, 135px)) !important;
+  left: 50% !important;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0 !important;
+  width: max-content !important;
+  z-index: 3 !important;
+}
+
+.hole .card,
+.hole.winner-hole .card {
+  width: var(--hole-card-width) !important;
+  height: var(--hole-card-height) !important;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Левая карта */
+.hole .card:nth-child(1) {
+  rotate: -8deg;
+  z-index: 1;
+}
+
+/* Правая карта */
+.hole .card:nth-child(2) {
+  rotate: 8deg;
+  margin-left: clamp(-28px, -3.5vw, -18px);
+  z-index: 2;
+}
+
+/* При победе положение и размер карт не меняются */
+.hole.winner-hole {
+  top: calc(100% - clamp(100px, 16vh, 135px)) !important;
+  left: 50% !important;
+  gap: 0 !important;
+}
+
+/* Карты пользователя остаются под карточкой даже при фолде */
+.hole.folded-hole {
+  z-index: 3 !important;
+}
+
+/* Карты ИИ находятся под карточками игроков */
+#opponentCards .opponent-cards {
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+/* Позиция карт под верхней карточкой */
+#opponentCards .opponent-cards.c0 {
+  top: calc(
+    8% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
+  );
+  left: calc(50% - 25px);
+  right: auto;
+  width: max-content;
+  transform: translateX(-50%);
+}
+
+/* Позиция карт под правой карточкой */
+#opponentCards .opponent-cards.c1 {
+  top: calc(
+    31% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
+  );
+  right: calc(2% + 5px);
+  left: auto;
+}
+
+/* Позиция карт под левой карточкой */
+#opponentCards .opponent-cards.c2 {
+  top: calc(
+    31% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
+  );
+  left: calc(2% + 5px);
+  right: auto;
+}
+
+/* Веер карт ИИ */
+#opponentCards .opponent-cards .mini-card:nth-child(1) {
+  rotate: -10deg;
+  z-index: 1;
+}
+
+#opponentCards .opponent-cards .mini-card:nth-child(2) {
+  rotate: 10deg;
+  margin-left: clamp(-10px, -1.2vw, -7px);
+  z-index: 2;
+}
+
+/* Вскрытие: карты остаются в том же положении,
+   что и рубашки до переворота */
+#opponentCards .opponent-cards.ai-seat-cards {
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  perspective: 700px;
+}
+
+/* Верхнее место */
+#opponentCards .opponent-cards.ai-seat-cards.c0 {
+  top: calc(
+    8% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
+  ) !important;
+  left: calc(50% - 25px) !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Правое место */
+#opponentCards .opponent-cards.ai-seat-cards.c1 {
+  top: calc(
+    31% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
+  ) !important;
+  right: calc(2% + 5px) !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+/* Левое место */
+#opponentCards .opponent-cards.ai-seat-cards.c2 {
+  top: calc(
+    31% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
+  ) !important;
+  left: calc(2% + 5px) !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* При вскрытии сохраняем размер обычных карт ИИ */
+#opponentCards .opponent-cards.ai-seat-cards .mini-card {
+  width: clamp(19px, 2.8vw, 26px) !important;
+  height: clamp(28px, 4vw, 37px) !important;
+  flex-shrink: 0;
+}
+
+/* Не меняем исходное положение номинала и масти */
+#opponentCards .opponent-cards.ai-seat-cards .mini-rank {
+  top: 1px !important;
+  left: 2px !important;
+  font-size: clamp(9px, 1.2vw, 11px) !important;
+}
+
+#opponentCards .opponent-cards.ai-seat-cards .mini-suit {
+  bottom: 1px !important;
+  right: 2px !important;
+  font-size: clamp(9px, 1.2vw, 11px) !important;
+}
+
+/* Портретная ориентация */
+@media (orientation: portrait) {
+  .hole {
+    --hole-card-width: clamp(48px, 13vw, 62px);
+    --hole-card-height: clamp(70px, 19vw, 90px);
+  }
+
+  #opponentCards .opponent-cards.c1,
+  #opponentCards .opponent-cards.ai-seat-cards.c1 {
+    top: calc(
+      29% + clamp(42px, 11vw, 58px) - clamp(11px, 2vw, 15px)
+    );
+  }
+
+  #opponentCards .opponent-cards.c2,
+  #opponentCards .opponent-cards.ai-seat-cards.c2 {
+    top: calc(
+      29% + clamp(42px, 11vw, 58px) - clamp(11px, 2vw, 15px)
+    );
+  }
+}
+
+/* Низкий экран в горизонтальной ориентации */
+@media (max-height: 420px) and (orientation: landscape) {
+  .hole {
+    --hole-card-width: clamp(39px, 5.4vw, 64px);
+    --hole-card-height: clamp(52px, 16vh, 82px);
+  }
+}
+
