@@ -1879,7 +1879,10 @@ transform-origin: center center;
 }
 
 #seats {
-  position: relative;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 4;
 }
 
