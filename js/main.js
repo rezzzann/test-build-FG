@@ -2252,40 +2252,6 @@ async function animateAIShowdownCards(handTick) {
   }
 
   const root = $('opponentCards');
-  const traceShowdownDOM = (stage, entries = []) => {
-  const cards = [...root.querySelectorAll(
-    '.opponent-cards .mini-card'
-  )];
-
-  console.group(`[Showdown DOM] ${stage}`);
-  console.log('tick:', tick, 'handTick:', handTick);
-  console.log('aiShowdownRevealBack:', aiShowdownRevealBack);
-  console.log('Всего карт в DOM:', cards.length);
- cards.forEach((el, i) => {
-  console.log(
-    `DOM card ${i}`,
-    JSON.stringify({
-      className: el.className,
-      rect: el.getBoundingClientRect().toJSON(),
-      opacity: getComputedStyle(el).opacity,
-      visibility: getComputedStyle(el).visibility,
-      display: getComputedStyle(el).display,
-      transform: getComputedStyle(el).transform,
-      backfaceVisibility: getComputedStyle(el).backfaceVisibility
-    }, null, 2)
-  );
-});
-  entries.forEach(({ element }, i) => {
-    console.log(`Captured card ${i}`, {
-      className: element.className,
-      isConnected: element.isConnected,
-      parent: element.parentElement?.className,
-      animation: element.getAnimations().map(a => a.playState)
-    });
-  });
-
-  console.groupEnd();
-};
 
   // Собираем существующие рубашки всех участвующих в шоудауне ИИ.
   const revealEntries = [];
@@ -2368,26 +2334,31 @@ async function animateAIShowdownCards(handTick) {
         ...board
       ]).coreCards.includes(card);
 
-    const template = document.createElement('div');
-    template.innerHTML = miniCard(card, true, isAICore);
+ const template = document.createElement('div');
+template.innerHTML = miniCard(card, true, isAICore);
 
-    const face = template.firstElementChild;
+const face = template.firstElementChild;
 if (!face) return;
 
+// Обновляем существующий DOM-элемент,
+// не заменяя рубашку новой картой.
+element.className = face.className;
+element.innerHTML = face.innerHTML;
+
 if (isInWinningHand) {
-  face.classList.add('winning-lift-target');
+  element.classList.add('winning-lift-target');
 }
 
 if (isAIWinner && !isInWinningHand) {
-  face.classList.add('not-in-combo');
+  element.classList.add('not-in-combo');
 }
 
-// Начальное положение открытой карты — ребром к зрителю.
-face.style.transform = 'perspective(700px) rotateY(-90deg)';
-face.style.opacity = '0.8';
+// Сохраняем начальное положение для второй половины переворота.
+element.style.transform = 'perspective(700px) rotateY(-90deg)';
+element.style.opacity = '0.8';
 
-element.replaceWith(face);
-faces.push(face);
+// Вторая анимация будет работать на том же DOM-элементе.
+faces.push(element);
   });
 
   if (handTick !== tick || gamePaused) return;
