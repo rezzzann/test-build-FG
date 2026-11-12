@@ -640,6 +640,7 @@ const opponentCardsRoot = $('opponentCards');
 
 const preserveShowdownCards =
   aiShowdownRevealBack ||
+  aiShowdownAnimating ||
   (
     over &&
     (humanWinnerReveal || aiWinnerReveal) &&
@@ -676,11 +677,15 @@ if (preserveShowdownCards) {
       const existingCard = existingCards[cardIndex];
       if (!existingCard) return;
 
-      if (aiShowdownRevealBack) {
-        existingCard.className = 'mini-card ai-reveal-back';
-        existingCard.innerHTML = '';
-        return;
-      }
+      if (aiShowdownAnimating) {
+  return;
+}
+
+if (aiShowdownRevealBack) {
+  existingCard.className = 'mini-card ai-reveal-back';
+  existingCard.innerHTML = '';
+  return;
+}
 
       const isInWinningHand =
         isAIWinner && aiWinningCards.includes(c);
