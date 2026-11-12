@@ -669,9 +669,8 @@ if (preserveShowdownCards) {
       : p.hole.length;
 
     const holeCards = p.hole.slice(0, dealtCount);
-    const existingCards = [
-      ...container.querySelectorAll(':scope > .mini-card')
-    ];
+   const existingCards = Array.from(container.children)
+  .filter(el => el.classList.contains('mini-card'));
 
     holeCards.forEach((c, cardIndex) => {
       const existingCard = existingCards[cardIndex];
