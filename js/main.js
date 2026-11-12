@@ -2296,7 +2296,7 @@ async function animateAIShowdownCards(handTick) {
   }
 
   // Первая половина: существующие рубашки поворачиваются ребром.
-  traceShowdownDOM('BEFORE FIRST ANIMATION', revealEntries);
+ 
   await Promise.all(revealEntries.map(({ element }) =>
     element.animate(
       [
@@ -2312,7 +2312,6 @@ async function animateAIShowdownCards(handTick) {
   ));
 
   if (handTick !== tick || gamePaused) return;
- traceShowdownDOM('AFTER FIRST ANIMATION', revealEntries);
   // Переключаем состояние, но НЕ вызываем render().
   aiShowdownRevealBack = false;
 
@@ -2364,7 +2363,6 @@ faces.push(element);
   if (handTick !== tick || gamePaused) return;
 
   // Вторая половина: новые лицевые стороны поворачиваются к зрителю.
-  traceShowdownDOM('BEFORE SECOND ANIMATION', revealEntries);
   await Promise.all(faces.map(el =>
     el.animate(
       [
