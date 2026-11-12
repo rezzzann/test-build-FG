@@ -341,10 +341,9 @@ function positionPocketCards() {
       temporaryProbe = true;
     }
 
-    const cardRect = probe.getBoundingClientRect();
-
-    const cardWidth = cardRect.width;
-    const cardHeight = cardRect.height;
+    // Берём исходные размеры карты без влияния поворота веера.
+const cardWidth = probe.offsetWidth;
+const cardHeight = probe.offsetHeight;
 
     if (temporaryProbe) probe.remove();
 
