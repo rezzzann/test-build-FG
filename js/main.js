@@ -2254,7 +2254,6 @@ console.log(`DOM card ${i}`, {
   transform: getComputedStyle(el).transform,
   backfaceVisibility: getComputedStyle(el).backfaceVisibility
 });
-  });
 
   entries.forEach(({ element }, i) => {
     console.log(`Captured card ${i}`, {
