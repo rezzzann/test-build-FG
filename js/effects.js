@@ -86,14 +86,13 @@ const EFFECTS_CSS = String.raw`
 @keyframes aiWinnerCardsIn {
   from {
     opacity: 0;
-    transform: translate(-50%,8px) scale(.94);
+    scale: .94;
   }
   to {
     opacity: 1;
-    transform: translate(-50%,0) scale(1);
+    scale: 1;
   }
 }
-
 
 /* =========================================
    ПОБЕДА
