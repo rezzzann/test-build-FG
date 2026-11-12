@@ -1082,10 +1082,17 @@ const cardIndex = playerIndex === 3
   : dealtCount;
 
 
-    const targetRect =
-      placeholders[cardIndex].getBoundingClientRect();
+const targetPlaceholder = placeholders[cardIndex];
+const targetRect = targetPlaceholder.getBoundingClientRect();
 
-    targetClone.remove();
+const targetWidth = targetPlaceholder.offsetWidth;
+const targetHeight = targetPlaceholder.offsetHeight;
+
+const targetRotation = cardIndex === 0
+  ? '-8deg'
+  : '8deg';
+
+targetClone.remove();
     const deckRect = deckStack.getBoundingClientRect();
     const tableRect = table.getBoundingClientRect();
 
@@ -1101,8 +1108,15 @@ const startX = deckRect.left - tableOriginX +
 const startY = deckRect.top - tableOriginY +
   deckRect.height / 2 - startHeight / 2;
 
-const endX = targetRect.left - tableOriginX;
-const endY = targetRect.top - tableOriginY;
+const endX =
+  targetRect.left -
+  tableOriginX +
+  (targetRect.width - targetWidth) / 2;
+
+const endY =
+  targetRect.top -
+  tableOriginY +
+  (targetRect.height - targetHeight) / 2;
 
     const flyingCard = document.createElement('div');
 flyingCard.className = isUser
@@ -1278,13 +1292,15 @@ function flyCommunityCard(cardIndex, handTick, reduceMotion) {
         top: `${startY}px`,
         width: `${deckRect.width}px`,
         height: `${deckRect.height}px`
+        rotate: '0deg'
       },
-      {
-        left: `${endX}px`,
-        top: `${endY}px`,
-        width: `${targetRect.width}px`,
-        height: `${targetRect.height}px`
-      }
+     {
+  left: `${endX}px`,
+  top: `${endY}px`,
+  width: `${targetWidth}px`,
+  height: `${targetHeight}px`,
+  rotate: targetRotation
+}
     ], {
       duration: 340,
       easing: 'cubic-bezier(.2,.8,.2,1)',
