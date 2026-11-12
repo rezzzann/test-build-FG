@@ -1866,3 +1866,119 @@ transform-origin: center center;
   }
 }
 
+/* =========================================
+   POKEREZA — КАРМАННЫЕ КАРТЫ
+   Позиционирование и отображение номинала
+   ========================================= */
+
+/* Слой карт находится под карточками игроков */
+#hole,
+#opponentCards {
+  z-index: 3;
+  pointer-events: none;
+}
+
+#seats {
+  position: relative;
+  z-index: 4;
+}
+
+/* Веер пользователя */
+.hole {
+  --hole-card-width: clamp(58px, 8.5vw, 94px);
+  --hole-card-height: clamp(84px, 12vw, 132px);
+
+  width: max-content !important;
+  gap: 0 !important;
+  overflow: visible;
+}
+
+.hole .card {
+  width: var(--hole-card-width) !important;
+  height: var(--hole-card-height) !important;
+  flex-shrink: 0;
+}
+
+.hole .card:nth-child(1) {
+  rotate: -8deg;
+  z-index: 1;
+}
+
+.hole .card:nth-child(2) {
+  rotate: 8deg;
+  margin-left: clamp(-28px, -3.5vw, -18px);
+  z-index: 2;
+}
+
+/* Номинал и масть пользователя друг под другом */
+.hole .card .rank {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  font-size: clamp(17px, 2.5vw, 27px);
+  line-height: 1;
+}
+
+.hole .card .center {
+  position: absolute;
+  top: 34px;
+  left: 7px;
+  align-self: auto;
+  font-size: clamp(17px, 2.5vw, 27px);
+  line-height: 1;
+}
+
+/* Веер карт ИИ */
+#opponentCards .opponent-cards {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  overflow: visible;
+}
+
+#opponentCards .mini-card:nth-child(1) {
+  rotate: -10deg;
+  z-index: 1;
+}
+
+#opponentCards .mini-card:nth-child(2) {
+  rotate: 10deg;
+  margin-left: clamp(-8px, -1vw, -5px);
+  z-index: 2;
+}
+
+/* Открытые карты ИИ: номинал и масть друг под другом */
+#opponentCards .mini-card .mini-rank {
+  position: absolute;
+  top: 3px !important;
+  left: 4px !important;
+  font-size: clamp(11px, 1.5vw, 16px) !important;
+  line-height: 1;
+}
+
+#opponentCards .mini-card .mini-suit {
+  position: absolute;
+  top: 21px !important;
+  left: 4px !important;
+  right: auto !important;
+  bottom: auto !important;
+  font-size: clamp(11px, 1.5vw, 16px) !important;
+  line-height: 1;
+}
+
+/* Портретная ориентация */
+@media (orientation: portrait) {
+  .hole {
+    --hole-card-width: clamp(48px, 13vw, 62px);
+    --hole-card-height: clamp(70px, 19vw, 90px);
+  }
+}
+
+/* Низкий экран */
+@media (max-height: 420px) and (orientation: landscape) {
+  .hole {
+    --hole-card-width: clamp(39px, 5.4vw, 64px);
+    --hole-card-height: clamp(52px, 16vh, 82px);
+  }
+}
+
