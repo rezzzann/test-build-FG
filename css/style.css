@@ -603,7 +603,7 @@ height: clamp(61px, 8.7vw, 96px);
   z-index: 10;
   opacity: 1;
   animation: none;
-  transition: opacity 600ms ease;
+transition: opacity 1200ms ease;
 }
  
 
@@ -618,16 +618,16 @@ height: clamp(61px, 8.7vw, 96px);
 
 /* Плавное появление новой комбинации без анимации положения карты. */
 .table.combo-transition-in .card.combo-core::before {
-  animation: winningCardFrameIn .6s ease forwards;
+animation: winningCardFrameIn 1.2s ease forwards;
 }
 
 .table.combo-transition-out .hand-summary {
   opacity: 0;
-  transition: opacity 600ms ease;
+transition: opacity 1200ms ease;
 }
 
 .table.combo-transition-in .hand-summary {
-  transition: opacity 600ms ease;
+ transition: opacity 1200ms ease;
 }
 
 .card.winning-card {
