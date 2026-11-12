@@ -1053,9 +1053,10 @@ function flyDealtCard(playerIndex, handTick, reduceMotion) {
     }
 
              // Всегда рассчитываем позиции в контейнере из двух карт.
-    const targetClone = target.cloneNode(false);
-    targetClone.style.visibility = 'hidden';
-
+const targetClone = target.cloneNode(false);
+targetClone.style.cssText = target.style.cssText;
+targetClone.style.visibility = 'hidden';
+targetClone.style.pointerEvents = 'none';
     const placeholders = [];
 
     for (let i = 0; i < 2; i++) {
