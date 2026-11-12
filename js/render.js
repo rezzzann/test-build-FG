@@ -450,6 +450,7 @@ const top =
       aiWinnerAnalysis,
       userHoleRevealBack,
 aiShowdownRevealBack,
+aiShowdownAnimating,
     } = s;
 if (!over || !winnerIds.length) {
   winnerAnimationPlayed = false;
