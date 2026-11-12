@@ -2247,16 +2247,12 @@ winningLiftActive = true;
  
 
 
+
 async function animateAIShowdownCards(handTick) {
   const root = $('opponentCards');
 
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    aiShowdownRevealBack = false;
-    aiShowdownAnimating = false;
-    render();
-    await liftWinningCards(handTick);
-    return;
-  }
+  const reduceMotion =
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const revealEntries = [];
 
@@ -2292,92 +2288,80 @@ async function animateAIShowdownCards(handTick) {
   });
 
   if (!revealEntries.length) {
-    console.warn('[Showdown] Не найдены карты ИИ');
-
     aiShowdownRevealBack = false;
     aiShowdownAnimating = false;
-
     render();
     await liftWinningCards(handTick);
     return;
   }
 
+  if (reduceMotion) {
+    aiShowdownRevealBack = false;
+    aiShowdownAnimating = false;
+    render();
+    await liftWinningCards(handTick);
+    return;
+  }
+
+  // Фаза 1. Поворачиваем рубашки ребром.
   aiShowdownAnimating = true;
 
-  const animations = [];
-
-  revealEntries.forEach(({ element, playerIndex, card }, cardIndex) => {
-    const isAIWinner =
-      aiWinnerReveal && playerIndex === aiWinnerId;
-
-    const isInWinningHand =
-      isAIWinner && aiWinningCards.includes(card);
-
-    const isAICore =
-      isAIWinner &&
-      !!analyzeHand([
-        ...players[aiWinnerId].hole,
-        ...board
-      ]).coreCards.includes(card);
-
-    const template = document.createElement('div');
-    template.innerHTML = miniCard(card, true, isAICore);
-
-    const face = template.firstElementChild;
-    if (!face) return;
-
-    // Сохраняем существующий внешний элемент карты.
-    element.className = 'mini-card';
-    element.style.transform = '';
-    element.style.opacity = '';
-
-    if (isInWinningHand) {
-      element.classList.add('winning-lift-target');
-    }
-
-    if (isAIWinner && !isInWinningHand) {
-      element.classList.add('not-in-combo');
-    }
-
-    // Создаём две стороны одной карты.
-    element.innerHTML = `
-      <span class="mini-card-flipper">
-        <span class="mini-card-back"></span>
-        <span class="mini-card-front ${face.classList.contains('red') ? 'red' : ''} ${isAICore ? 'winning-card' : ''}">
-          ${face.innerHTML}
-        </span>
-      </span>
-    `;
-
-    const flipper = element.querySelector('.mini-card-flipper');
-    if (!flipper) return;
-
-    animations.push(
-      flipper.animate(
+  await Promise.all(
+    revealEntries.map(({ element }) =>
+      element.animate(
         [
-          { transform: 'rotateY(0deg)' },
-          { transform: 'rotateY(180deg)' }
+          {
+            transform: 'perspective(700px) rotateY(0deg)'
+          },
+          {
+            transform: 'perspective(700px) rotateY(90deg)'
+          }
         ],
         {
-          duration: 600,
-          delay: cardIndex * 100,
-          easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
+          duration: 240,
+          easing: 'ease-in',
           fill: 'forwards'
         }
       ).finished.catch(() => {})
-    );
-  });
-
-  // Ждём завершения всех переворотов.
-  await Promise.all(animations);
+    )
+  );
 
   if (handTick !== tick || gamePaused) return;
 
+  // Фаза 2. Подменяем рубашки лицевыми сторонами.
+  // render.js обновит содержимое существующих элементов.
   aiShowdownRevealBack = false;
   aiShowdownAnimating = false;
+  render();
 
-  // Карты уже открыты. Не вызываем render:
-  // он не должен пересоздавать их содержимое.
+  // Фаза 3. Поворачиваем открытые карты обратно.
+  await Promise.all(
+    revealEntries.map(({ element }, index) => {
+      if (!element.isConnected) return Promise.resolve();
+
+      return element.animate(
+        [
+          {
+            transform: 'perspective(700px) rotateY(-90deg)'
+          },
+          {
+            transform: 'perspective(700px) rotateY(0deg)'
+          }
+        ],
+        {
+          duration: 240,
+          delay: index * 70,
+          easing: 'ease-out',
+          fill: 'both'
+        }
+      ).finished.catch(() => {});
+    })
+  );
+
+  if (handTick !== tick || gamePaused) return;
+
+  aiShowdownAnimating = false;
+
   await liftWinningCards(handTick);
 }
 
