@@ -1985,19 +1985,18 @@ transform-origin: center center;
   }
 }
 /* =========================================
-   POKEREZA — УВЕЛИЧЕННЫЕ КАРМАННЫЕ КАРТЫ ИИ
+   POKEREZA — КАРМАННЫЕ КАРТЫ ИИ ×1.5
    ========================================= */
 
-/* Удвоенный размер закрытых и открытых карт ИИ */
-#opponentCards .opponent-cards .mini-card,
-#opponentCards .opponent-cards.ai-seat-cards .mini-card {
-  width: clamp(40px, 5.6vw, 52px) !important;
-  height: clamp(58px, 8vw, 74px) !important;
+/* Закрытые и открытые карты ИИ */
+#opponentCards .opponent-cards .mini-card {
+  width: clamp(30px, 4.2vw, 39px) !important;
+  height: clamp(43.5px, 6vw, 55.5px) !important;
   flex-shrink: 0;
 }
 
-/* Такой же размер у карт во время полёта из колоды */
+/* Карты ИИ во время полёта из колоды */
 .dealing-card.mini-card {
-  width: clamp(40px, 5.6vw, 52px);
-  height: clamp(58px, 8vw, 74px);
+  width: clamp(30px, 4.2vw, 39px);
+  height: clamp(43.5px, 6vw, 55.5px);
 }
