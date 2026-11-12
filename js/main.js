@@ -2232,6 +2232,37 @@ async function animateAIShowdownCards(handTick) {
   }
 
   const root = $('opponentCards');
+  const traceShowdownDOM = (stage, entries = []) => {
+  const cards = [...root.querySelectorAll(
+    '.opponent-cards .mini-card'
+  )];
+
+  console.group(`[Showdown DOM] ${stage}`);
+  console.log('tick:', tick, 'handTick:', handTick);
+  console.log('aiShowdownRevealBack:', aiShowdownRevealBack);
+  console.log('Всего карт в DOM:', cards.length);
+
+  cards.forEach((el, i) => {
+    console.log(`DOM card ${i}`, {
+      className: el.className,
+      isConnected: el.isConnected,
+      parent: el.parentElement?.className,
+      animation: el.getAnimations().map(a => a.playState),
+      rect: el.getBoundingClientRect().toJSON()
+    });
+  });
+
+  entries.forEach(({ element }, i) => {
+    console.log(`Captured card ${i}`, {
+      className: element.className,
+      isConnected: element.isConnected,
+      parent: element.parentElement?.className,
+      animation: element.getAnimations().map(a => a.playState)
+    });
+  });
+
+  console.groupEnd();
+};
 
   // Собираем существующие рубашки всех участвующих в шоудауне ИИ.
   const revealEntries = [];
@@ -2276,6 +2307,7 @@ async function animateAIShowdownCards(handTick) {
   }
 
   // Первая половина: существующие рубашки поворачиваются ребром.
+  traceShowdownDOM('BEFORE FIRST ANIMATION', revealEntries);
   await Promise.all(revealEntries.map(({ element }) =>
     element.animate(
       [
@@ -2291,7 +2323,7 @@ async function animateAIShowdownCards(handTick) {
   ));
 
   if (handTick !== tick || gamePaused) return;
-
+ traceShowdownDOM('AFTER FIRST ANIMATION', revealEntries);
   // Переключаем состояние, но НЕ вызываем render().
   aiShowdownRevealBack = false;
 
@@ -2334,6 +2366,7 @@ async function animateAIShowdownCards(handTick) {
   if (handTick !== tick || gamePaused) return;
 
   // Вторая половина: новые лицевые стороны поворачиваются к зрителю.
+  traceShowdownDOM('BEFORE SECOND ANIMATION', revealEntries);
   await Promise.all(faces.map(el =>
     el.animate(
       [
