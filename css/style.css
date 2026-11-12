@@ -1794,14 +1794,6 @@ transform-origin: center center;
   right: auto !important;
   transform: none !important;
 }
-
-/* При вскрытии сохраняем размер обычных карт ИИ */
-#opponentCards .opponent-cards.ai-seat-cards .mini-card {
-  width: clamp(19px, 2.8vw, 26px) !important;
-  height: clamp(28px, 4vw, 37px) !important;
-  flex-shrink: 0;
-}
-
 /* Не меняем исходное положение номинала и масти */
 #opponentCards .opponent-cards.ai-seat-cards .mini-rank {
   top: 1px !important;
