@@ -2306,7 +2306,7 @@ async function animateAIShowdownCards(handTick) {
 
   const animations = [];
 
-  revealEntries.forEach(({ element, playerIndex, card }) => {
+  revealEntries.forEach(({ element, playerIndex, card }, cardIndex) => {
     const isAIWinner =
       aiWinnerReveal && playerIndex === aiWinnerId;
 
