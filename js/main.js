@@ -1078,9 +1078,7 @@ const dealtCount = Math.min(
   players[playerIndex].dealtCount || 0
 );
 
-const cardIndex = playerIndex === 3
-  ? 1 - dealtCount
-  : dealtCount;
+const cardIndex = dealtCount;
 
 
 const targetPlaceholder = placeholders[cardIndex];
