@@ -46,6 +46,8 @@ const TEST_FIRST_HAND_AI_ALL_IN = false;
 const TEST_MANUAL_NEXT_HAND = false;
       // ALL-IN для всех ИИ на каждой раздаче.
 const TEST_ALL_HANDS_AI_ALL_IN = false;
+      // Быстрый тест: после блайндов сразу переходим к шоудауну.
+const TEST_FAST_SHOWDOWN = true;
 // Включение / отключение таймера хода.
 const TEST_ACTION_CLOCK_ENABLED = true;
 const DISPLAY_VERSION=GAME_VERSION;
@@ -718,13 +720,18 @@ function runBlindSequence(sbi, sbAmount, bbi, bbAmount, handTick) {
       });
     }
 
-    // После завершения анимации разрешаем первый ход.
+    // После блайндов выбираем обычную игру или быстрый тест шоудауна.
     blindSequenceTimer = setTimeout(() => {
       blindSequenceTimer = null;
 
-      if (!over && handTick === tick && !gamePaused) {
-        advanceQueue();
+      if (over || handTick !== tick || gamePaused) return;
+
+      if (TEST_FAST_SHOWDOWN) {
+        runOutBoard(handTick);
+        return;
       }
+
+      advanceQueue();
     }, reduceMotion ? 200 : 1100);
 
   }, reduceMotion ? 200 : 1100);
