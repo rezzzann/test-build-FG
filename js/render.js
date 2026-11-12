@@ -635,29 +635,52 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
       return `<div data-player-index="${i}" class="seat ${p.eliminated ? 'eliminated' : ''} ${animateInfoReturn ? 'allin-info-appear' : ''} ${cls} ${p.allinFlame ? 'allin-flame-active' : ''} ${userClass} ${i === actor && !over ? 'active' : ''} ${p.folded ? 'folded' : ''}">${winMarkup}<div class="action-label ${thinking ? 'thinking' : ''} ${labelClass} ${animateAction ? 'action-label-animate' : ''}" ${animationStyle}>${actionMarkup(action)}</div><div class="avatar-wrap"><div class="avatar">${p.icon}</div></div>${seatInfoMarkup}</div>`;
     }).join('');
 
-  $('opponentCards').innerHTML = players.map((p, i) => {
-  if (i === 0 || p.folded) return '';
+ 
+const opponentCardsRoot = $('opponentCards');
 
-  const pos = cardPos[i];
-  if (!pos) return '';
-
-  const revealed =
+const preserveShowdownCards =
+  aiShowdownRevealBack ||
+  (
     over &&
-    !p.folded &&
-    (humanWinnerReveal || aiWinnerReveal);
+    (humanWinnerReveal || aiWinnerReveal) &&
+    !!opponentCardsRoot.querySelector(
+      '.opponent-cards.ai-seat-cards'
+    )
+  );
 
-  const isAIWinner = aiWinnerReveal && i === aiWinnerId;
+if (preserveShowdownCards) {
+  players.forEach((p, i) => {
+    if (i === 0 || p.folded) return;
 
-  const dealtCount = Number.isInteger(p.dealtCount)
-    ? p.dealtCount
-    : p.hole.length;
+    const pos = cardPos[i];
+    if (!pos) return;
 
-  const holeCards = p.hole.slice(0, dealtCount);
+    const container = opponentCardsRoot.querySelector(
+      `.opponent-cards.${pos}`
+    );
 
-  if (revealed) {
-    const cardsMarkup = holeCards.map(c => {
+    if (!container) return;
+
+    container.classList.add('ai-seat-cards', 'ai-winner-cards');
+
+    const isAIWinner = aiWinnerReveal && i === aiWinnerId;
+    const dealtCount = Number.isInteger(p.dealtCount)
+      ? p.dealtCount
+      : p.hole.length;
+
+    const holeCards = p.hole.slice(0, dealtCount);
+    const existingCards = [
+      ...container.querySelectorAll(':scope > .mini-card')
+    ];
+
+    holeCards.forEach((c, cardIndex) => {
+      const existingCard = existingCards[cardIndex];
+      if (!existingCard) return;
+
       if (aiShowdownRevealBack) {
-        return '<span class="mini-card ai-reveal-back"></span>';
+        existingCard.className = 'mini-card ai-reveal-back';
+        existingCard.innerHTML = '';
+        return;
       }
 
       const isInWinningHand =
@@ -667,24 +690,87 @@ const seatInfoMarkup = p.eliminated && p.showTournamentStats
         isAIWinner &&
         !!aiWinnerAnalysis?.coreCards.includes(c);
 
-      let html = miniCard(c, true, isAICore);
+      const template = document.createElement('span');
+      template.innerHTML = miniCard(c, true, isAICore);
+
+      const face = template.firstElementChild;
+      if (!face) return;
+
+      existingCard.className = face.className;
+      existingCard.innerHTML = face.innerHTML;
 
       if (isInWinningHand) {
-        html = html.replace(
-          'class="mini-card',
-          'class="mini-card winning-lift-target'
-        );
+        existingCard.classList.add('winning-lift-target');
       }
 
       if (isAIWinner && !isInWinningHand) {
-        html = html.replace(
-          'class="mini-card',
-          'class="mini-card not-in-combo'
-        );
+        existingCard.classList.add('not-in-combo');
       }
+    });
+  });
+} else {
+  opponentCardsRoot.innerHTML = players.map((p, i) => {
+    if (i === 0 || p.folded) return '';
 
-      return html;
-    }).join('');
+    const pos = cardPos[i];
+    if (!pos) return '';
+
+    const revealed =
+      over &&
+      !p.folded &&
+      (humanWinnerReveal || aiWinnerReveal);
+
+    const dealtCount = Number.isInteger(p.dealtCount)
+      ? p.dealtCount
+      : p.hole.length;
+
+    const holeCards = p.hole.slice(0, dealtCount);
+
+    if (revealed) {
+      const cardsMarkup = holeCards.map(c => {
+        const isAIWinner = aiWinnerReveal && i === aiWinnerId;
+
+        const isInWinningHand =
+          isAIWinner && aiWinningCards.includes(c);
+
+        const isAICore =
+          isAIWinner &&
+          !!aiWinnerAnalysis?.coreCards.includes(c);
+
+        let html = miniCard(c, true, isAICore);
+
+        if (isInWinningHand) {
+          html = html.replace(
+            'class="mini-card',
+            'class="mini-card winning-lift-target'
+          );
+        }
+
+        if (isAIWinner && !isInWinningHand) {
+          html = html.replace(
+            'class="mini-card',
+            'class="mini-card not-in-combo'
+          );
+        }
+
+        return html;
+      }).join('');
+
+      return `
+        <div class="opponent-cards ${pos} ai-seat-cards ai-winner-cards">
+          ${cardsMarkup}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="opponent-cards ${pos}">
+        ${holeCards.map(() => '<span class="mini-card"></span>').join('')}
+      </div>
+    `;
+  }).join('');
+}
+
 
     return `
       <div class="opponent-cards ${pos} ai-seat-cards ai-winner-cards">
