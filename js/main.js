@@ -1089,8 +1089,10 @@ const targetRect = targetPlaceholder.getBoundingClientRect();
 const targetWidth = targetPlaceholder.offsetWidth;
 const targetHeight = targetPlaceholder.offsetHeight;
 
-const targetRotation =
-  getComputedStyle(targetPlaceholder).rotate || '0deg';
+// Угол полёта должен совпадать с конечным веером.
+const targetRotation = isUser
+  ? (cardIndex === 0 ? '-8deg' : '8deg')
+  : (cardIndex === 0 ? '-10deg' : '10deg');
 targetClone.remove();
     const deckRect = deckStack.getBoundingClientRect();
     const tableRect = table.getBoundingClientRect();
