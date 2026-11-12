@@ -1088,10 +1088,8 @@ const targetRect = targetPlaceholder.getBoundingClientRect();
 const targetWidth = targetPlaceholder.offsetWidth;
 const targetHeight = targetPlaceholder.offsetHeight;
 
-const targetRotation = cardIndex === 0
-  ? '-8deg'
-  : '8deg';
-
+const targetRotation =
+  getComputedStyle(targetPlaceholder).rotate || '0deg';
 targetClone.remove();
     const deckRect = deckStack.getBoundingClientRect();
     const tableRect = table.getBoundingClientRect();
