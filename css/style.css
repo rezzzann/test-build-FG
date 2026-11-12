@@ -1735,17 +1735,6 @@ transform-origin: center center;
   gap: 0;
 }
 
-/* Позиция карт под верхней карточкой */
-#opponentCards .opponent-cards.c0 {
-  top: calc(
-    8% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
-  );
-  left: calc(50% - 25px);
-  right: auto;
-  width: max-content;
-  transform: translateX(-50%);
-}
-
 /* Позиция карт под правой карточкой */
 #opponentCards .opponent-cards.c1 {
   top: calc(
@@ -1784,16 +1773,6 @@ transform-origin: center center;
   align-items: flex-start;
   gap: 0;
   perspective: 700px;
-}
-
-/* Верхнее место */
-#opponentCards .opponent-cards.ai-seat-cards.c0 {
-  top: calc(
-    8% + clamp(48px, 13vw, 65px) - clamp(14px, 2vw, 18px)
-  ) !important;
-  left: calc(50% - 25px) !important;
-  right: auto !important;
-  transform: translateX(-50%) !important;
 }
 
 /* Правое место */
