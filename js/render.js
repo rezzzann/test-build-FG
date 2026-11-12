@@ -356,14 +356,13 @@ const overlap = isUser
 
 const totalWidth = cardWidth * 2 - overlap;
 
-// Карты ИИ начинаются в 20 px от левого края карточки игрока.
-const left = isUser
-  ? avatarRect.left + avatarRect.width / 2 -
-    tableRect.left - totalWidth / 2
-  : seatRect.left - tableRect.left + 20;
+// Единый отступ 20 px от левого края карточки игрока.
+const left =
+  seatRect.left -
+  tableRect.left +
+  20;
 
-// 70% высоты карты остаётся над карточкой игрока,
-// 30% заходит под неё.
+// 70% карт над карточкой, 30% скрыто под ней.
 const top =
   seatRect.top -
   tableRect.top -
