@@ -825,6 +825,7 @@ over,
     initialDealInProgress,
     userHoleRevealBack,
 aiShowdownRevealBack,
+    aiShowdownAnimating,
     communityDealingIndices: [...communityDealingIndices],
    board,
 currentHandAnalysis: players[user] &&
