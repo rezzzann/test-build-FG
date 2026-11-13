@@ -1938,4 +1938,31 @@ transform-origin: center center;
   height: clamp(43.5px, 6vw, 55.5px);
 }
 
+/* Открытые карманные карты ИИ — стандартный визуал карт */
+#opponentCards .opponent-cards.ai-seat-cards .card {
+  width: clamp(38px, 4.2vw, 49px);
+  height: clamp(55px, 6vw, 70px);
+  padding: 4px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* Сохраняем подъём выигрышных карт ИИ */
+#opponentCards .opponent-cards.ai-seat-cards .card.winning-lift {
+  top: -15px;
+  z-index: 10;
+}
+
+/* Плавность подъёма */
+#opponentCards .opponent-cards.ai-seat-cards .card {
+  top: 0;
+  transition: top .36s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #opponentCards .opponent-cards.ai-seat-cards .card {
+    transition: none;
+  }
+}
+
 
