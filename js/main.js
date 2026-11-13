@@ -2371,29 +2371,28 @@ revealEntries.forEach(({ element, playerIndex, card }) => {
 
 
   // Фаза 3. Поворачиваем открытые карты обратно.
-  await Promise.all(
-    revealEntries.map(({ element }, index) => {
-      if (!element.isConnected) return Promise.resolve();
+ await Promise.all(
+  revealEntries.map(({ element, cardIndex }) => {
+    if (!element.isConnected) return Promise.resolve();
 
-      return element.animate(
-        [
-          {
-            transform: 'perspective(700px) rotateY(-90deg)'
-          },
-          {
-            transform: 'perspective(700px) rotateY(0deg)'
-          }
-        ],
+    return element.animate(
+      [
         {
-          duration: 240,
-          delay: index * 70,
-          easing: 'ease-out',
-          fill: 'both'
+          transform: 'perspective(700px) rotateY(-90deg)'
+        },
+        {
+          transform: 'perspective(700px) rotateY(0deg)'
         }
-      ).finished.catch(() => {});
-    })
-  );
-
+      ],
+      {
+        duration: 240,
+        delay: cardIndex * 70,
+        easing: 'ease-out',
+        fill: 'both'
+      }
+    ).finished.catch(() => {});
+  })
+);
   if (handTick !== tick || gamePaused) return;
 
   aiShowdownAnimating = false;
