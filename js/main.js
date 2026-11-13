@@ -2328,10 +2328,45 @@ async function animateAIShowdownCards(handTick) {
 
   if (handTick !== tick || gamePaused) return;
 
-  // Фаза 2. Подменяем рубашки лицевыми сторонами.
-  // render.js обновит содержимое существующих элементов.
+ 
+// Фаза 2. Меняем содержимое существующих элементов напрямую.
+// Повторный render() здесь намеренно не вызывается.
 aiShowdownRevealBack = false;
-render();
+
+revealEntries.forEach(({ element, playerIndex, card }) => {
+  if (!element.isConnected) return;
+
+  const isAIWinner =
+    aiWinnerReveal && playerIndex === aiWinnerId;
+
+  const isInWinningHand =
+    isAIWinner && aiWinningCards.includes(card);
+
+  const isAICore =
+    isAIWinner &&
+    !!analyzeHand([
+      ...players[aiWinnerId].hole,
+      ...board
+    ]).coreCards.includes(card);
+
+  const template = document.createElement('div');
+  template.innerHTML = miniCard(card, true, isAICore);
+
+  const face = template.firstElementChild;
+  if (!face) return;
+
+  element.className = face.className;
+  element.innerHTML = face.innerHTML;
+
+  if (isInWinningHand) {
+    element.classList.add('winning-lift-target');
+  }
+
+  if (isAIWinner && !isInWinningHand) {
+    element.classList.add('not-in-combo');
+  }
+});
+
 
   // Фаза 3. Поворачиваем открытые карты обратно.
   await Promise.all(
