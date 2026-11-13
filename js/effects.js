@@ -79,19 +79,8 @@ const EFFECTS_CSS = String.raw`
 
 .opponent-cards.ai-winner-cards,
 .opponent-cards.ai-winner-cards.revealed {
-  animation: aiWinnerCardsIn .65s cubic-bezier(.22,.75,.25,1) .5s both;
+  animation: none !important;
   transition: none !important;
-}
-
-@keyframes aiWinnerCardsIn {
-  from {
-    opacity: 0;
-    scale: .94;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-  }
 }
 
 /* =========================================
