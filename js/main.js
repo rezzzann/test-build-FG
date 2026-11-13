@@ -2280,11 +2280,12 @@ async function animateAIShowdownCards(handTick) {
       const element = cards[cardIndex];
       if (!element) return;
 
-      revealEntries.push({
-        element,
-        playerIndex,
-        card
-      });
+    revealEntries.push({
+  element,
+  playerIndex,
+  card,
+  cardIndex
+});
     });
   });
 
