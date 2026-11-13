@@ -2249,11 +2249,9 @@ winningLiftActive = true;
 
 
 
+
 async function animateAIShowdownCards(handTick) {
   const root = $('opponentCards');
-
-  const reduceMotion =
-    matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const revealEntries = [];
 
@@ -2276,16 +2274,15 @@ async function animateAIShowdownCards(handTick) {
       ? player.dealtCount
       : player.hole.length;
 
-    player.hole.slice(0, dealtCount).forEach((card, cardIndex) => {
+    player.hole.slice(0, dealtCount).forEach((holeCard, cardIndex) => {
       const element = cards[cardIndex];
       if (!element) return;
 
-    revealEntries.push({
-  element,
-  playerIndex,
-  card,
-  cardIndex
-});
+      revealEntries.push({
+        element,
+        playerIndex,
+        holeCard
+      });
     });
   });
 
@@ -2297,13 +2294,104 @@ async function animateAIShowdownCards(handTick) {
     return;
   }
 
-  if (reduceMotion) {
-    aiShowdownRevealBack = false;
-    aiShowdownAnimating = false;
-    render();
-    await liftWinningCards(handTick);
-    return;
-  }
+  if (handTick !== tick || gamePaused) return;
+
+  aiShowdownAnimating = true;
+
+  // Фаза 1. Все рубашки одновременно поворачиваются ребром.
+  await Promise.all(
+    revealEntries.map(({ element }) =>
+      element.animate(
+        [
+          { transform: 'perspective(700px) rotateY(0deg)' },
+          { transform: 'perspective(700px) rotateY(90deg)' }
+        ],
+        {
+          duration: 240,
+          easing: 'ease-in',
+          fill: 'forwards'
+        }
+      ).finished.catch(() => {})
+    )
+  );
+
+  if (handTick !== tick || gamePaused) return;
+
+  // Фаза 2. На ребре мгновенно заменяем рубашки лицевыми сторонами.
+  aiShowdownRevealBack = false;
+
+  const openedEntries = [];
+
+  revealEntries.forEach(({ element, playerIndex, holeCard }) => {
+    if (!element.isConnected) return;
+
+    const isAIWinner =
+      aiWinnerReveal && playerIndex === aiWinnerId;
+
+    const isInWinningHand =
+      isAIWinner && aiWinningCards.includes(holeCard);
+
+    const isAICore =
+      isAIWinner &&
+      !!analyzeHand([
+        ...players[aiWinnerId].hole,
+        ...board
+      ]).coreCards.includes(holeCard);
+
+    const template = document.createElement('div');
+    template.innerHTML = card(holeCard);
+
+    const face = template.firstElementChild;
+    if (!face) return;
+
+    const openedCard = document.createElement('div');
+    openedCard.className = face.className;
+    openedCard.innerHTML = face.innerHTML;
+
+    if (isAICore) {
+      openedCard.classList.add('winning-card');
+    }
+
+    if (isInWinningHand) {
+      openedCard.classList.add('winning-lift-target');
+    }
+
+    if (isAIWinner && !isInWinningHand) {
+      openedCard.classList.add('not-in-combo');
+    }
+
+    openedCard.style.transform =
+      'perspective(700px) rotateY(-90deg)';
+
+    element.replaceWith(openedCard);
+
+    openedEntries.push(openedCard);
+  });
+
+  // Фаза 3. Все открытые карты одновременно возвращаются в исходное положение.
+  await Promise.all(
+    openedEntries.map(element =>
+      element.animate(
+        [
+          { transform: 'perspective(700px) rotateY(-90deg)' },
+          { transform: 'perspective(700px) rotateY(0deg)' }
+        ],
+        {
+          duration: 240,
+          easing: 'ease-out',
+          fill: 'both'
+        }
+      ).finished.catch(() => {})
+    )
+  );
+
+  if (handTick !== tick || gamePaused) return;
+
+  aiShowdownAnimating = false;
+
+  await liftWinningCards(handTick);
+}
+
 
   // Фаза 1. Поворачиваем рубашки ребром.
   aiShowdownAnimating = true;
