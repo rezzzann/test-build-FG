@@ -671,19 +671,19 @@ if (preserveShowdownCards) {
       : p.hole.length;
 
     const holeCards = p.hole.slice(0, dealtCount);
-   const existingCards = Array.from(container.children)
-  .filter(el => el.classList.contains('mini-card'));
+  const existingCards = Array.from(container.children)
+  .filter(el => el.classList.contains('card'));
 
     holeCards.forEach((c, cardIndex) => {
       const existingCard = existingCards[cardIndex];
       if (!existingCard) return;
 
- if (aiShowdownAnimating && aiShowdownRevealBack) {
+if (aiShowdownAnimating && aiShowdownRevealBack) {
   return;
 }
 
 if (aiShowdownRevealBack) {
-  existingCard.className = 'mini-card';
+  existingCard.className = 'card back';
   existingCard.innerHTML = '';
   return;
 }
@@ -695,8 +695,8 @@ if (aiShowdownRevealBack) {
         isAIWinner &&
         !!aiWinnerAnalysis?.coreCards.includes(c);
 
-      const template = document.createElement('span');
-      template.innerHTML = miniCard(c, true, isAICore);
+      const template = document.createElement('div');
+template.innerHTML = card(c);
 
       const face = template.firstElementChild;
       if (!face) return;
@@ -742,19 +742,19 @@ if (aiShowdownRevealBack) {
           isAIWinner &&
           !!aiWinnerAnalysis?.coreCards.includes(c);
 
-        let html = miniCard(c, true, isAICore);
+        let html = card(c);
 
         if (isInWinningHand) {
           html = html.replace(
-            'class="mini-card',
-            'class="mini-card winning-lift-target'
+            'class="card',
+            'class="card winning-lift-target'
           );
         }
 
         if (isAIWinner && !isInWinningHand) {
           html = html.replace(
-            'class="mini-card',
-            'class="mini-card not-in-combo'
+            'class="card',
+            'class="card not-in-combo'
           );
         }
 
@@ -770,7 +770,7 @@ if (aiShowdownRevealBack) {
 
     return `
       <div class="opponent-cards ${pos}">
-        ${holeCards.map(() => '<span class="mini-card"></span>').join('')}
+        ${holeCards.map(() => '<div class="card back"></div>').join('')}
       </div>
     `;
   }).join('');
