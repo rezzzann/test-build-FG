@@ -844,7 +844,7 @@ aiWinnerAnalysis: aiWinningCards.length &&
     ? analyzeHand([...players[aiWinnerId].hole, ...board])
     : null
   }),
-  card,
+    card: cardMarkup,
   miniCard,
   fmt,
   compactFmt,
