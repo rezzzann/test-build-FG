@@ -2281,7 +2281,8 @@ async function animateAIShowdownCards(handTick) {
       revealEntries.push({
         element,
         playerIndex,
-        holeCard
+        holeCard,
+        cardIndex
       });
     });
   });
@@ -2322,7 +2323,7 @@ async function animateAIShowdownCards(handTick) {
 
   const openedEntries = [];
 
-  revealEntries.forEach(({ element, playerIndex, holeCard }) => {
+  revealEntries.forEach(({ element, playerIndex, holeCard, cardIndex }) => {
     if (!element.isConnected) return;
 
     const isAIWinner =
@@ -2347,6 +2348,12 @@ async function animateAIShowdownCards(handTick) {
     const openedCard = document.createElement('div');
     openedCard.className = face.className;
     openedCard.innerHTML = face.innerHTML;
+    // Сохраняем исходный наклон карт веером.
+openedCard.style.rotate = cardIndex === 0 ? '-10deg' : '10deg';
+
+if (cardIndex === 1) {
+  openedCard.style.marginLeft = 'clamp(-10px, -1.2vw, -7px)';
+}
 
     if (isAICore) {
       openedCard.classList.add('winning-card');
