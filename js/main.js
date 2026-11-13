@@ -264,14 +264,12 @@ let allInLightEndHandler = null;
 }
 
 // После вскрытия сохраняем огонь только победителям.
+
 function settleAllInFire(winnerIndexes) {
-  // Если в раздаче не было ALL-IN — ничего не делаем.
   if (firstAllInSeat === -1) return;
 
   const winnerSet = new Set(winnerIndexes);
 
-  // Определяем игроков, которые действительно пошли ALL-IN,
-  // проиграли раздачу и у которых ещё горит пламя.
   const loserIndexes = players
     .map((player, index) => index)
     .filter(index =>
@@ -281,15 +279,19 @@ function settleAllInFire(winnerIndexes) {
 
   if (loserIndexes.length === 0) return;
 
-  // Затухает только пламя проигравших ALL-IN игроков.
   extinguishFire(loserIndexes, () => {
     loserIndexes.forEach(index => {
       players[index].allinFlame = false;
-    });
 
-    render();
+      const seat = document.querySelector(
+        `#seats .seat[data-player-index="${index}"]`
+      );
+
+      seat?.classList.remove('allin-flame-active');
+    });
   });
 }
+
 function startAllInTableLight(playerIndex) {
   if (firstAllInSeat !== -1) return;
 
