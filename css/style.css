@@ -1939,30 +1939,30 @@ transform-origin: center center;
 }
 
 // Открытые карманные карты ИИ — стандартный визуал карт 
+/* Открытые карты ИИ — прежний размер, новый вид номинала и масти */
 #opponentCards .opponent-cards.ai-seat-cards .card {
-  width: clamp(38px, 4.2vw, 49px);
-  height: clamp(55px, 6vw, 70px);
+  width: clamp(30px, 4.2vw, 39px);
+  height: clamp(43.5px, 6vw, 55.5px);
   padding: 4px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
-/* Номинал и масть открытых карт ИИ — как у пользователя */
+
 #opponentCards .opponent-cards.ai-seat-cards .card .rank {
   position: absolute;
-  top: 7px;
-  left: 7px;
-  font-size: clamp(17px, 2.5vw, 27px);
+  top: 3px;
+  left: 4px;
+  font-size: clamp(11px, 1.5vw, 16px);
   line-height: 1;
 }
 
 #opponentCards .opponent-cards.ai-seat-cards .card .center {
   position: absolute;
-  top: 34px;
-  left: 7px;
+  top: 21px;
+  left: 4px;
   right: auto;
   bottom: auto;
-  align-self: auto;
-  font-size: clamp(17px, 2.5vw, 27px);
+  font-size: clamp(11px, 1.5vw, 16px);
   line-height: 1;
 }
 /* Сохраняем подъём выигрышных карт ИИ */
