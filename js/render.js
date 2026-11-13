@@ -678,7 +678,7 @@ if (preserveShowdownCards) {
       const existingCard = existingCards[cardIndex];
       if (!existingCard) return;
 
-      if (aiShowdownAnimating) {
+ if (aiShowdownAnimating && aiShowdownRevealBack) {
   return;
 }
 
