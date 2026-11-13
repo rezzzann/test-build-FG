@@ -381,7 +381,6 @@ if (
   )
 ) {
   flareFire(firstAllInSeat);
-  render();
 }
   }
 
