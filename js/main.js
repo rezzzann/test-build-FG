@@ -10,7 +10,7 @@ import {
   dequeue as removeFromQueue,
   queueHead as getQueueHead
 } from './round.js';
-import { card, miniCard, fmt, compactFmt } from './format.js';
+import {   card as cardMarkup,   miniCard,   fmt,   compactFmt } from './format.js';
 import {
   getBetChipConfig,
   getBetChipCount,
@@ -2269,8 +2269,8 @@ async function animateAIShowdownCards(handTick) {
 
     if (!container) return;
 
-    const cards = Array.from(container.children)
-      .filter(el => el.classList.contains('mini-card'));
+   const cards = Array.from(container.children)
+  .filter(el => el.classList.contains('card'));
 
     const dealtCount = Number.isInteger(player.dealtCount)
       ? player.dealtCount
@@ -2305,27 +2305,79 @@ async function animateAIShowdownCards(handTick) {
     return;
   }
 
-  // Фаза 1. Поворачиваем рубашки ребром.
+
+  // Каждая карта выполняет непрерывный переворот.
+  // Вторая карта начинает на 70 мс позже первой.
   aiShowdownAnimating = true;
 
   await Promise.all(
-    revealEntries.map(({ element }) =>
-      element.animate(
+    revealEntries.map(async ({ element, playerIndex, card, cardIndex }) => {
+      if (!element.isConnected) return;
+
+      // Первая половина: штатная рубашка поворачивается до 90°.
+      await element.animate(
         [
-          {
-            transform: 'perspective(700px) rotateY(0deg)'
-          },
-          {
-            transform: 'perspective(700px) rotateY(90deg)'
-          }
+          { transform: 'perspective(700px) rotateY(0deg)' },
+          { transform: 'perspective(700px) rotateY(90deg)' }
         ],
         {
           duration: 240,
+          delay: cardIndex * 70,
           easing: 'ease-in',
           fill: 'forwards'
         }
-      ).finished.catch(() => {})
-    )
+      ).finished.catch(() => {});
+
+      if (
+        !element.isConnected ||
+        handTick !== tick ||
+        gamePaused
+      ) return;
+
+      // В точке 90° заменяем рубашку на обычную лицевую карту.
+      const isAIWinner =
+        aiWinnerReveal && playerIndex === aiWinnerId;
+
+      const isInWinningHand =
+        isAIWinner && aiWinningCards.includes(card);
+
+      const isAICore =
+        isAIWinner &&
+        !!analyzeHand([
+          ...players[aiWinnerId].hole,
+          ...board
+        ]).coreCards.includes(card);
+
+      const template = document.createElement('div');
+      template.innerHTML = cardMarkup(card);
+
+      const face = template.firstElementChild;
+      if (!face) return;
+
+      element.className = face.className;
+      element.innerHTML = face.innerHTML;
+
+      if (isInWinningHand) {
+        element.classList.add('winning-lift-target');
+      }
+
+      if (isAIWinner && !isInWinningHand) {
+        element.classList.add('not-in-combo');
+      }
+
+      // Вторая половина: сразу доворачиваем лицевую сторону.
+      await element.animate(
+        [
+          { transform: 'perspective(700px) rotateY(-90deg)' },
+          { transform: 'perspective(700px) rotateY(0deg)' }
+        ],
+        {
+          duration: 240,
+          easing: 'ease-out',
+          fill: 'forwards'
+        }
+      ).finished.catch(() => {});
+    })
   );
 
   if (handTick !== tick || gamePaused) return;
