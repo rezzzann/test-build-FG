@@ -2379,17 +2379,10 @@ async function animateAIShowdownCards(handTick) {
       ).finished.catch(() => {});
     })
   );
-
   if (handTick !== tick || gamePaused) return;
-
-  if (handTick !== tick || gamePaused) return;
-
   aiShowdownAnimating = false;
-
   await liftWinningCards(handTick);
 }
-
-
 async function finish() {
   pendingPreAction = null;
 
