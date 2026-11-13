@@ -166,6 +166,14 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
 .hole.winner-hole{top:calc(50% + clamp(35px,5.1vw,58px) + 6px);gap:clamp(4px,.7vw,9px)}
 .hole.winner-hole .card{width:clamp(48px,7vw,82px);height:clamp(70px,10.2vw,116px)}
 .opponent-cards.ai-winner-cards,.opponent-cards.ai-winner-cards.revealed{top:calc(60% - clamp(55px,15vw,70px)*1.5 - 10px)!important;left:50%!important;right:auto!important;transform:translate(-50%,0);gap:3px!important;opacity:1;z-index:5;filter:drop-shadow(0 2px 4px #000b);}
+/* Размер стандартных карт при вскрытии ИИ */
+.opponent-cards.ai-winner-cards .card,
+.opponent-cards.ai-winner-cards.revealed .card {
+  width: clamp(38px, 10.5vw, 49px) !important;
+  height: clamp(55px, 15vw, 70px) !important;
+  padding: 4px;
+  flex-shrink: 0;
+}
 .hole.folded-hole{z-index:5;filter:brightness(.45) drop-shadow(0 2px 4px #000b)}
 .hole.folded-hole .card{filter:brightness(.45);border-radius:4px}
 .seat{position:absolute;z-index:4;display:flex;align-items:center;gap:7px;min-width:112px;padding:7px 9px;border:1px solid #c5a15b88;border-radius:12px;background:#101513ee;box-shadow:0 4px 12px #0006;overflow:visible}.seat:has(.win-display.visible){z-index:600!important}.seat:has(.win-display.visible) .win-display{z-index:700!important}
@@ -185,6 +193,9 @@ button{font:inherit;cursor:pointer;border:0}button:disabled{opacity:.4}
   z-index: 20;
   pointer-events: none;
   perspective: 700px;
+}
+.ai-seat-cards .card {
+  transform-style: preserve-3d;
 }
 .seat.user-seat{min-width:clamp(170px,23vw,230px);gap:9px;padding:8px 11px;border-width:2px}
 .user-seat .avatar{width:clamp(49px,6vw,62px);height:clamp(64px,7.5vw,76px);border-radius:15px;font-size:clamp(25px,3.2vw,34px);border-width:3px;box-shadow:0 0 12px #c5a15b55}
@@ -728,7 +739,7 @@ transition: opacity 1200ms ease;
 /* Плавное движение карт лучшей комбинации */
 .community-slot .card,
 .hole .card,
-.ai-seat-cards .mini-card {
+.ai-seat-cards .card {
   top: 0;
   transition: top .36s ease;
 }
@@ -736,7 +747,7 @@ transition: opacity 1200ms ease;
 /* Поднимаем только выбранные пять карт */
 .community-slot .card.winning-lift,
 .hole .card.winning-lift,
-.ai-seat-cards .mini-card.winning-lift {
+.ai-seat-cards .card.winning-lift {
   top: -15px;
   z-index: 10;
 }
@@ -745,7 +756,7 @@ transition: opacity 1200ms ease;
 @media (prefers-reduced-motion: reduce) {
   .community-slot .card,
   .hole .card,
-  .ai-seat-cards .mini-card {
+  .ai-seat-cards .card {
     transition: none;
   }
 }
@@ -1729,13 +1740,13 @@ transform-origin: center center;
   transform: none !important;
 }
 /* Не меняем исходное положение номинала и масти */
-#opponentCards .opponent-cards.ai-seat-cards .mini-rank {
+#opponentCards .opponent-cards.ai-seat-cards .rank {
   top: 1px !important;
   left: 2px !important;
   font-size: clamp(9px, 1.2vw, 11px) !important;
 }
 
-#opponentCards .opponent-cards.ai-seat-cards .mini-suit {
+#opponentCards .opponent-cards.ai-seat-cards .center {
   bottom: 1px !important;
   right: 2px !important;
   font-size: clamp(9px, 1.2vw, 11px) !important;
@@ -1843,26 +1854,6 @@ transform-origin: center center;
   gap: 0;
   overflow: visible;
 }
-
-/* Открытые карты ИИ: номинал и масть друг под другом */
-#opponentCards .mini-card .mini-rank {
-  position: absolute;
-  top: 3px !important;
-  left: 4px !important;
-  font-size: clamp(11px, 1.5vw, 16px) !important;
-  line-height: 1;
-}
-
-#opponentCards .mini-card .mini-suit {
-  position: absolute;
-  top: 21px !important;
-  left: 4px !important;
-  right: auto !important;
-  bottom: auto !important;
-  font-size: clamp(11px, 1.5vw, 16px) !important;
-  line-height: 1;
-}
-
 /* Портретная ориентация */
 @media (orientation: portrait) {
   .hole {
