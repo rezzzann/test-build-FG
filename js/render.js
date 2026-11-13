@@ -683,7 +683,7 @@ if (preserveShowdownCards) {
 }
 
 if (aiShowdownRevealBack) {
-  existingCard.className = 'mini-card ai-reveal-back';
+  existingCard.className = 'mini-card';
   existingCard.innerHTML = '';
   return;
 }
