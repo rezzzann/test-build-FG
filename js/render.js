@@ -646,7 +646,7 @@ const preserveShowdownCards =
     over &&
     (humanWinnerReveal || aiWinnerReveal) &&
     !!opponentCardsRoot.querySelector(
-      '.opponent-cards.ai-seat-cards'
+      '.opponent-cards'
     )
   );
 
