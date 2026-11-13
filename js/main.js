@@ -2330,9 +2330,8 @@ async function animateAIShowdownCards(handTick) {
 
   // Фаза 2. Подменяем рубашки лицевыми сторонами.
   // render.js обновит содержимое существующих элементов.
-  aiShowdownRevealBack = false;
-  aiShowdownAnimating = false;
-  render();
+aiShowdownRevealBack = false;
+render();
 
   // Фаза 3. Поворачиваем открытые карты обратно.
   await Promise.all(
