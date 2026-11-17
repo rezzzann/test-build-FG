@@ -1,4 +1,8 @@
-
+function cardSpriteClass(c) {
+  return c.r === 'K' && c.s === '♦'
+    ? 'sprite-king-diamonds'
+    : '';
+}
 export function card(c, back = false) {
   if (back) return '<div class="card back"></div>';
 
