@@ -187,6 +187,10 @@ function renderCommunity() {
       if (!node) return;
 
       const currentCard = board[i];
+      node.classList.toggle(
+  'sprite-king-diamonds',
+  currentCard.r === 'K' && currentCard.s === '♦'
+);
 
      const isHumanCore =
   !!humanWinnerReveal &&
@@ -277,7 +281,7 @@ function renderCommunity() {
     const pending = communityDealingIndices.includes(i);
 
     const cardHTML = `
-      <div class="card ${c.red ? 'red' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isWinningCard ? 'winning-lift-target' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
+           <div class="card ${c.red ? 'red' : ''} ${c.r === 'K' && c.s === '♦' ? 'sprite-king-diamonds' : ''} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isWinningCard ? 'winning-lift-target' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
         <span class="rank">${c.r === 'T' ? '10' : c.r}</span>
         <span class="center">${c.s}</span>
       </div>
