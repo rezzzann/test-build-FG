@@ -2936,7 +2936,27 @@ window.addEventListener('pageshow', event => {
   if (event.persisted || document.visibilityState === 'visible') {
     handlePageVisible();
   }
-});                                                                                                                                                                                                          
+});    
+      const testKingUser = $('testForceKingUser');
+const testKingFlop = $('testForceKingFlop');
+
+testKingUser.addEventListener('change', () => {
+  if (testKingUser.checked) {
+    testKingFlop.checked = false;
+    TEST_FORCE_KD_FLOP = false;
+  }
+
+  TEST_FORCE_KD_USER = testKingUser.checked;
+});
+
+testKingFlop.addEventListener('change', () => {
+  if (testKingFlop.checked) {
+    testKingUser.checked = false;
+    TEST_FORCE_KD_USER = false;
+  }
+
+  TEST_FORCE_KD_FLOP = testKingFlop.checked;
+});
 $('exitButton').addEventListener('click',pauseGameForMenu);
 $('resumeButton').addEventListener('click',restoreSavedGame);
 $('restartButton').addEventListener('click',resetStacksAndRestart);
