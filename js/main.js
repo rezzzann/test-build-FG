@@ -47,11 +47,11 @@ const TEST_MANUAL_NEXT_HAND = false;
       // ALL-IN для всех ИИ на каждой раздаче.
 const TEST_ALL_HANDS_AI_ALL_IN = false;
       // Быстрый тест: после блайндов сразу переходим к шоудауну.
-const TEST_FAST_SHOWDOWN = true;
+const TEST_FAST_SHOWDOWN = false;
 // Включение / отключение таймера хода.
 const TEST_ACTION_CLOCK_ENABLED = true;
       // ТЕСТ СПРАЙТА K♦
-let TEST_FORCE_KD_USER = false;
+let TEST_FORCE_KD_USER = true;
 let TEST_FORCE_KD_FLOP = false;
 let testKingDiamondsCard = null;
 const DISPLAY_VERSION=GAME_VERSION;
