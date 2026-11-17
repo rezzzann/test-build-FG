@@ -1964,5 +1964,21 @@ transform-origin: center center;
     transition: none;
   }
 }
+/* TEST SPRITE: KING OF DIAMONDS */
+.card.sprite-king-diamonds,
+.mini-card.sprite-king-diamonds,
+.opponent-cards.ai-winner-cards .mini-card.sprite-king-diamonds {
+  background-image: url("../king_diamonds_sprite_282x396.png") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
 
+/* Скрываем старую текстовую графику только на тестовой карте */
+.card.sprite-king-diamonds .rank,
+.card.sprite-king-diamonds .center,
+.mini-card.sprite-king-diamonds .mini-rank,
+.mini-card.sprite-king-diamonds .mini-suit {
+  opacity: 0 !important;
+}
 
