@@ -50,10 +50,6 @@ const TEST_ALL_HANDS_AI_ALL_IN = false;
 const TEST_FAST_SHOWDOWN = false;
 // Включение / отключение таймера хода.
 const TEST_ACTION_CLOCK_ENABLED = true;
-      // ТЕСТ СПРАЙТА K♦
-let TEST_FORCE_KD_USER = true;
-let TEST_FORCE_KD_FLOP = false;
-let testKingDiamondsCard = null;
 const DISPLAY_VERSION=GAME_VERSION;
 // Текущий режим турнира: classic или highroller.
 let tournamentMode = 'classic';
@@ -744,29 +740,6 @@ function runBlindSequence(sbi, sbAmount, bbi, bbAmount, handTick) {
   }, reduceMotion ? 200 : 1100);
 }
 function shuffle() {   deck = createShuffledDeck(ranks, suits); }
-      function takeSpecificCard(rank, suit) {
-  const index = deck.findIndex(
-    c => c.r === rank && c.s === suit
-  );
-
-  return index === -1 ? null : deck.splice(index, 1)[0];
-}
-
-function drawFlopCards() {
-  const cards = [
-    deck.pop(),
-    deck.pop(),
-    deck.pop()
-  ];
-
-  if (TEST_FORCE_KD_FLOP && testKingDiamondsCard) {
-    cards[2] = testKingDiamondsCard;
-    testKingDiamondsCard = null;
-  }
-
-  return cards;
-}
-
 function live() {
   return getLive(players);
 }
@@ -1658,11 +1631,6 @@ winnerChipVfx.fadeOut();
 handNo++;
 shuffle();
 
-testKingDiamondsCard =
-  TEST_FORCE_KD_USER || TEST_FORCE_KD_FLOP
-    ? takeSpecificCard('K', '♦')
-    : null;
-
 resetAllInTableLight();
   board = [];
   renderedBoardCount = 0;
@@ -1674,9 +1642,9 @@ resetAllInTableLight();
   over = false;
   log = [];
 
-  players.forEach((p, i) => {
+  players.forEach(p => {
     p.folded = p.stack <= 0;
-    if (p.folded) {   p.hole = []; } else if (i === user && TEST_FORCE_KD_USER && testKingDiamondsCard) {   p.hole = [testKingDiamondsCard, deck.pop()];   testKingDiamondsCard = null; } else {   p.hole = [deck.pop(), deck.pop()]; }
+    p.hole = p.folded ? [] : [deck.pop(), deck.pop()];
     p.dealtCount = 0;
     p.allin = false;
     p.wentAllInThisHand = false;
@@ -1940,7 +1908,7 @@ if (!collected) return;
   let newCards;
 
   if (street === 0) {
-    newCards = drawFlopCards();
+    newCards = [deck.pop(), deck.pop(), deck.pop()];
     street = 1;
   } else if (street === 1) {
     newCards = [deck.pop()];
@@ -2937,26 +2905,6 @@ window.addEventListener('pageshow', event => {
     handlePageVisible();
   }
 });    
-      const testKingUser = $('testForceKingUser');
-const testKingFlop = $('testForceKingFlop');
-
-testKingUser.addEventListener('change', () => {
-  if (testKingUser.checked) {
-    testKingFlop.checked = false;
-    TEST_FORCE_KD_FLOP = false;
-  }
-
-  TEST_FORCE_KD_USER = testKingUser.checked;
-});
-
-testKingFlop.addEventListener('change', () => {
-  if (testKingFlop.checked) {
-    testKingUser.checked = false;
-    TEST_FORCE_KD_USER = false;
-  }
-
-  TEST_FORCE_KD_FLOP = testKingFlop.checked;
-});
 $('exitButton').addEventListener('click',pauseGameForMenu);
 $('resumeButton').addEventListener('click',restoreSavedGame);
 $('restartButton').addEventListener('click',resetStacksAndRestart);
