@@ -1964,20 +1964,44 @@ transform-origin: center center;
     transition: none;
   }
 }
-/* TEST SPRITE: KING OF DIAMONDS */
+/* POKEREZA — УНИВЕРСАЛЬНЫЕ СПРАЙТЫ ИГРОВЫХ КАРТ */
+
+/* Король пик */
+.card.sprite-king-spades,
+.mini-card.sprite-king-spades {
+  background-image: url("../deck/king_spades.png") !important;
+}
+
+/* Король червей */
+.card.sprite-king-hearts,
+.mini-card.sprite-king-hearts {
+  background-image: url("../deck/king_hearts.png") !important;
+}
+
+/* Король бубен */
 .card.sprite-king-diamonds,
-.mini-card.sprite-king-diamonds,
-.opponent-cards.ai-winner-cards .mini-card.sprite-king-diamonds {
-  background-image: url("../king_diamonds_sprite_282x396.png") !important;
+.mini-card.sprite-king-diamonds {
+  background-image: url("../deck/king_diamonds.png") !important;
+}
+
+/* Король треф */
+.card.sprite-king-clubs,
+.mini-card.sprite-king-clubs {
+  background-image: url("../deck/king_clubs.png") !important;
+}
+
+/* Общие параметры всех спрайтов */
+.card[class*="sprite-king-"],
+.mini-card[class*="sprite-king-"] {
   background-size: 100% 100% !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
 
-/* Скрываем старую текстовую графику только на тестовой карте */
-.card.sprite-king-diamonds .rank,
-.card.sprite-king-diamonds .center,
-.mini-card.sprite-king-diamonds .mini-rank,
-.mini-card.sprite-king-diamonds .mini-suit {
+/* Скрываем стандартные символы поверх изображений */
+.card[class*="sprite-king-"] .rank,
+.card[class*="sprite-king-"] .center,
+.mini-card[class*="sprite-king-"] .mini-rank,
+.mini-card[class*="sprite-king-"] .mini-suit {
   opacity: 0 !important;
 }
