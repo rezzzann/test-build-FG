@@ -207,31 +207,14 @@ function renderCommunity() {
       if (!node) return;
 
       const currentCard = board[i];
-node.classList.remove(
-  'sprite-king-spades',
-  'sprite-king-hearts',
-  'sprite-king-diamonds',
-  'sprite-king-clubs'
-);
+node.className = node.className.replace(
+  /\bsprite-(?:[2-9]|10|jack|queen|king|ace)-(?:spades|hearts|diamonds|clubs)\b/g,
+  ''
+).trim();
 
-const rankNames = {
-  K: 'king',
-  Q: 'queen',
-  J: 'jack',
-  A: 'ace',
-  T: '10'
-};
+const spriteClass = getSpriteClass(currentCard);
 
-const suitNames = {
-  '♠': 'spades',
-  '♥': 'hearts',
-  '♦': 'diamonds',
-  '♣': 'clubs'
-};
-
-const spriteClass = `sprite-${rankNames[currentCard.r] || currentCard.r}-${suitNames[currentCard.s] || ''}`;
-
-if (suitNames[currentCard.s]) {
+if (spriteClass) {
   node.classList.add(spriteClass);
 }
 
