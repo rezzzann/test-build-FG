@@ -19,6 +19,26 @@ export function createRenderer({
   let previousLabelActions = [];
   let labelAnimationUntil = [];
   let allinInfoAppearUntil = [];
+  function getSpriteClass(c) {
+  const ranks = {
+    K: 'king',
+    Q: 'queen',
+    J: 'jack',
+    A: 'ace',
+    T: '10'
+  };
+
+  const suits = {
+    '♠': 'spades',
+    '♥': 'hearts',
+    '♦': 'diamonds',
+    '♣': 'clubs'
+  };
+
+  if (!suits[c.s]) return '';
+
+  return `sprite-${ranks[c.r] || c.r}-${suits[c.s]}`;
+}
   // Единый WebGL-эффект ALL-IN для всех игроков.
 const fireVfx = createFireVfx({
   table: $('table'),
@@ -304,7 +324,7 @@ if (suitNames[currentCard.s]) {
     const pending = communityDealingIndices.includes(i);
 
     const cardHTML = `
-           <div class="card ${c.red ? 'red' : ''} ${`sprite-${({K:'king',Q:'queen',J:'jack',A:'ace',T:'10'})[c.r] || c.r}-${({ '♠':'spades','♥':'hearts','♦':'diamonds','♣':'clubs' })[c.s] || ''}`} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isWinningCard ? 'winning-lift-target' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
+          <div class="card ${c.red ? 'red' : ''} ${getSpriteClass(c)} ${isNew ? 'reveal-card' : ''} ${isAICore ? 'winning-card' : ''} ${isCoreCard && !aiWinnerReveal ? 'combo-core' : ''} ${isWinningCard ? 'winning-lift-target' : ''} ${isDimmed ? 'not-in-combo' : ''} ${pending ? 'deal-pending' : ''}">
         <span class="rank">${c.r === 'T' ? '10' : c.r}</span>
         <span class="center">${c.s}</span>
       </div>
