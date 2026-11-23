@@ -1,7 +1,25 @@
 function cardSpriteClass(c) {
-  return c.r === 'K' && c.s === '♦'
-    ? 'sprite-king-diamonds'
-    : '';
+  const rankNames = {
+    K: 'king',
+    Q: 'queen',
+    J: 'jack',
+    A: 'ace',
+    T: '10'
+  };
+
+  const suitNames = {
+    '♠': 'spades',
+    '♥': 'hearts',
+    '♦': 'diamonds',
+    '♣': 'clubs'
+  };
+
+  const rank = rankNames[c.r] || c.r;
+  const suit = suitNames[c.s];
+
+  if (!suit) return '';
+
+  return `sprite-${rank}-${suit}`;
 }
 export function card(c, back = false) {
   if (back) return '<div class="card back"></div>';
